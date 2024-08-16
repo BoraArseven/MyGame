@@ -77,7 +77,6 @@ class GameControllerIT {
 		resetDatabase();
 	}
 
-	
 	@AfterAll
 	static void tearDownAll() {
 		HibernateUtil.close();
@@ -143,6 +142,38 @@ class GameControllerIT {
 		LOGGER.info("Player {} successfully added to map {}", addedPlayer.getName(), map.getName());
 	}
 
+	@Test
+	void testRemovePlayerFromMap_GameMapIsNull() {
+		// Arrange: Create and persist a Player without associating it with a GameMap
+		Player player = new PlayerBuilder().withName("TestPlayer").build();
+
+		EntityManager em = emf.createEntityManager();
+		EntityTransaction transaction = em.getTransaction();
+
+		try {
+			transaction.begin();
+			em.persist(player); // Persist the player into the database
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction.isActive()) {
+				transaction.rollback();
+			}
+			throw new RuntimeException("Failed to persist player", e);
+		} finally {
+			em.close();
+		}
+
+		// Act & Assert: Try to remove the player from a non-existent GameMap (ID 999)
+		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
+			gameMapDAO.removePlayerFromMap(999L, player); // Use a non-existent GameMap ID
+		});
+
+		// Assert: Verify that the exception message is as expected
+		assertEquals("Expected GameMap not found or Player not in this GameMap.", thrown.getMessage());
+
+		LOGGER.info("Test completed: testRemovePlayerFromMap_GameMapIsNull");
+	}
+
 //	@Test
 //	void testRemovePlayerFromMap_PlayerExistsInMap() {
 //		// Arrange: Create a new player and a game map
@@ -186,13 +217,128 @@ class GameControllerIT {
 //		} catch (Exception e) {
 //			if (transaction.isActive()) {
 //				transaction.rollback();
-//			}
-//			throw e;
-//		} finally {
+//		}
+//	throw e;
+//	} finally {
 //			em.close();
 //		}
-//
 //		LOGGER.info("Player {} successfully removed from map {}", playerToRemove.getName(), map.getName());
-//	}
+//}
+	@Test
+	void testRemovePlayerFromMap_PlayerIsNull() {
+		// Arrange: Create and persist a GameMap
+		GameMap gameMap = new GameMap();
+		gameMap.setName("TestMap");
+		gameMapDAO.save(gameMap);
+
+		// Act & Assert: Try to remove a null player from the map
+		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
+			gameMapDAO.removePlayerFromMap(gameMap.getId(), null);
+		});
+
+		// Assert: Verify that the exception message is as expected
+		assertEquals("Player is null or has a null ID.", thrown.getMessage());
+	}
+
+	@Test
+	void testRemovePlayerFromMap_PlayerHasNullId() {
+		// Arrange: Create and persist a GameMap
+		GameMap gameMap = new GameMap();
+		gameMap.setName("TestMap");
+		gameMapDAO.save(gameMap);
+
+		// Create a Player with null ID
+		Player playerWithNullId = new PlayerBuilder().withName("TestPlayerWithNullId").build();
+
+		// Act & Assert: Try to remove the player with null ID from the map
+		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
+			gameMapDAO.removePlayerFromMap(gameMap.getId(), playerWithNullId);
+		});
+
+		// Assert: Verify that the exception message is as expected
+		assertEquals("Player is null or has a null ID.", thrown.getMessage());
+	}
+
+	@Test
+	void testRemovePlayerFromMap_PlayerNotInGameMap() {
+		// Arrange: Create and persist a GameMap and a Player
+		GameMap gameMap = new GameMap();
+		gameMap.setName("TestMap");
+		gameMapDAO.save(gameMap);
+
+		Player player = new PlayerBuilder().withName("TestPlayer").build();
+		playerDAO.updatePlayer(player); // Persist the player separately, not in the game map
+
+		// Act & Assert: Try to remove the player from the map where the player is not
+		// present
+		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
+			gameMapDAO.removePlayerFromMap(gameMap.getId(), player);
+		});
+
+		// Assert: Verify that the exception message is as expected
+		assertEquals("Player is null or has a null ID.", thrown.getMessage());
+	}
+
+	@Test
+	void testRemovePlayerFromMap_SuccessfulRemoval() {
+		// Arrange: Create and persist a GameMap and a Player, and associate the player
+		// with the GameMap
+		GameMap gameMap = new GameMap();
+		gameMap.setName("TestMap");
+		gameMapDAO.save(gameMap);
+
+		Player player = new PlayerBuilder().withName("TestPlayer").build();
+		playerDAO.updatePlayer(player); // Persist the player
+		gameMapDAO.addPlayerToMap(gameMap.getId(), player); // Add the player to the map
+
+		// Act: Remove the player from the map
+		gameMapDAO.removePlayerFromMap(gameMap.getId(), player);
+
+		// Assert: Ensure the player was successfully removed from the map
+		EntityManager em = emf.createEntityManager();
+		GameMap updatedMap = em.find(GameMap.class, gameMap.getId());
+		em.refresh(updatedMap); // Ensure the latest data is loaded
+		assertTrue(updatedMap.getPlayers().isEmpty(), "Player was not successfully removed from the map");
+		em.close();
+	}
+
+	@Test
+	void testRemovePlayerFromMap_ManagedPlayerIsNull() {
+		// Arrange: Create and persist a GameMap
+		GameMap gameMap = new GameMap();
+		gameMap.setName("TestMap");
+		gameMapDAO.save(gameMap);
+
+		// Create a Player object with a valid ID but do not persist it
+		Player player = new PlayerBuilder().withName("TestPlayer").build();
+		player.setId(999L);
+		// Act & Assert: Try to remove a player with a non-existent ID from the map
+		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
+			gameMapDAO.removePlayerFromMap(gameMap.getId(), player);
+		});
+
+		// Assert: Verify that the exception message is as expected
+		assertEquals("Expected GameMap not found or Player not in this GameMap.", thrown.getMessage());
+	}
+
+	@Test
+	void testRemovePlayerFromMap_PlayerExistsButNotInGameMap() {
+		// Arrange: Create and persist a GameMap and a Player
+		GameMap gameMap = new GameMap();
+		gameMap.setName("TestMap");
+		gameMapDAO.save(gameMap);
+
+		Player player = new PlayerBuilder().withName("TestPlayer").build();
+		playerDAO.updatePlayer(player); // Persist the player separately
+
+		// Act & Assert: Try to remove the player from the map where the player is not
+		// present
+		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
+			gameMapDAO.removePlayerFromMap(gameMap.getId(), player);
+		});
+
+		// Assert: Verify that the exception message is as expected
+		assertEquals("Player is null or has a null ID.", thrown.getMessage());
+	}
 
 }

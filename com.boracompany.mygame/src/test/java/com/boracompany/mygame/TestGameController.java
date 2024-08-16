@@ -19,6 +19,9 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
@@ -74,7 +77,6 @@ class TestGameController {
 		assertEquals("Attacker or defender is null.", exception.getMessage());
 	}
 
-	
 	@Test
 	void testwhenAttackingAttackingPLayerisNullThrowsException() {
 		Player attacker = null;
@@ -910,5 +912,67 @@ class TestGameController {
 		assertEquals("Damage should be positive", exception.getMessage());
 	}
 
-	
+
+	@Test
+	void testRemovePlayerFromMap_GameMapPlayersIsNull() {
+		// Arrange
+		Player player = new PlayerBuilder().withName("TestPlayer").withHealth(100f).withDamage(50f).build();
+		Long mapId = 1L; // Valid map ID
+
+		// Mock gameMapDAO to return a map with null players list
+		GameMap mockGameMap = mock(GameMap.class);
+		when(mockGameMap.getPlayers()).thenReturn(null);
+		when(gameMapDAOMock.findById(mapId)).thenReturn(mockGameMap);
+
+		// Act & Assert
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+			gameControllerwithMocks.removePlayerFromMap(mapId, player);
+		});
+
+		assertEquals("Map with ID 1 or player TestPlayer not found", exception.getMessage());
+		verify(logger).error("Map with ID {} or player {} not found", mapId, player.getName());
+	}
+
+	@Test
+	void testRemovePlayerFromMap_PlayerNotInMap() {
+		// Arrange
+		Player playerNotInMap = new PlayerBuilder().withName("TestPlayer").withHealth(100f).withDamage(50f).build();
+		Long mapId = 1L; // Valid map ID
+
+		// Mock gameMapDAO to return a map with an empty players list
+		GameMap mockGameMap = mock(GameMap.class);
+		when(mockGameMap.getPlayers()).thenReturn(new ArrayList<>());
+		when(gameMapDAOMock.findById(mapId)).thenReturn(mockGameMap);
+
+		// Act & Assert
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+			gameControllerwithMocks.removePlayerFromMap(mapId, playerNotInMap);
+		});
+
+		assertEquals("Map with ID 1 or player TestPlayer not found", exception.getMessage());
+		verify(logger).error("Map with ID {} or player {} not found", mapId, playerNotInMap.getName());
+	}
+
+	@Test
+	void testRemovePlayerFromMap_PlayerSuccessfullyRemoved() {
+		// Arrange
+		Player playerToRemove = new PlayerBuilder().withName("TestPlayer").withHealth(100f).withDamage(50f).build();
+		Long mapId = 1L; // Valid map ID
+
+		// Mock gameMapDAO to return a map with the player in the players list
+		GameMap mockGameMap = mock(GameMap.class);
+		List<Player> playersList = new ArrayList<>();
+		playersList.add(playerToRemove);
+		when(mockGameMap.getPlayers()).thenReturn(playersList);
+		when(gameMapDAOMock.findById(mapId)).thenReturn(mockGameMap);
+
+		// Act
+		gameControllerwithMocks.removePlayerFromMap(mapId, playerToRemove);
+
+		// Assert
+		verify(gameMapDAOMock).removePlayerFromMap(mapId, playerToRemove);
+		verify(gameMapDAOMock).update(mockGameMap);
+		verify(logger).info("Player {} removed from map {}", playerToRemove.getName(), mockGameMap.getName());
+	}
+
 }

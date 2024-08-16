@@ -32,8 +32,8 @@ public class GameMapDAOIT {
 	private static final Logger LOGGER = LogManager.getLogger(GameMapDAOIT.class);
 
 	@Container
-	public static PostgreSQLContainer<?> postgreSQLContainer = extracted()
-			.withDatabaseName("test").withUsername("test").withPassword("test");
+	public static PostgreSQLContainer<?> postgreSQLContainer = extracted().withDatabaseName("test").withUsername("test")
+			.withPassword("test");
 
 	private static PostgreSQLContainer<?> extracted() {
 		return new PostgreSQLContainer<>("postgres:13.3");
@@ -96,8 +96,6 @@ public class GameMapDAOIT {
 		assertEquals("Test Map", retrievedMap.getName());
 	}
 
-	
-	
 	@Test
 	void testFindAll() {
 		GameMap gameMap1 = new GameMap();
@@ -734,6 +732,5 @@ public class GameMapDAOIT {
 		// Verify that the EntityManager is closed after the operation
 		Mockito.verify(emSpy).close();
 	}
-	
 
 }

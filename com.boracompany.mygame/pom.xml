@@ -342,7 +342,15 @@ since javax.xml.bind has been removed from the JDK -->
 					<artifactId>jacoco-maven-plugin</artifactId>
 					<version>0.8.12</version>
 					<configuration>
-
+						<rules>
+							<rule>
+								<element>METHOD</element>
+								<excludes>
+									<exclude>
+										*@com.boracompany.mygame.Main.ExcludeFromJacocoGeneratedReport*</exclude>
+								</excludes>
+							</rule>
+						</rules>
 						<excludes>
 							<exclude>**/Main/**</exclude>
 							<exclude>**/Model/**</exclude>
