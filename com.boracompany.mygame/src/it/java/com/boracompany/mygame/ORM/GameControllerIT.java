@@ -185,10 +185,11 @@ class GameControllerIT {
 		GameMap gameMap = new GameMap();
 		gameMap.setName("TestMap");
 		gameMapDAO.save(gameMap);
-
+		
+		Long gameMapId = gameMap.getId();
 		// Act & Assert: Try to remove a null player from the map
 		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
-			Long gameMapId = gameMap.getId();
+			
 			gameMapDAO.removePlayerFromMap(gameMapId, null);
 		});
 
@@ -205,10 +206,10 @@ class GameControllerIT {
 
 		// Create a Player with null ID
 		Player playerWithNullId = new PlayerBuilder().withName("TestPlayerWithNullId").build();
-
+		Long gameId = gameMap.getId();
 		// Act & Assert: Try to remove the player with null ID from the map
 		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
-			Long gameId = gameMap.getId();
+			
 			gameMapDAO.removePlayerFromMap(gameId, playerWithNullId);
 		});
 
@@ -262,7 +263,7 @@ class GameControllerIT {
 
 	@Test
 	void testRemovePlayerFromMap_ManagedPlayerIsNull() {
-		//Create and persist a GameMap
+		// Create and persist a GameMap
 		GameMap gameMap = new GameMap();
 		gameMap.setName("TestMap");
 		gameMapDAO.save(gameMap);
@@ -294,9 +295,9 @@ class GameControllerIT {
 		Player player = new PlayerBuilder().withName("TestPlayer").build();
 		playerDAO.updatePlayer(player); // Persist the player separately
 
-
+		Long gameMapId = gameMap.getId();
 		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
-			Long gameMapId = gameMap.getId();
+			
 			gameMapDAO.removePlayerFromMap(gameMapId, player);
 		});
 
