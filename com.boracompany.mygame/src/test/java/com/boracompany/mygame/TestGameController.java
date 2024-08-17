@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 
-import com.boracompany.mygame.Controller.GameController;
+import com.boracompany.mygame.controller.GameController;
 import com.boracompany.mygame.model.GameMap;
 import com.boracompany.mygame.model.Player;
 import com.boracompany.mygame.model.PlayerBuilder;

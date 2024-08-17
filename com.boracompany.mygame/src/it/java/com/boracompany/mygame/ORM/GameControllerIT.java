@@ -22,7 +22,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.boracompany.mygame.Controller.GameController;
+import com.boracompany.mygame.controller.GameController;
 import com.boracompany.mygame.model.GameMap;
 import com.boracompany.mygame.model.Player;
 import com.boracompany.mygame.model.PlayerBuilder;
@@ -179,56 +179,6 @@ class GameControllerIT {
 		LOGGER.info("Test completed: testRemovePlayerFromMap_GameMapIsNull");
 	}
 
-//	@Test
-//	void testRemovePlayerFromMap_PlayerExistsInMap() {
-//		// Arrange: Create a new player and a game map
-//		Player playerToRemove = playerBuilder.resetBuilder().withDamage(10).withHealth(20).withName("PlayerToRemove")
-//				.build();
-//
-//		GameMap map = new GameMap();
-//		map.setName("TestMap");
-//
-//		// Persist the map and the player in the database
-//		gameMapDAO.save(map);
-//
-//		// After persisting, the ID should be automatically generated and assigned to
-//		// the map
-//		Long generatedMapId = map.getId(); // Retrieve the newly generated ID
-//
-//		// Ensure that the map has been assigned an ID
-//		assertNotNull(generatedMapId, "Map ID should not be null after persisting");
-//
-//		playerDAO.updatePlayer(playerToRemove);
-//
-//		// Add the player to the map using the controller
-//		controller.addPlayerToMap(generatedMapId, playerToRemove);
-//
-//		// Act: Remove the player from the map using the controller
-//		controller.removePlayerFromMap(generatedMapId, playerToRemove);
-//
-//		// Assert: Access the players collection within an active transaction to check
-//		// removal
-//		EntityManager em = emf.createEntityManager();
-//		EntityTransaction transaction = em.getTransaction();
-//
-//		try {
-//			transaction.begin();
-//			GameMap retrievedMap = gameMapDAO.findById(generatedMapId);
-//			assertNotNull(retrievedMap, "Retrieved map should not be null");
-//
-//			// Access the players collection while the session is still open
-//			assertTrue(retrievedMap.getPlayers().isEmpty(), "Player was not successfully removed from the map");
-//			transaction.commit();
-//		} catch (Exception e) {
-//			if (transaction.isActive()) {
-//				transaction.rollback();
-//		}
-//	throw e;
-//	} finally {
-//			em.close();
-//		}
-//		LOGGER.info("Player {} successfully removed from map {}", playerToRemove.getName(), map.getName());
-//}
 	@Test
 	void testRemovePlayerFromMap_PlayerIsNull() {
 		// Arrange: Create and persist a GameMap

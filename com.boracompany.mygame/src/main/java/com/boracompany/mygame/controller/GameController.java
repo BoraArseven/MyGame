@@ -1,4 +1,4 @@
-package com.boracompany.mygame.Controller;
+package com.boracompany.mygame.controller;
 
 import com.boracompany.mygame.model.GameMap;
 import com.boracompany.mygame.model.Player;
