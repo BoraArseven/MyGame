@@ -1,11 +1,10 @@
-package com.boracompany.mygame.Controller;
+package com.boracompany.mygame.controller;
 
-import com.boracompany.mygame.Model.GameMap;
-import com.boracompany.mygame.Model.Player;
-import com.boracompany.mygame.Model.PlayerBuilder;
-import com.boracompany.mygame.ORM.PlayerDAOIMPL;
-import com.boracompany.mygame.ORM.GameMapDAO;
-import com.boracompany.mygame.Main.ExcludeFromJacocoGeneratedReport;
+import com.boracompany.mygame.model.GameMap;
+import com.boracompany.mygame.model.Player;
+import com.boracompany.mygame.model.PlayerBuilder;
+import com.boracompany.mygame.orm.GameMapDAO;
+import com.boracompany.mygame.orm.PlayerDAOIMPL;
 
 import org.apache.logging.log4j.Logger;
 
@@ -22,10 +21,7 @@ public class GameController {
 		this.logger = logger;
 	}
 
-	// Default constructor for simplicity
-	@ExcludeFromJacocoGeneratedReport
-	public GameController() {
-	}
+
 
 	// Method to create a new player and add it to the database
 	public Player createPlayer(String playerName, float health, float damage) {

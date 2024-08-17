@@ -4,7 +4,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
-import com.boracompany.mygame.Model.Player;
+import com.boracompany.mygame.model.Player;
+import com.boracompany.mygame.orm.PlayerDAOIMPL;
 
 public class TestPlayerDAOIMPL extends PlayerDAOIMPL {
 

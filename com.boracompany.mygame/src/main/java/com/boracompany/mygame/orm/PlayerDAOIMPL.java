@@ -1,4 +1,4 @@
-package com.boracompany.mygame.ORM;
+package com.boracompany.mygame.orm;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import javax.persistence.TypedQuery;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.boracompany.mygame.Model.Player;
+import com.boracompany.mygame.model.Player;
 
 public class PlayerDAOIMPL implements PlayerDAO {
 	

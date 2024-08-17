@@ -19,9 +19,6 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,12 +26,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 
-import com.boracompany.mygame.Controller.GameController;
-import com.boracompany.mygame.Model.GameMap;
-import com.boracompany.mygame.Model.Player;
-import com.boracompany.mygame.Model.PlayerBuilder;
-import com.boracompany.mygame.ORM.GameMapDAO;
-import com.boracompany.mygame.ORM.PlayerDAOIMPL;
+import com.boracompany.mygame.controller.GameController;
+import com.boracompany.mygame.model.GameMap;
+import com.boracompany.mygame.model.Player;
+import com.boracompany.mygame.model.PlayerBuilder;
+import com.boracompany.mygame.orm.GameMapDAO;
+import com.boracompany.mygame.orm.PlayerDAOIMPL;
 
 class TestGameController {
 	private static final Logger LOGGER = LogManager.getLogger(TestGameController.class);
@@ -681,7 +678,7 @@ class TestGameController {
 	}
 
 	@Test
-	public void testAddPlayerToMap() {
+	void testAddPlayerToMap() {
 		// Arrange
 		Long mapId = 1L;
 		Player player = new PlayerBuilder().withName("TestPlayer").withHealth(100f).withDamage(50f).build();
@@ -697,7 +694,7 @@ class TestGameController {
 	}
 
 	@Test
-	public void testAddPlayerToMap_MapNotFound() {
+	void testAddPlayerToMap_MapNotFound() {
 		// Arrange
 		Long mapId = 1L;
 		Player player = new PlayerBuilder().withName("TestPlayer").withHealth(100f).withDamage(50f).build();
@@ -713,7 +710,7 @@ class TestGameController {
 	}
 
 	@Test
-	public void testRemovePlayerFromMap() {
+	void testRemovePlayerFromMap() {
 		// Arrange
 		Long mapId = 1L;
 		Player player = new PlayerBuilder().withName("TestPlayer").withHealth(100f).withDamage(50f).build();
@@ -730,7 +727,7 @@ class TestGameController {
 	}
 
 	@Test
-	public void testRemovePlayerFromMap_MapNotFound() {
+	void testRemovePlayerFromMap_MapNotFound() {
 		// Arrange
 		Long mapId = 1L;
 		Player player = new PlayerBuilder().withName("TestPlayer").withHealth(100f).withDamage(50f).build();
@@ -746,7 +743,7 @@ class TestGameController {
 	}
 
 	@Test
-	public void testAttack_KillDefender() {
+	void testAttack_KillDefender() {
 		// Arrange
 		Player attacker = new PlayerBuilder().withName("Attacker").withHealth(100f).withDamage(200f).build();
 		Player defender = new PlayerBuilder().withName("Defender").withHealth(100f).build();
@@ -761,7 +758,7 @@ class TestGameController {
 	}
 
 	@Test
-	public void testAttack_DefenderNull() {
+	void testAttack_DefenderNull() {
 		// Arrange
 		Player attacker = new PlayerBuilder().withName("Attacker").withHealth(100f).withDamage(20f).build();
 		Player defender = null;
@@ -912,7 +909,6 @@ class TestGameController {
 		assertEquals("Damage should be positive", exception.getMessage());
 	}
 
-
 	@Test
 	void testRemovePlayerFromMap_GameMapPlayersIsNull() {
 		// Arrange
@@ -966,10 +962,8 @@ class TestGameController {
 		when(mockGameMap.getPlayers()).thenReturn(playersList);
 		when(gameMapDAOMock.findById(mapId)).thenReturn(mockGameMap);
 
-		// Act
 		gameControllerwithMocks.removePlayerFromMap(mapId, playerToRemove);
 
-		// Assert
 		verify(gameMapDAOMock).removePlayerFromMap(mapId, playerToRemove);
 		verify(gameMapDAOMock).update(mockGameMap);
 		verify(logger).info("Player {} removed from map {}", playerToRemove.getName(), mockGameMap.getName());

@@ -1,4 +1,4 @@
-package com.boracompany.mygame.Model;
+package com.boracompany.mygame.model;
 
 //Builder class is not expected to be failed, so removed from coverage.
 public class PlayerBuilder {

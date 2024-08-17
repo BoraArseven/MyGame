@@ -1,29 +1,34 @@
 package com.boracompany.mygame.ORM;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.mockito.Mockito;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.boracompany.mygame.Controller.GameController;
-import com.boracompany.mygame.Model.GameMap;
-import com.boracompany.mygame.Model.Player;
-import com.boracompany.mygame.Model.PlayerBuilder;
+import com.boracompany.mygame.controller.GameController;
+import com.boracompany.mygame.model.GameMap;
+import com.boracompany.mygame.model.Player;
+import com.boracompany.mygame.model.PlayerBuilder;
+import com.boracompany.mygame.orm.GameMapDAO;
+import com.boracompany.mygame.orm.HibernateUtil;
+import com.boracompany.mygame.orm.PlayerDAOIMPL;
 
 @Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -174,56 +179,6 @@ class GameControllerIT {
 		LOGGER.info("Test completed: testRemovePlayerFromMap_GameMapIsNull");
 	}
 
-//	@Test
-//	void testRemovePlayerFromMap_PlayerExistsInMap() {
-//		// Arrange: Create a new player and a game map
-//		Player playerToRemove = playerBuilder.resetBuilder().withDamage(10).withHealth(20).withName("PlayerToRemove")
-//				.build();
-//
-//		GameMap map = new GameMap();
-//		map.setName("TestMap");
-//
-//		// Persist the map and the player in the database
-//		gameMapDAO.save(map);
-//
-//		// After persisting, the ID should be automatically generated and assigned to
-//		// the map
-//		Long generatedMapId = map.getId(); // Retrieve the newly generated ID
-//
-//		// Ensure that the map has been assigned an ID
-//		assertNotNull(generatedMapId, "Map ID should not be null after persisting");
-//
-//		playerDAO.updatePlayer(playerToRemove);
-//
-//		// Add the player to the map using the controller
-//		controller.addPlayerToMap(generatedMapId, playerToRemove);
-//
-//		// Act: Remove the player from the map using the controller
-//		controller.removePlayerFromMap(generatedMapId, playerToRemove);
-//
-//		// Assert: Access the players collection within an active transaction to check
-//		// removal
-//		EntityManager em = emf.createEntityManager();
-//		EntityTransaction transaction = em.getTransaction();
-//
-//		try {
-//			transaction.begin();
-//			GameMap retrievedMap = gameMapDAO.findById(generatedMapId);
-//			assertNotNull(retrievedMap, "Retrieved map should not be null");
-//
-//			// Access the players collection while the session is still open
-//			assertTrue(retrievedMap.getPlayers().isEmpty(), "Player was not successfully removed from the map");
-//			transaction.commit();
-//		} catch (Exception e) {
-//			if (transaction.isActive()) {
-//				transaction.rollback();
-//		}
-//	throw e;
-//	} finally {
-//			em.close();
-//		}
-//		LOGGER.info("Player {} successfully removed from map {}", playerToRemove.getName(), map.getName());
-//}
 	@Test
 	void testRemovePlayerFromMap_PlayerIsNull() {
 		// Arrange: Create and persist a GameMap
@@ -269,12 +224,13 @@ class GameControllerIT {
 		Player player = new PlayerBuilder().withName("TestPlayer").build();
 		playerDAO.updatePlayer(player); // Persist the player separately, not in the game map
 
-		// Act & Assert: Try to remove the player from the map where the player is not
-		// present
-		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
-			gameMapDAO.removePlayerFromMap(gameMap.getId(), player);
-		});
+		// Arrange
+		Long gameMapId = gameMap.getId();
 
+		// Act & Assert: Try to remove a null player from the map
+		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
+		    gameMapDAO.removePlayerFromMap(gameMapId, null);
+		});
 		// Assert: Verify that the exception message is as expected
 		assertEquals("Player is null or has a null ID.", thrown.getMessage());
 	}
@@ -312,10 +268,15 @@ class GameControllerIT {
 		// Create a Player object with a valid ID but do not persist it
 		Player player = new PlayerBuilder().withName("TestPlayer").build();
 		player.setId(999L);
-		// Act & Assert: Try to remove a player with a non-existent ID from the map
+	
+		// Arrange
+		Long gameMapId = gameMap.getId();
+
+	
 		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
-			gameMapDAO.removePlayerFromMap(gameMap.getId(), player);
+		    gameMapDAO.removePlayerFromMap(gameMapId, player);
 		});
+
 
 		// Assert: Verify that the exception message is as expected
 		assertEquals("Expected GameMap not found or Player not in this GameMap.", thrown.getMessage());

@@ -29,6 +29,13 @@
 		<sonar.organization>boraarseven</sonar.organization>
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 		<pitest.version>1.16.1</pitest.version>
+
+    <sonar.coverage.exclusions>
+        **/main/**/*,
+        **/model/*,
+        **/Hibernate*
+        </sonar.coverage.exclusions>
+
 	</properties>
 
 	<dependencies>
@@ -285,11 +292,11 @@ since javax.xml.bind has been removed from the JDK -->
 						<excludedClasses>
 							<param>com.boracompany.mygame.IT.*</param> <!--
 							Exclude IT folder -->
-							<param>com.boracompany.mygame.Main.*</param> <!--
+							<param>com.boracompany.mygame.main.*</param> <!--
 							Exclude Main folder -->
-							<param>com.boracompany.mygame.ORM.*</param><!--
+							<param>com.boracompany.mygame.orm.*</param><!--
 							Exclude ORM folder, since they are only tested in IT -->
-							<param>com.boracompany.mygame.Model.*</param>
+							<param>com.boracompany.mygame.model.*</param>
 						</excludedClasses>
 						<mutators>
 							<mutator>ALL</mutator>
@@ -305,7 +312,6 @@ since javax.xml.bind has been removed from the JDK -->
 							<avoidCallsTo>org.slf4j</avoidCallsTo>
 							<avoidCallsTo>org.apache.commons.logging</avoidCallsTo>
 							<avoidCallsTo>org.apache.logging.log4j</avoidCallsTo>
-
 						</avoidCallsTo>
 						<outputFormats>
 							<param>HTML</param>
@@ -352,8 +358,8 @@ since javax.xml.bind has been removed from the JDK -->
 							</rule>
 						</rules>
 						<excludes>
-							<exclude>**/Main/**</exclude>
-							<exclude>**/Model/**</exclude>
+							<exclude>**/main/**</exclude>
+							<exclude>**/model/**</exclude>
 							<exclude>**/Hibernate*</exclude>
 
 						</excludes>
@@ -384,7 +390,7 @@ since javax.xml.bind has been removed from the JDK -->
 											<limit>
 												<counter>LINE</counter>
 												<value>COVEREDRATIO</value>
-												<minimum>0.90</minimum>
+												<minimum>0.95</minimum>
 											</limit>
 										</limits>
 									</rule>
