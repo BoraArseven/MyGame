@@ -777,4 +777,81 @@ public class GameMapDAOIT {
 		}
 	}
 
+	@Test
+	void testAddPlayerToMap_TransactionActive() {
+		// Spy on the real EntityManagerFactory and EntityManager
+		EntityManagerFactory spyEmf = Mockito.spy(emf);
+		EntityManager spyEm = Mockito.spy(spyEmf.createEntityManager());
+		EntityTransaction spyTransaction = Mockito.spy(spyEm.getTransaction());
+
+		// Set up the spy to use the real transaction
+		Mockito.when(spyEmf.createEntityManager()).thenReturn(spyEm);
+		Mockito.when(spyEm.getTransaction()).thenReturn(spyTransaction);
+
+		// Simulate finding a GameMap but throwing a PersistenceException during persist
+		GameMap gameMap = new GameMap();
+		Mockito.when(spyEm.find(GameMap.class, 1L)).thenReturn(gameMap);
+		Mockito.doThrow(new PersistenceException("Simulated Persistence Exception")).when(spyEm)
+				.persist(Mockito.any(Player.class));
+
+		// Ensure that the transaction is active
+		Mockito.when(spyTransaction.isActive()).thenReturn(true);
+
+		// Use the spied EntityManagerFactory in the DAO
+		GameMapDAO gameMapDAO = new GameMapDAO(spyEmf);
+
+		// Verify that the addPlayerToMap method throws a PersistenceException
+		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
+			gameMapDAO.addPlayerToMap(1L, new Player());
+		});
+
+		// Assert that the transaction was rolled back
+		Mockito.verify(spyTransaction, Mockito.times(1)).rollback();
+
+		// Assert that the exception message contains the expected text
+		assertEquals("Simulated Persistence Exception", thrownException.getMessage());
+
+		// Verify that the EntityManager is closed after the operation
+		Mockito.verify(spyEm).close();
+	}
+
+	@Test
+	void testAddPlayerToMap_TransactionNotActive() {
+		// Spy on the real EntityManagerFactory and EntityManager
+		EntityManagerFactory spyEmf = Mockito.spy(emf);
+		EntityManager spyEm = Mockito.spy(spyEmf.createEntityManager());
+		EntityTransaction spyTransaction = Mockito.spy(spyEm.getTransaction());
+
+		// Set up the spy to use the real transaction
+		Mockito.when(spyEmf.createEntityManager()).thenReturn(spyEm);
+		Mockito.when(spyEm.getTransaction()).thenReturn(spyTransaction);
+
+		// Simulate finding a GameMap but throwing a PersistenceException during persist
+		GameMap gameMap = new GameMap();
+		Mockito.when(spyEm.find(GameMap.class, 1L)).thenReturn(gameMap);
+		Mockito.doThrow(new PersistenceException("Simulated Persistence Exception")).when(spyEm)
+				.persist(Mockito.any(Player.class));
+
+		// Ensure that the transaction is not active
+		Mockito.when(spyTransaction.isActive()).thenReturn(false);
+
+		// Use the spied EntityManagerFactory in the DAO
+		GameMapDAO gameMapDAO = new GameMapDAO(spyEmf);
+
+		// Verify that the addPlayerToMap method throws a PersistenceException
+		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
+			gameMapDAO.addPlayerToMap(1L, new Player());
+		});
+
+		// Assert that the transaction rollback was not called since the transaction is
+		// not active
+		Mockito.verify(spyTransaction, Mockito.never()).rollback();
+
+		// Assert that the exception message contains the expected text
+		assertEquals("Simulated Persistence Exception", thrownException.getMessage());
+
+		// Verify that the EntityManager is closed after the operation
+		Mockito.verify(spyEm).close();
+	}
+
 }

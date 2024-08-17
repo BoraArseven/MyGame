@@ -137,7 +137,11 @@ public class GameMapDAO implements IGameMapDAO {
 		EntityTransaction transaction = entityManager.getTransaction();
 
 		try {
-			transaction.begin();
+			// Check if the transaction is already active
+			if (!transaction.isActive()) {
+				transaction.begin();
+			}
+
 			GameMap gameMap = entityManager.find(GameMap.class, mapId);
 
 			if (gameMap == null) {
