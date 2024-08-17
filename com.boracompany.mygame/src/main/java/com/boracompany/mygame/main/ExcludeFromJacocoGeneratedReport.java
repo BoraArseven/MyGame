@@ -1,4 +1,4 @@
-package com.boracompany.mygame.Main;
+package com.boracompany.mygame.main;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

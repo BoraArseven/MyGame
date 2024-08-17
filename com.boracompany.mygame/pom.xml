@@ -353,7 +353,7 @@ since javax.xml.bind has been removed from the JDK -->
 						<excludes>
 							<exclude>**/main/**</exclude>
 							<exclude>**/model/**</exclude>
-							<exclude>**/hibernate*</exclude>
+							<exclude>**/Hibernate*</exclude>
 
 						</excludes>
 					</configuration>

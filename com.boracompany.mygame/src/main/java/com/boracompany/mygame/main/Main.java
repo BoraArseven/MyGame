@@ -1,4 +1,4 @@
-package com.boracompany.mygame.Main;
+package com.boracompany.mygame.main;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
