@@ -11,6 +11,7 @@ import java.util.Map;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceUnitInfo;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
@@ -89,23 +90,19 @@ public class HibernateUtil {
 		}
 	}
 
-	// parameteried queries is not supported when creating databases
 	private static void createDatabase(Connection conn, String databaseName) throws SQLException {
-		// Basic input validation to ensure that the database name contains only allowed
-		// characters
+		// Validate the database name to ensure it only contains valid characters
 		if (!isValidDatabaseName(databaseName)) {
 			throw new IllegalArgumentException("Invalid database name: " + databaseName);
 		}
 
 		// Safely construct and execute the CREATE DATABASE statement
 		try (Statement stmt = conn.createStatement()) {
-			stmt.execute("CREATE DATABASE " + databaseName);
+			stmt.execute("CREATE DATABASE `" + databaseName + "`");
 		}
 	}
 
-	// A helper method to validate the database name
 	private static boolean isValidDatabaseName(String databaseName) {
-		// Allow only alphanumeric characters and underscores
-		return databaseName != null && databaseName.matches("[a-zA-Z0-9_]+");
+		return databaseName != null && databaseName.matches("^[a-zA-Z0-9_]{1,64}$");
 	}
 }
