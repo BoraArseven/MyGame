@@ -37,13 +37,7 @@
 			<artifactId>HikariCP</artifactId>
 			<version>5.0.1</version> <!-- Use the latest stable version -->
 		</dependency>
-		<!--
-		<dependency>
-			<groupId>org.mongodb</groupId>
-			<artifactId>mongo-java-driver</artifactId>
-			<version>${mongo.driver.version}</version>
-		</dependency>
-		-->
+
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
