@@ -733,4 +733,44 @@ public class GameMapDAOIT {
 		Mockito.verify(emSpy).close();
 	}
 
+	@Test
+	void testRemovePlayerFromMap_GameMapOrPlayerNotInGameMap() {
+		// Arrange
+		EntityManager em = emf.createEntityManager();
+		EntityTransaction transaction = em.getTransaction();
+
+		try {
+			// Begin transaction and save the GameMap without adding any players
+			transaction.begin();
+			GameMap gameMap = new GameMap();
+			gameMap.setName("Test GameMap");
+			em.persist(gameMap);
+			transaction.commit();
+
+			// Begin new transaction and save the Player without assigning it to the GameMap
+			transaction.begin();
+			Player player = new Player();
+			player.setName("Test Player");
+			em.persist(player);
+			transaction.commit();
+
+			// Detach both entities so we don't have automatic synchronization
+			em.detach(gameMap);
+			em.detach(player);
+
+
+			GameMapDAO gameMapDAO = new GameMapDAO(emf);
+
+			// Act & Assert: Try to remove the player that is not part of the game map
+			assertThrows(RuntimeException.class, () -> {
+				gameMapDAO.removePlayerFromMap(gameMap.getId(), player);
+			});
+
+		} finally {
+			if (em.isOpen()) {
+				em.close(); // Ensure the EntityManager is closed after the test
+			}
+		}
+	}
+
 }
