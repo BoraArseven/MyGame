@@ -1,10 +1,10 @@
-package com.boracompany.mygame.ORM;
-
-import com.boracompany.mygame.Model.GameMap;
-import com.boracompany.mygame.Model.Player;
+package com.boracompany.mygame.orm;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.boracompany.mygame.model.GameMap;
+import com.boracompany.mygame.model.Player;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;

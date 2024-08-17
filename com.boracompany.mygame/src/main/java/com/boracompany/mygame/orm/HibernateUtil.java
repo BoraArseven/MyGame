@@ -1,4 +1,4 @@
-package com.boracompany.mygame.ORM;
+package com.boracompany.mygame.orm;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -12,8 +12,8 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
-import com.boracompany.mygame.Model.GameMap;
-import com.boracompany.mygame.Model.Player;
+import com.boracompany.mygame.model.GameMap;
+import com.boracompany.mygame.model.Player;
 public class HibernateUtil {
 
     private static EntityManagerFactory entityManagerFactory;

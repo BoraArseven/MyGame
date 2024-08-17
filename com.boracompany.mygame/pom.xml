@@ -287,9 +287,9 @@ since javax.xml.bind has been removed from the JDK -->
 							Exclude IT folder -->
 							<param>com.boracompany.mygame.Main.*</param> <!--
 							Exclude Main folder -->
-							<param>com.boracompany.mygame.ORM.*</param><!--
+							<param>com.boracompany.mygame.orm.*</param><!--
 							Exclude ORM folder, since they are only tested in IT -->
-							<param>com.boracompany.mygame.Model.*</param>
+							<param>com.boracompany.mygame.model.*</param>
 						</excludedClasses>
 						<mutators>
 							<mutator>ALL</mutator>
@@ -351,9 +351,9 @@ since javax.xml.bind has been removed from the JDK -->
 							</rule>
 						</rules>
 						<excludes>
-							<exclude>**/Main/**</exclude>
-							<exclude>**/Model/**</exclude>
-							<exclude>**/Hibernate*</exclude>
+							<exclude>**/main/**</exclude>
+							<exclude>**/model/**</exclude>
+							<exclude>**/hibernate*</exclude>
 
 						</excludes>
 					</configuration>

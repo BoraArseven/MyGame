@@ -22,8 +22,10 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.boracompany.mygame.Model.Player;
-import com.boracompany.mygame.Model.PlayerBuilder;
+import com.boracompany.mygame.model.Player;
+import com.boracompany.mygame.model.PlayerBuilder;
+import com.boracompany.mygame.orm.HibernateUtil;
+import com.boracompany.mygame.orm.PlayerDAOIMPL;
 
 @Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -735,8 +737,7 @@ public class PlayerDAOImpIT {
 		Player player = new Player();
 		player.setId(1L); // Use an arbitrary ID
 
-		// Act & Assert: Expect a RuntimeException when attempting to delete the player
-		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+		assertThrows(RuntimeException.class, () -> {
 			dao.deletePlayer(player);
 		});
 
@@ -775,8 +776,7 @@ public class PlayerDAOImpIT {
 		Player player = new Player();
 		player.setId(1L); // Use an arbitrary ID
 
-		// Act & Assert: Expect a RuntimeException when attempting to delete the player
-		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+		assertThrows(RuntimeException.class, () -> {
 			dao.deletePlayer(player);
 		});
 
@@ -818,8 +818,7 @@ public class PlayerDAOImpIT {
 		Player player = new Player();
 		player.setId(1L); // Use an arbitrary ID
 
-		// Act & Assert: Expect a RuntimeException when attempting to delete the player
-		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+		assertThrows(RuntimeException.class, () -> {
 			dao.deletePlayer(player);
 		});
 

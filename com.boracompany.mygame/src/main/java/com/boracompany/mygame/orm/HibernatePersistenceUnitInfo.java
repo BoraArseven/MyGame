@@ -1,4 +1,4 @@
-package com.boracompany.mygame.ORM;
+package com.boracompany.mygame.orm;
 
 import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;

@@ -1,8 +1,8 @@
-package com.boracompany.mygame.ORM;
+package com.boracompany.mygame.orm;
 
 import java.util.List;
 
-import com.boracompany.mygame.Model.Player;
+import com.boracompany.mygame.model.Player;
 
 public interface PlayerDAO {
 	   public List<Player> getAllPlayers();

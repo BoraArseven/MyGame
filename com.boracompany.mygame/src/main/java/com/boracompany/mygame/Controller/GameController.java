@@ -1,11 +1,10 @@
 package com.boracompany.mygame.Controller;
 
-import com.boracompany.mygame.Model.GameMap;
-import com.boracompany.mygame.Model.Player;
-import com.boracompany.mygame.Model.PlayerBuilder;
-import com.boracompany.mygame.ORM.PlayerDAOIMPL;
-import com.boracompany.mygame.ORM.GameMapDAO;
-
+import com.boracompany.mygame.model.GameMap;
+import com.boracompany.mygame.model.Player;
+import com.boracompany.mygame.model.PlayerBuilder;
+import com.boracompany.mygame.orm.GameMapDAO;
+import com.boracompany.mygame.orm.PlayerDAOIMPL;
 
 import org.apache.logging.log4j.Logger;
 

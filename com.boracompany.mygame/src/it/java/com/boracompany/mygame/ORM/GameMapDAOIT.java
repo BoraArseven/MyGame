@@ -21,9 +21,11 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.boracompany.mygame.Model.GameMap;
-import com.boracompany.mygame.Model.Player;
-import com.boracompany.mygame.Model.PlayerBuilder;
+import com.boracompany.mygame.model.GameMap;
+import com.boracompany.mygame.model.Player;
+import com.boracompany.mygame.model.PlayerBuilder;
+import com.boracompany.mygame.orm.GameMapDAO;
+import com.boracompany.mygame.orm.HibernateUtil;
 
 @Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

@@ -1,9 +1,9 @@
-package com.boracompany.mygame.ORM;
-
-import com.boracompany.mygame.Model.GameMap;
-import com.boracompany.mygame.Model.Player;
+package com.boracompany.mygame.orm;
 
 import java.util.List;
+
+import com.boracompany.mygame.model.GameMap;
+import com.boracompany.mygame.model.Player;
 
 public interface IGameMapDAO {
 

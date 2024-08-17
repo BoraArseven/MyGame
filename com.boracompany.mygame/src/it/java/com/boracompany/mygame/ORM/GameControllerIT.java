@@ -23,9 +23,12 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.boracompany.mygame.Controller.GameController;
-import com.boracompany.mygame.Model.GameMap;
-import com.boracompany.mygame.Model.Player;
-import com.boracompany.mygame.Model.PlayerBuilder;
+import com.boracompany.mygame.model.GameMap;
+import com.boracompany.mygame.model.Player;
+import com.boracompany.mygame.model.PlayerBuilder;
+import com.boracompany.mygame.orm.GameMapDAO;
+import com.boracompany.mygame.orm.HibernateUtil;
+import com.boracompany.mygame.orm.PlayerDAOIMPL;
 
 @Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

@@ -1,4 +1,4 @@
-package com.boracompany.mygame.Model;
+package com.boracompany.mygame.model;
 
 import javax.persistence.*;
 
