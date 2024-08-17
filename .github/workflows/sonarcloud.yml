@@ -36,5 +36,125 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
+          xvfb-run mvn -Pjacoco -B -e verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+          -Dsonar.projectKey=BoraArseven_MyGame \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+          -Dsonar.coverage.exclusions=**/model/**,**/main/**,**/Hibernate**
+Explanation:
+run: block: I used a pipe (|) to start a multi-line string for the run command. This allows each Maven option to be placed on a new line for readability.
+Escaping special characters: In YAML, commas and other special characters can be misinterpreted. By placing everything inside a multi-line string, these issues are avoided.
+This should resolve your syntax error while preserving the correct configuration for the Maven and SonarCloud analysis.
+
+
+
+
+
+You said:
+Error:  Failed to execute goal org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar (default-cli) on project mygame: Could not find a default branch for project with key 'com.boracompany:mygame'. Make sure project exists. -> [Help 1],
+"name: SonarCloud
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  build:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'zulu' # Alternative distribution options are available.
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Build and analyze
+        working-directory: com.boracompany.mygame
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
           xvfb-run mvn -Pjacoco -B -e verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar Dsonar.projectKey=BoraArseven_MyGame -Dsonar.host.url=https://sonarcloud.io -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml 
 
+"
+ChatGPT said:
+ChatGPT
+The error message suggests that SonarCloud could not find a default branch for the project with key 'com.boracompany:mygame'. This might happen due to several reasons, such as the project not being properly set up on SonarCloud, or the branch name not matching the default branch on SonarCloud.
+
+Potential Fixes:
+Ensure the SonarCloud project exists:
+
+Make sure that the project with the key com.boracompany:mygame is set up in SonarCloud. The key should be exactly as configured in your repository and SonarCloud.
+Ensure that the projectKey in your configuration matches the one defined in SonarCloud.
+Default Branch Configuration:
+
+Ensure that the branch you're pushing to (in this case, main) is the default branch on SonarCloud.
+If main is not the default branch, either change your GitHub Action to work on the default branch of SonarCloud or configure SonarCloud to use main as the default branch.
+Correct the Project Key:
+
+Based on the provided YAML snippet, the project key appears as BoraArseven_MyGame in your run step but is referenced as com.boracompany:mygame in the error. Ensure that the project key in the configuration matches exactly what SonarCloud expects.
+Update the project key to match SonarCloud's configuration.
+Command Formatting Issue:
+
+There is a formatting issue in the Maven run command. The -Dsonar.projectKey=BoraArseven_MyGame parameter should be preceded by a hyphen (-), and you missed the - at the beginning of Dsonar.projectKey.
+Suggested Workflow After Fixes:
+yaml
+Copy code
+name: SonarCloud
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  build:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'zulu' # Alternative distribution options are available.
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Build and analyze
+        working-directory: com.boracompany.mygame
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          xvfb-run mvn -Pjacoco -B -e verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+          -Dsonar.projectKey=com.boracompany:mygame \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
