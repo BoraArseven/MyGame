@@ -168,11 +168,10 @@ public class GameMapDAOIT {
 		em.refresh(updatedMap); // Ensure the latest data is loaded
 		var players = updatedMap.getPlayers();
 		for (Player selectedplayer : players) {
-			   // Corrected: Use %s in printf instead of {}
-		    System.out.printf("player: %s/n", selectedplayer.toString());
+			System.out.printf("player: %s/n", selectedplayer.toString());
 
-		    // Corrected: Use {} with LOGGER.debug and pass the argument separately
-		    LOGGER.debug("player: {}", selectedplayer.toString());
+			// Corrected: Use {} with LOGGER.debug and pass the argument separately
+			LOGGER.debug("player: {}", selectedplayer.toString());
 		}
 		assertEquals(1, updatedMap.getPlayers().size());
 		assertEquals("TestAddPlayer", updatedMap.getPlayers().get(0).getName());
@@ -226,8 +225,9 @@ public class GameMapDAOIT {
 		GameMapDAO spyGameMapDAO = new GameMapDAO(emfSpy);
 		Mockito.doThrow(new PersistenceException("Simulated Exception")).when(emfSpy).createEntityManager();
 
+		Long gameMapID = gameMap.getId();
 		assertThrows(PersistenceException.class, () -> {
-			Long gameMapID = gameMap.getId();
+
 			spyGameMapDAO.addPlayerToMap(gameMapID, player);
 		});
 
@@ -251,9 +251,9 @@ public class GameMapDAOIT {
 		EntityManagerFactory emfSpy = Mockito.spy(emf);
 		GameMapDAO spyGameMapDAO = new GameMapDAO(emfSpy);
 		Mockito.doThrow(new PersistenceException("Simulated Exception")).when(emfSpy).createEntityManager();
-
+		Long gameMapId = gameMap.getId();
 		assertThrows(PersistenceException.class, () -> {
-			Long gameMapId = gameMap.getId();
+
 			spyGameMapDAO.removePlayerFromMap(gameMapId, player);
 		});
 
@@ -513,14 +513,9 @@ public class GameMapDAOIT {
 		GameMap gameMap = new GameMap();
 		gameMap.setId(1L);
 		Mockito.when(spyEm.find(GameMap.class, 1L)).thenReturn(gameMap);
-
-		// Verify that the addPlayerToMap method throws a PersistenceException due to
-		// the
-		// simulated
-		// PersistenceException
+		
+		Player player = new Player();
 		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
-			
-			Player player = new Player();
 			gameMapDAOwithSpiedEmf.addPlayerToMap(1L, player);
 		});
 
@@ -589,7 +584,7 @@ public class GameMapDAOIT {
 			transaction = em.getTransaction();
 			Player player = new Player();
 			assertThrows(PersistenceException.class, () -> {
-				
+
 				testGameMapDAO.removePlayerFromMap(gameId, player);
 			});
 
@@ -622,7 +617,7 @@ public class GameMapDAOIT {
 		Mockito.doReturn(null).when(emSpy).find(GameMap.class, 1L);
 		Player player = new Player();
 		assertThrows(PersistenceException.class, () -> {
-			
+
 			gameMapDAO.removePlayerFromMap(1L, player);
 		});
 
@@ -661,7 +656,7 @@ public class GameMapDAOIT {
 
 		Long id = gameMap.getId();
 		assertThrows(PersistenceException.class, () -> {
-			
+
 			gameMapDAOWithSpiedEmf.removePlayerFromMap(id, new Player());
 		});
 
@@ -740,7 +735,7 @@ public class GameMapDAOIT {
 
 		Player player = new Player();
 		assertThrows(PersistenceException.class, () -> {
-			
+
 			gameMapDAOWithSpiedEmf.removePlayerFromMap(1L, player);
 		});
 
@@ -780,7 +775,7 @@ public class GameMapDAOIT {
 			Long id = gameMap.getId();
 			// Try to remove the player that is not part of the game map
 			assertThrows(PersistenceException.class, () -> {
-				
+
 				testGameMapDAO.removePlayerFromMap(id, player);
 			});
 
@@ -816,7 +811,7 @@ public class GameMapDAOIT {
 		Player player = new Player();
 		// Verify that the addPlayerToMap method throws a PersistenceException
 		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
-			
+
 			gameMapDAOWithSpiedEmf.addPlayerToMap(1L, player);
 		});
 
@@ -852,11 +847,11 @@ public class GameMapDAOIT {
 
 		// Use the spied EntityManagerFactory in the DAO
 		GameMapDAO gameMapDAOWithSpiedEmf = new GameMapDAO(spyEmf);
-		
+
 		Player player = new Player();
 		// Verify that the addPlayerToMap method throws a PersistenceException
 		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
-			
+
 			gameMapDAOWithSpiedEmf.addPlayerToMap(1L, player);
 		});
 

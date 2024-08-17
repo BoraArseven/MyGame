@@ -35,5 +35,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: xvfb-run mvn -Pjacoco -B -e verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=BoraArseven_MyGame -Dsonar.host.url=https://sonarcloud.io -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
- "-Dsonar.coverage.exclusions=**/model/**,**/main/**,**/Hibernate**"
+        run: |
+          xvfb-run mvn -Pjacoco -B -e verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+          -Dsonar.projectKey=BoraArseven_MyGame \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+          -Dsonar.coverage.exclusions=**/model/**,**/main/**,**/Hibernate**
