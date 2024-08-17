@@ -224,12 +224,13 @@ class GameControllerIT {
 		Player player = new PlayerBuilder().withName("TestPlayer").build();
 		playerDAO.updatePlayer(player); // Persist the player separately, not in the game map
 
-		// Act & Assert: Try to remove the player from the map where the player is not
-		// present
-		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
-			gameMapDAO.removePlayerFromMap(gameMap.getId(), player);
-		});
+		// Arrange
+		Long gameMapId = gameMap.getId();
 
+		// Act & Assert: Try to remove a null player from the map
+		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
+		    gameMapDAO.removePlayerFromMap(gameMapId, null);
+		});
 		// Assert: Verify that the exception message is as expected
 		assertEquals("Player is null or has a null ID.", thrown.getMessage());
 	}
@@ -267,10 +268,15 @@ class GameControllerIT {
 		// Create a Player object with a valid ID but do not persist it
 		Player player = new PlayerBuilder().withName("TestPlayer").build();
 		player.setId(999L);
-		// Act & Assert: Try to remove a player with a non-existent ID from the map
+	
+		// Arrange
+		Long gameMapId = gameMap.getId();
+
+	
 		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
-			gameMapDAO.removePlayerFromMap(gameMap.getId(), player);
+		    gameMapDAO.removePlayerFromMap(gameMapId, player);
 		});
+
 
 		// Assert: Verify that the exception message is as expected
 		assertEquals("Expected GameMap not found or Player not in this GameMap.", thrown.getMessage());
