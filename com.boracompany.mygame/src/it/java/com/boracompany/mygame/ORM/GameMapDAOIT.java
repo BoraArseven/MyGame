@@ -32,8 +32,8 @@ public class GameMapDAOIT {
 	private static final Logger LOGGER = LogManager.getLogger(GameMapDAOIT.class);
 
 	@Container
-	public static PostgreSQLContainer<?> postgreSQLContainer = extracted()
-			.withDatabaseName("test").withUsername("test").withPassword("test");
+	public static PostgreSQLContainer<?> postgreSQLContainer = extracted().withDatabaseName("test").withUsername("test")
+			.withPassword("test");
 
 	private static PostgreSQLContainer<?> extracted() {
 		return new PostgreSQLContainer<>("postgres:13.3");
@@ -96,8 +96,6 @@ public class GameMapDAOIT {
 		assertEquals("Test Map", retrievedMap.getName());
 	}
 
-	
-	
 	@Test
 	void testFindAll() {
 		GameMap gameMap1 = new GameMap();
@@ -734,6 +732,45 @@ public class GameMapDAOIT {
 		// Verify that the EntityManager is closed after the operation
 		Mockito.verify(emSpy).close();
 	}
-	
+
+	@Test
+	void testRemovePlayerFromMap_GameMapOrPlayerNotInGameMap() {
+		// Arrange
+		EntityManager em = emf.createEntityManager();
+		EntityTransaction transaction = em.getTransaction();
+
+		try {
+			// Begin transaction and save the GameMap without adding any players
+			transaction.begin();
+			GameMap gameMap = new GameMap();
+			gameMap.setName("Test GameMap");
+			em.persist(gameMap);
+			transaction.commit();
+
+			// Begin new transaction and save the Player without assigning it to the GameMap
+			transaction.begin();
+			Player player = new Player();
+			player.setName("Test Player");
+			em.persist(player);
+			transaction.commit();
+
+			// Detach both entities so we don't have automatic synchronization
+			em.detach(gameMap);
+			em.detach(player);
+
+
+			GameMapDAO gameMapDAO = new GameMapDAO(emf);
+
+			// Act & Assert: Try to remove the player that is not part of the game map
+			assertThrows(RuntimeException.class, () -> {
+				gameMapDAO.removePlayerFromMap(gameMap.getId(), player);
+			});
+
+		} finally {
+			if (em.isOpen()) {
+				em.close(); // Ensure the EntityManager is closed after the test
+			}
+		}
+	}
 
 }
