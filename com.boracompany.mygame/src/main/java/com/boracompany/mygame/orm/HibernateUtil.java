@@ -94,11 +94,12 @@ public class HibernateUtil {
 		// Validate the database name to ensure it only contains valid characters
 		if (!isValidDatabaseName(databaseName)) {
 			throw new IllegalArgumentException("Invalid database name: " + databaseName);
-		}
-
-		// Safely construct and execute the CREATE DATABASE statement
-		try (Statement stmt = conn.createStatement()) {
-			stmt.execute("CREATE DATABASE `" + databaseName + "`");
+		} else {
+			// Safely construct and execute the CREATE DATABASE statement
+			try (PreparedStatement stmt = conn.prepareStatement("CREATE DATABASE ?")) {
+				stmt.setString(1, databaseName);
+				stmt.execute();
+			}
 		}
 	}
 
