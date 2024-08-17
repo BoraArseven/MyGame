@@ -394,9 +394,7 @@ since javax.xml.bind has been removed from the JDK -->
 					<artifactId>maven-site-plugin</artifactId>
 					<version>3.9.1</version>
 				</plugin>
-
 			</plugins>
-
 		</pluginManagement>
 	</build>
 	<profiles>
@@ -412,7 +410,6 @@ since javax.xml.bind has been removed from the JDK -->
 				</plugins>
 			</build>
 		</profile>
-
 		<profile>
 			<id>coveralls</id>
 			<build>
