@@ -259,7 +259,7 @@ public class PlayerDAOImpIT {
 	}
 
 	@Test
-	 void testUpdatePlayerWhenTransactionIsNotActive() {
+	void testUpdatePlayerWhenTransactionIsNotActive() {
 		// Spy the real EntityManagerFactory
 		EntityManagerFactory emfSpy = Mockito.spy(emf);
 
@@ -300,7 +300,7 @@ public class PlayerDAOImpIT {
 	}
 
 	@Test
-	 void testDeletePlayerRollbackWhenRuntimeException() {
+	void testDeletePlayerRollbackWhenRuntimeException() {
 		// Use the custom TestPlayerDAOIMPL that throws the exception
 		EntityManager em = emf.createEntityManager();
 		TestPlayerDAOIMPL playerDAO = new TestPlayerDAOIMPL(emf);
@@ -319,7 +319,7 @@ public class PlayerDAOImpIT {
 	}
 
 	@Test
-	 void testDeletePlayer() {
+	void testDeletePlayer() {
 		EntityManager em = emf.createEntityManager();
 		em.getTransaction().begin();
 		Player player = new PlayerBuilder().withName("To Be Deleted").build();
@@ -332,7 +332,7 @@ public class PlayerDAOImpIT {
 	}
 
 	@Test
-	 void testDeletePlayerDoesNotRollbackWhenTransactionIsNull() {
+	void testDeletePlayerDoesNotRollbackWhenTransactionIsNull() {
 		// Create a spy of the real EntityManagerFactory
 		EntityManagerFactory spiedEmf = Mockito.spy(emf);
 
@@ -384,7 +384,7 @@ public class PlayerDAOImpIT {
 	}
 
 	@Test
-	 void testDeletePlayerTriggersRollbackOnRuntimeException() {
+	void testDeletePlayerTriggersRollbackOnRuntimeException() {
 		// Create a spy of the real EntityManagerFactory
 		EntityManagerFactory spiedEmf = Mockito.spy(emf);
 
@@ -430,7 +430,7 @@ public class PlayerDAOImpIT {
 	}
 
 	@Test
-	 void testDeletePlayerThrowsExceptionForNonExistingPlayer() {
+	void testDeletePlayerThrowsExceptionForNonExistingPlayer() {
 		// Create a spy of the real EntityManagerFactory
 		EntityManagerFactory spiedEmf = Mockito.spy(emf);
 
@@ -469,7 +469,7 @@ public class PlayerDAOImpIT {
 	}
 
 	@Test
-	 void testDeletePlayerThrowsExceptionWhenTransactionIsNull() {
+	void testDeletePlayerThrowsExceptionWhenTransactionIsNull() {
 		// Create a spy of the real EntityManagerFactory
 		EntityManagerFactory spiedEmf = Mockito.spy(emf);
 
@@ -508,7 +508,7 @@ public class PlayerDAOImpIT {
 	}
 
 	@Test
-	 void testDeletePlayerTriggersRollbackWhenTransactionIsActive() {
+	void testDeletePlayerTriggersRollbackWhenTransactionIsActive() {
 		// Create a spy of the real EntityManagerFactory
 		EntityManagerFactory spiedEmf = Mockito.spy(emf);
 
@@ -556,7 +556,7 @@ public class PlayerDAOImpIT {
 	}
 
 	@Test
-	 void testDeletePlayerTriggersRollbackOnTransactionFailure() {
+	void testDeletePlayerTriggersRollbackOnTransactionFailure() {
 		EntityManagerFactory spiedemf = Mockito.spy(emf);
 		// Given: Persist a player in the database
 		EntityManager em = emf.createEntityManager();
@@ -579,14 +579,17 @@ public class PlayerDAOImpIT {
 		// Mock the EntityManagerFactory to return the spied EntityManager
 		Mockito.doReturn(emSpy).when(spiedemf).createEntityManager();
 
+		Player player2 = new Player() {
+			@Override
+			public Long getId() {
+				throw new RuntimeException("Simulated failure during deletePlayer");
+			}
+		};
 		// When: Call the deletePlayer method and simulate an exception inside it
+
 		assertThrows(RuntimeException.class, () -> {
-			playerDAOForTest.deletePlayer(new Player() {
-				@Override
-				public Long getId() {
-					throw new RuntimeException("Simulated failure during deletePlayer");
-				}
-			});
+
+			playerDAOForTest.deletePlayer(player2);
 		});
 
 		// Then: Verify that rollback was called
@@ -601,7 +604,7 @@ public class PlayerDAOImpIT {
 	}
 
 	@Test
-	 void testDeletePlayerThrowsExceptionForNonExistentPlayer() {
+	void testDeletePlayerThrowsExceptionForNonExistentPlayer() {
 		// Given: A player that does not exist in the database
 		Player nonExistentPlayer = new Player();
 		nonExistentPlayer.setId(-999L); // Use an ID that is unlikely to exist
@@ -615,7 +618,7 @@ public class PlayerDAOImpIT {
 	}
 
 	@Test
-	 void testDeletePlayerTriggersRollbackWhenExceptionOccurs() {
+	void testDeletePlayerTriggersRollbackWhenExceptionOccurs() {
 		// Given: Persist a player in the database
 		EntityManager em = emf.createEntityManager();
 		em.getTransaction().begin();
@@ -667,7 +670,7 @@ public class PlayerDAOImpIT {
 	}
 
 	@Test
-	 void testDeletePlayerThrowsExceptionWhenPlayerNotFound() {
+	void testDeletePlayerThrowsExceptionWhenPlayerNotFound() {
 		// Mock the EntityManagerFactory
 		EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
 
@@ -713,7 +716,7 @@ public class PlayerDAOImpIT {
 	}
 
 	@Test
-	 void testDeletePlayerTransactionIsNullAndThrowsException() {
+	void testDeletePlayerTransactionIsNullAndThrowsException() {
 		// Mock the EntityManagerFactory
 		EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
 
@@ -749,7 +752,7 @@ public class PlayerDAOImpIT {
 	}
 
 	@Test
-	 void testDeletePlayerTransactionNotActiveAndThrowsException() {
+	void testDeletePlayerTransactionNotActiveAndThrowsException() {
 		// Mock the EntityManagerFactory
 		EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
 
@@ -788,7 +791,7 @@ public class PlayerDAOImpIT {
 	}
 
 	@Test
-	 void testDeletePlayerTransactionActiveAndThrowsException() {
+	void testDeletePlayerTransactionActiveAndThrowsException() {
 		// Mock the EntityManagerFactory
 		EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
 
@@ -829,9 +832,8 @@ public class PlayerDAOImpIT {
 		Mockito.verify(emMock).close();
 	}
 
-
 	@Test
-	 void testDeletePlayerTransactionCommitsSuccessfully() {
+	void testDeletePlayerTransactionCommitsSuccessfully() {
 		// Mock the EntityManagerFactory
 		EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
 
