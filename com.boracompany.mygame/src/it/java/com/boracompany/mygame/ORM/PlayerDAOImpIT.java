@@ -123,7 +123,7 @@ public class PlayerDAOImpIT {
 	@Test
 	void testUpdatePlayerWhenRollbackOnRuntimeException() {
 		// Use the custom TestPlayerDAOIMPL that throws the exception
-		TestPlayerDAOIMPL playerDAO = new TestPlayerDAOIMPL(emf);
+		TestPlayerDAOIMPL playerDAOTest = new TestPlayerDAOIMPL(emf);
 
 		// Create a player instance
 		Player player = new Player();
@@ -131,7 +131,7 @@ public class PlayerDAOImpIT {
 
 		// Act & Assert: Ensure that the exception is thrown and rollback happens
 		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-			playerDAO.updatePlayer(player);
+			playerDAOTest.updatePlayer(player);
 		});
 
 		// Check that the exception message is correct
@@ -303,7 +303,7 @@ public class PlayerDAOImpIT {
 	void testDeletePlayerRollbackWhenRuntimeException() {
 		// Use the custom TestPlayerDAOIMPL that throws the exception
 		EntityManager em = emf.createEntityManager();
-		TestPlayerDAOIMPL playerDAO = new TestPlayerDAOIMPL(emf);
+		TestPlayerDAOIMPL playerDAOTest = new TestPlayerDAOIMPL(emf);
 		// Create a player instance
 		Player player = new PlayerBuilder().withName("Should Rollback").build();
 		em.getTransaction().begin();
@@ -311,7 +311,7 @@ public class PlayerDAOImpIT {
 		em.getTransaction().commit();
 
 		assertThrows(RuntimeException.class, () -> {
-			playerDAO.deletePlayer(player);
+			playerDAOTest.deletePlayer(player);
 		});
 		Player managedPlayer = em.find(Player.class, player.getId());
 		assertNotNull(managedPlayer);
@@ -523,7 +523,7 @@ public class PlayerDAOImpIT {
 		Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
 
 		// Inject the spied EntityManagerFactory into the PlayerDAOIMPL
-		PlayerDAOIMPL playerDAO = new PlayerDAOIMPL(spiedEmf);
+		PlayerDAOIMPL playerDAOTest = new PlayerDAOIMPL(spiedEmf);
 
 		// Create and persist a Player instance using the actual database
 		Player player = new PlayerBuilder().withName("Test Player").build();
@@ -545,7 +545,7 @@ public class PlayerDAOImpIT {
 
 		// Act & Assert: Ensure that the exception is thrown and rollback happens
 		assertThrows(RuntimeException.class, () -> {
-			playerDAO.deletePlayer(player);
+			playerDAOTest.deletePlayer(player);
 		});
 
 		// Verify that rollback was called on the transaction

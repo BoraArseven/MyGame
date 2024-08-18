@@ -107,7 +107,7 @@ public class GameController {
 			defender.setHealth(0);
 			defender.setAlive(false);
 			logger.info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
-					defender.getName(), defender.Isalive());
+					defender.getName(), defender.isAlive());
 		}
 	}
 }

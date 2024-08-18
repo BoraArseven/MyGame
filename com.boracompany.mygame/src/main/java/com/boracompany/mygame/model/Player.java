@@ -65,7 +65,7 @@ public class Player {
         this.damage = damage;
     }
 
-    public boolean Isalive() {
+    public boolean isAlive() {
         return isalive;
     }
 

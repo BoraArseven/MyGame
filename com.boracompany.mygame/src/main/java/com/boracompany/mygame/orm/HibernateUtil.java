@@ -21,27 +21,27 @@ public class HibernateUtil {
 
 	private static EntityManagerFactory entityManagerFactory;
 
+	// Private constructor to prevent instantiation
+	private HibernateUtil() {
+	}
+
 	public static void initialize(String dbUrl, String dbUser, String dbPassword) {
 		Map<String, Object> properties = new HashMap<>();
 		if (dbUrl == null || dbUser == null || dbPassword == null) {
 			throw new RuntimeException("Database connection properties not set");
 		}
-
 		// Extract the database name from the URL
 		String cleanDbUrl = dbUrl.split("\\?")[0]; // Remove query parameters
 		String databaseName = cleanDbUrl.substring(cleanDbUrl.lastIndexOf('/') + 1);
 		String baseDbUrl = cleanDbUrl.substring(0, cleanDbUrl.lastIndexOf('/')) + "/postgres";
-
 		// Check and create database if it doesn't exist
 		createDatabaseIfNotExists(baseDbUrl, dbUser, dbPassword, databaseName);
-
 		properties.put(AvailableSettings.URL, dbUrl);
 		properties.put(AvailableSettings.USER, dbUser);
 		properties.put(AvailableSettings.PASS, dbPassword);
 		properties.put(AvailableSettings.DIALECT, "org.hibernate.dialect.PostgreSQLDialect");
 		properties.put(AvailableSettings.HBM2DDL_AUTO, "update");
 		properties.put(AvailableSettings.SHOW_SQL, "true");
-
 		// HikariCP settings
 		properties.put("hibernate.hikari.connectionTimeout", "20000");
 		properties.put("hibernate.hikari.minimumIdle", "10");
@@ -49,7 +49,6 @@ public class HibernateUtil {
 		properties.put("hibernate.hikari.idleTimeout", "300000");
 		properties.put("hibernate.hikari.maxLifetime", "1800000");
 		properties.put("hibernate.hikari.poolName", "MyHikariCP");
-
 		entityManagerFactory = new HibernatePersistenceProvider()
 				.createContainerEntityManagerFactory(createPersistenceUnitInfo(), properties);
 	}
@@ -59,7 +58,9 @@ public class HibernateUtil {
 	}
 
 	public static void close() {
-		entityManagerFactory.close();
+		if (entityManagerFactory != null) {
+			entityManagerFactory.close();
+		}
 	}
 
 	private static PersistenceUnitInfo createPersistenceUnitInfo() {
@@ -78,11 +79,8 @@ public class HibernateUtil {
 
 	private static boolean databaseExists(Connection conn, String databaseName) throws SQLException {
 		String query = "SELECT 1 FROM pg_database WHERE datname = ?";
-
 		try (PreparedStatement pstmt = conn.prepareStatement(query)) {
-			// Set the databaseName parameter
 			pstmt.setString(1, databaseName);
-
 			try (ResultSet rs = pstmt.executeQuery()) {
 				return rs.next();
 			}
@@ -93,15 +91,15 @@ public class HibernateUtil {
 		// Validate the database name to ensure it only contains valid characters
 		if (!isValidDatabaseName(databaseName)) {
 			throw new IllegalArgumentException("Invalid database name: " + databaseName);
-		} else {
-			// Safely construct and execute the CREATE DATABASE statement
-			try (PreparedStatement stmt = conn.prepareStatement("CREATE DATABASE ?")) {
-				stmt.setString(1, databaseName);
-				stmt.execute();
-			}
+		}
+		// Safely construct and execute the CREATE DATABASE statement
+		String sql = "CREATE DATABASE " + databaseName;
+		try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+			stmt.execute();
 		}
 	}
-// \\w means [a-zA-Z0-9_]
+
+	// \\w means [a-zA-Z0-9_]
 	private static boolean isValidDatabaseName(String databaseName) {
 		return databaseName != null && databaseName.matches("^\\w{1,64}$");
 	}
