@@ -18,11 +18,15 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 
@@ -44,7 +48,7 @@ class TestGameController {
 	private GameController gameControllerwithMocks;
 
 	@BeforeEach
-	void setup() throws Exception {
+	void setup() {
 		// Initialize the PlayerBuilder
 		builder = new PlayerBuilder();
 
@@ -208,37 +212,28 @@ class TestGameController {
 		assertEquals(false, defender.Isalive());
 	}
 
-	@Test
-	void AttackerDealsExactDamageToKillDefender() {
-		Player attacker = builder.resetBuilder().withDamage(50).withName("Attacker").withHealth(30).build();
-		Player defender = builder.resetBuilder().withDamage(10).withName("Defender").withHealth(50).build();
-
+	@ParameterizedTest
+	@MethodSource("provideAttackScenarios")
+	void attackerDealsDamage(Player attacker, Player defender, int expectedHealth, boolean expectedIsAlive) {
 		gameControllerwithMocks.attack(attacker, defender);
 
-		assertEquals(0, defender.getHealth());
-		assertEquals(false, defender.Isalive());
+		assertEquals(expectedHealth, defender.getHealth());
+		assertEquals(expectedIsAlive, defender.Isalive());
 	}
 
-	@Test
-	void AttackerDealsDamageToIncapacitateDefender() {
-		Player attacker = builder.resetBuilder().withDamage(60).withName("Attacker").withHealth(30).build();
-		Player defender = builder.resetBuilder().withDamage(10).withName("Defender").withHealth(50).build();
-
-		gameControllerwithMocks.attack(attacker, defender);
-
-		assertEquals(0, defender.getHealth());
-		assertEquals(false, defender.Isalive());
-	}
-
-	@Test
-	void AttackerDealsNonLethalDamageToDefender() {
-		Player attacker = builder.resetBuilder().withDamage(10).withName("Attacker").withHealth(30).build();
-		Player defender = builder.resetBuilder().withDamage(10).withName("Defender").withHealth(50).build();
-
-		gameControllerwithMocks.attack(attacker, defender);
-
-		assertEquals(40, defender.getHealth());
-		assertEquals(true, defender.Isalive());
+	private static Stream<Arguments> provideAttackScenarios() {
+		return Stream.of(
+				Arguments.of(new PlayerBuilder().withDamage(50).withName("Attacker").withHealth(30).build(),
+						new PlayerBuilder().resetBuilder().withDamage(10).withName("Defender").withHealth(50).build(),
+						0, false),
+				Arguments.of(
+						new PlayerBuilder().resetBuilder().withDamage(60).withName("Attacker").withHealth(30).build(),
+						new PlayerBuilder().resetBuilder().withDamage(10).withName("Defender").withHealth(50).build(),
+						0, false),
+				Arguments.of(
+						new PlayerBuilder().resetBuilder().withDamage(10).withName("Attacker").withHealth(30).build(),
+						new PlayerBuilder().resetBuilder().withDamage(10).withName("Defender").withHealth(50).build(),
+						40, true));
 	}
 
 	@Test
