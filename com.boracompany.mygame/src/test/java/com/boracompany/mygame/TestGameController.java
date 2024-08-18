@@ -382,7 +382,7 @@ class TestGameController {
 
 		// Verify that the correct logging occurred
 		verify(logger).info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
-				eq("Defender"), eq(false));
+				"Defender", false);
 
 	}
 
@@ -532,7 +532,7 @@ class TestGameController {
 
 		// Verify that the correct logging occurred
 		verify(logger).info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
-				eq("Defender"), eq(false));
+				"Defender", false);
 	}
 
 	@Test
@@ -595,7 +595,7 @@ class TestGameController {
 		verify(defenderSpy, times(0)).setAlive(false);
 
 		// Ensure correct logging for the attack with health remaining
-		verify(logger).info("Attack successful: Defender: {}'s new health: {}", eq("Defender"), eq(1f));
+		verify(logger).info("Attack successful: Defender: {}'s new health: {}", "Defender", 1f);
 	}
 
 	@Test
@@ -621,7 +621,7 @@ class TestGameController {
 
 		// Ensure correct logging for the attack resulting in death
 		verify(logger).info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
-				eq("Defender"), eq(false));
+				"Defender", false);
 	}
 
 	@Test
