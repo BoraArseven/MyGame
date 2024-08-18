@@ -137,7 +137,7 @@ class TestGameController {
 		gameControllerwithMocks.attack(attacker, defender);
 
 		assertEquals(0, defender.getHealth());
-		assertEquals(false, defender.Isalive());
+		assertEquals(false, defender.isAlive());
 	}
 
 	@Test
@@ -160,7 +160,7 @@ class TestGameController {
 		LOGGER.debug("Defender's health after second attack: {}", defender.getHealth());
 
 		assertEquals(30, defender.getHealth());
-		assertEquals(true, defender.Isalive());
+		assertEquals(true, defender.isAlive());
 	}
 
 	@Test
@@ -196,7 +196,7 @@ class TestGameController {
 		Player defender = builder.resetBuilder().withDamage(10).withName("Defender").withHealth(50).build();
 		gameControllerwithMocks.attack(attacker, defender);
 		assertEquals(0, defender.getHealth());
-		assertEquals(false, defender.Isalive());
+		assertEquals(false, defender.isAlive());
 	}
 
 	@ParameterizedTest
@@ -205,7 +205,7 @@ class TestGameController {
 		gameControllerwithMocks.attack(attacker, defender);
 
 		assertEquals(expectedHealth, defender.getHealth());
-		assertEquals(expectedIsAlive, defender.Isalive());
+		assertEquals(expectedIsAlive, defender.isAlive());
 	}
 
 	private static Stream<Arguments> provideAttackScenarios() {
@@ -243,7 +243,7 @@ class TestGameController {
 		gameControllerwithMocks.attack(attacker, defender);
 
 		assertEquals(0, defender.getHealth());
-		assertEquals(false, defender.Isalive()); // Ensure that defender is marked as dead.
+		assertEquals(false, defender.isAlive()); // Ensure that defender is marked as dead.
 		assertEquals("Defender", defender.getName()); // Check that name retrieval works after setting health to 0.
 	}
 
@@ -268,7 +268,7 @@ class TestGameController {
 		gameControllerwithMocks.attack(attacker, defender);
 
 		assertEquals(40, defender.getHealth()); // Health should decrease
-		assertTrue(defender.Isalive()); // Defender should still be alive
+		assertTrue(defender.isAlive()); // Defender should still be alive
 	}
 
 
@@ -329,7 +329,7 @@ class TestGameController {
 
 		// Verify that the public behavior of the GameController is correct
 		assertEquals(50, defender.getHealth());
-		assertTrue(defender.Isalive());
+		assertTrue(defender.isAlive());
 
 		// Verify that logging occurred with the correct messages
 		verify(logger).info(anyString(), eq("Attacker"), eq(100f), eq("Defender"), eq(150f));
@@ -378,7 +378,7 @@ class TestGameController {
 
 		// Verify the defender's health and alive status
 		assertEquals(0, defender.getHealth());
-		assertFalse(defender.Isalive());
+		assertFalse(defender.isAlive());
 
 		// Verify that the correct logging occurred
 		verify(logger).info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
@@ -405,7 +405,7 @@ class TestGameController {
 
 		assertEquals(0, defender.getHealth()); // Ensure defender's health is 0
 		verify(defender).setAlive(false); // Verify setAlive(false) is called
-		assertFalse(defender.Isalive()); // Ensure defender is not alive
+		assertFalse(defender.isAlive()); // Ensure defender is not alive
 	}
 
 	@Test
@@ -419,7 +419,7 @@ class TestGameController {
 
 		// Assert that the defender's health is exactly 0, not 1
 		assertEquals(0, defender.getHealth());
-		assertFalse(defender.Isalive()); // Ensure defender is dead
+		assertFalse(defender.isAlive()); // Ensure defender is dead
 	}
 
 	@Test
@@ -438,7 +438,7 @@ class TestGameController {
 		verify(defenderSpy).setAlive(false);
 
 		// Optionally, check the alive status after the attack
-		assertFalse(defenderSpy.Isalive());
+		assertFalse(defenderSpy.isAlive());
 
 	}
 
@@ -461,7 +461,7 @@ class TestGameController {
 		inOrder.verify(defenderSpy).setAlive(false);
 
 		// After that, isAlive() should be called
-		inOrder.verify(defenderSpy).Isalive();
+		inOrder.verify(defenderSpy).isAlive();
 
 		// Verify that the defender's health is correctly set to 0
 		assertEquals(0, defenderSpy.getHealth(), 0.0);
@@ -486,7 +486,7 @@ class TestGameController {
 		verify(defenderSpy, times(1)).setAlive(false);
 
 		// Verify that isAlive() was called exactly once
-		verify(defenderSpy, times(1)).Isalive();
+		verify(defenderSpy, times(1)).isAlive();
 	}
 
 	@Test
@@ -510,7 +510,7 @@ class TestGameController {
 		verify(defenderSpy, times(1)).setAlive(false);
 
 		// Verify that isAlive() was called exactly once
-		verify(defenderSpy, times(1)).Isalive();
+		verify(defenderSpy, times(1)).isAlive();
 
 		// Now perform an overkill attack to ensure health does not go negative
 		attacker.setDamage(100);
@@ -518,7 +518,7 @@ class TestGameController {
 
 		// Ensure health is still 0 and isAlive() is still false
 		assertEquals(0, defenderSpy.getHealth(), 0.0);
-		assertFalse(defenderSpy.Isalive());
+		assertFalse(defenderSpy.isAlive());
 	}
 
 	@Test
@@ -553,7 +553,7 @@ class TestGameController {
 		inOrder.verify(defenderSpy).setAlive(false);
 
 		// After that, isAlive() should be called
-		inOrder.verify(defenderSpy).Isalive();
+		inOrder.verify(defenderSpy).isAlive();
 
 		// Verify that the defender's health is correctly set to 0
 		assertEquals(0, defenderSpy.getHealth(), 0.0);
@@ -570,7 +570,7 @@ class TestGameController {
 
 		// Ensure defender's health is 0 and they are dead
 		assertEquals(0, defender.getHealth());
-		assertFalse(defender.Isalive());
+		assertFalse(defender.isAlive());
 	}
 
 	@Test
@@ -589,7 +589,7 @@ class TestGameController {
 		assertEquals(1, defenderSpy.getHealth(), 0.0);
 
 		// Ensure defender is still alive
-		assertTrue(defenderSpy.Isalive());
+		assertTrue(defenderSpy.isAlive());
 
 		// Verify that setAlive(false) was never called because defender is still alive
 		verify(defenderSpy, times(0)).setAlive(false);
@@ -614,7 +614,7 @@ class TestGameController {
 		assertEquals(0, defenderSpy.getHealth(), 0.0);
 
 		// Ensure defender is marked as dead
-		assertFalse(defenderSpy.Isalive());
+		assertFalse(defenderSpy.isAlive());
 
 		// Verify that setAlive(false) was called because defender is dead
 		verify(defenderSpy, times(1)).setAlive(false);
@@ -720,7 +720,7 @@ class TestGameController {
 
 		// Assert
 		assertEquals(0f, defender.getHealth());
-		assertFalse(defender.Isalive());
+		assertFalse(defender.isAlive());
 		verifyNoInteractions(playerDAOMock, gameMapDAOMock);
 	}
 

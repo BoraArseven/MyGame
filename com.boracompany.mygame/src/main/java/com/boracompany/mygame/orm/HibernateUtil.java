@@ -21,7 +21,35 @@ public class HibernateUtil {
 
 	private static EntityManagerFactory entityManagerFactory;
 
+	// Private constructor to prevent instantiation
+	private HibernateUtil() {
+	}
+
+	// Static inner class for lazy initialization and thread safety
+	private static class SingletonHelper {
+		private static final HibernateUtil INSTANCE = new HibernateUtil();
+	}
+
+	// Public method to provide access to the singleton instance
+	public static HibernateUtil getInstance() {
+		return SingletonHelper.INSTANCE;
+	}
+
+	//Double-checked locker pattern
+	// Static method to initialize the EntityManagerFactory
+	// We call whenever we want an emf, if there is no emf, it will create, otherwise does nothing, we simply call emf after the call of this method.
 	public static void initialize(String dbUrl, String dbUser, String dbPassword) {
+		if (entityManagerFactory == null) {
+			// synchronized ensures that only one thread can access that at the same time.
+			synchronized (HibernateUtil.class) {
+				if (entityManagerFactory == null) {
+					getInstance().initializeInternal(dbUrl, dbUser, dbPassword);
+				}
+			}
+		}
+	}
+
+	private void initializeInternal(String dbUrl, String dbUser, String dbPassword) {
 		Map<String, Object> properties = new HashMap<>();
 		if (dbUrl == null || dbUser == null || dbPassword == null) {
 			throw new RuntimeException("Database connection properties not set");
@@ -55,18 +83,28 @@ public class HibernateUtil {
 	}
 
 	public static EntityManagerFactory getEntityManagerFactory() {
+		if (entityManagerFactory == null) {
+			throw new IllegalStateException("HibernateUtil is not initialized.");
+		}
 		return entityManagerFactory;
 	}
 
 	public static void close() {
-		entityManagerFactory.close();
+		if (entityManagerFactory != null) {
+			synchronized (HibernateUtil.class) {
+				if (entityManagerFactory != null) {
+					entityManagerFactory.close();
+					entityManagerFactory = null;
+				}
+			}
+		}
 	}
 
-	private static PersistenceUnitInfo createPersistenceUnitInfo() {
+	private PersistenceUnitInfo createPersistenceUnitInfo() {
 		return new HibernatePersistenceUnitInfo("my-persistence-unit", Player.class, GameMap.class);
 	}
 
-	private static void createDatabaseIfNotExists(String baseDbUrl, String user, String password, String databaseName) {
+	private void createDatabaseIfNotExists(String baseDbUrl, String user, String password, String databaseName) {
 		try (Connection conn = DriverManager.getConnection(baseDbUrl, user, password)) {
 			if (!databaseExists(conn, databaseName)) {
 				createDatabase(conn, databaseName);
@@ -76,13 +114,10 @@ public class HibernateUtil {
 		}
 	}
 
-	private static boolean databaseExists(Connection conn, String databaseName) throws SQLException {
+	private boolean databaseExists(Connection conn, String databaseName) throws SQLException {
 		String query = "SELECT 1 FROM pg_database WHERE datname = ?";
-
 		try (PreparedStatement pstmt = conn.prepareStatement(query)) {
-			// Set the databaseName parameter
 			pstmt.setString(1, databaseName);
-
 			try (ResultSet rs = pstmt.executeQuery()) {
 				return rs.next();
 			}
