@@ -43,44 +43,46 @@ public class HibernateUtil {
 			// synchronized ensures that only one thread can access that at the same time.
 			synchronized (HibernateUtil.class) {
 				if (entityManagerFactory == null) {
-					getInstance().initializeInternal(dbUrl, dbUser, dbPassword);
+					getInstance();
+					HibernateUtil.initializeInternal(dbUrl, dbUser, dbPassword);
 				}
 			}
 		}
 	}
 
-	private void initializeInternal(String dbUrl, String dbUser, String dbPassword) {
-		Map<String, Object> properties = new HashMap<>();
-		if (dbUrl == null || dbUser == null || dbPassword == null) {
-			throw new RuntimeException("Database connection properties not set");
-		}
+	private static void initializeInternal(String dbUrl, String dbUser, String dbPassword) {
+	    Map<String, Object> properties = new HashMap<>();
+	    if (dbUrl == null || dbUser == null || dbPassword == null) {
+	        throw new IllegalArgumentException("Database connection properties must not be null");
+	    }
 
-		// Extract the database name from the URL
-		String cleanDbUrl = dbUrl.split("\\?")[0]; // Remove query parameters
-		String databaseName = cleanDbUrl.substring(cleanDbUrl.lastIndexOf('/') + 1);
-		String baseDbUrl = cleanDbUrl.substring(0, cleanDbUrl.lastIndexOf('/')) + "/postgres";
+	    // Extract the database name from the URL
+	    String cleanDbUrl = dbUrl.split("\\?")[0]; // Remove query parameters
+	    String databaseName = cleanDbUrl.substring(cleanDbUrl.lastIndexOf('/') + 1);
+	    String baseDbUrl = cleanDbUrl.substring(0, cleanDbUrl.lastIndexOf('/')) + "/postgres";
+	    
+	    // Check and create database if it doesn't exist
+	    createDatabaseIfNotExists(baseDbUrl, dbUser, dbPassword, databaseName);
 
-		// Check and create database if it doesn't exist
-		createDatabaseIfNotExists(baseDbUrl, dbUser, dbPassword, databaseName);
+	    properties.put(AvailableSettings.URL, dbUrl);
+	    properties.put(AvailableSettings.USER, dbUser);
+	    properties.put(AvailableSettings.PASS, dbPassword);
+	    properties.put(AvailableSettings.DIALECT, "org.hibernate.dialect.PostgreSQLDialect");
+	    properties.put(AvailableSettings.HBM2DDL_AUTO, "update");
+	    properties.put(AvailableSettings.SHOW_SQL, "true");
 
-		properties.put(AvailableSettings.URL, dbUrl);
-		properties.put(AvailableSettings.USER, dbUser);
-		properties.put(AvailableSettings.PASS, dbPassword);
-		properties.put(AvailableSettings.DIALECT, "org.hibernate.dialect.PostgreSQLDialect");
-		properties.put(AvailableSettings.HBM2DDL_AUTO, "update");
-		properties.put(AvailableSettings.SHOW_SQL, "true");
+	    // HikariCP settings
+	    properties.put("hibernate.hikari.connectionTimeout", "20000");
+	    properties.put("hibernate.hikari.minimumIdle", "10");
+	    properties.put("hibernate.hikari.maximumPoolSize", "20");
+	    properties.put("hibernate.hikari.idleTimeout", "300000");
+	    properties.put("hibernate.hikari.maxLifetime", "1800000");
+	    properties.put("hibernate.hikari.poolName", "MyHikariCP");
 
-		// HikariCP settings
-		properties.put("hibernate.hikari.connectionTimeout", "20000");
-		properties.put("hibernate.hikari.minimumIdle", "10");
-		properties.put("hibernate.hikari.maximumPoolSize", "20");
-		properties.put("hibernate.hikari.idleTimeout", "300000");
-		properties.put("hibernate.hikari.maxLifetime", "1800000");
-		properties.put("hibernate.hikari.poolName", "MyHikariCP");
-
-		entityManagerFactory = new HibernatePersistenceProvider()
-				.createContainerEntityManagerFactory(createPersistenceUnitInfo(), properties);
+	    entityManagerFactory = new HibernatePersistenceProvider()
+	            .createContainerEntityManagerFactory(createPersistenceUnitInfo(), properties);
 	}
+
 
 	public static EntityManagerFactory getEntityManagerFactory() {
 		if (entityManagerFactory == null) {
@@ -100,21 +102,21 @@ public class HibernateUtil {
 		}
 	}
 
-	private PersistenceUnitInfo createPersistenceUnitInfo() {
+	private static PersistenceUnitInfo createPersistenceUnitInfo() {
 		return new HibernatePersistenceUnitInfo("my-persistence-unit", Player.class, GameMap.class);
 	}
 
-	private void createDatabaseIfNotExists(String baseDbUrl, String user, String password, String databaseName) {
+	private static void createDatabaseIfNotExists(String baseDbUrl, String user, String password, String databaseName) {
 		try (Connection conn = DriverManager.getConnection(baseDbUrl, user, password)) {
 			if (!databaseExists(conn, databaseName)) {
 				createDatabase(conn, databaseName);
 			}
 		} catch (SQLException e) {
-			throw new RuntimeException("Failed to create database: " + databaseName, e);
+			throw new IllegalArgumentException("Failed to create database: " + databaseName, e);
 		}
 	}
 
-	private boolean databaseExists(Connection conn, String databaseName) throws SQLException {
+	private static boolean databaseExists(Connection conn, String databaseName) throws SQLException {
 		String query = "SELECT 1 FROM pg_database WHERE datname = ?";
 		try (PreparedStatement pstmt = conn.prepareStatement(query)) {
 			pstmt.setString(1, databaseName);
