@@ -35,7 +35,6 @@ public class HibernateUtil {
 			// synchronized ensures that only one thread can access that at the same time.
 			synchronized (HibernateUtil.class) {
 				if (entityManagerFactory == null) {
-					
 					HibernateUtil.initializeInternal(dbUrl, dbUser, dbPassword);
 				}
 			}
