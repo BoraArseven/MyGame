@@ -171,7 +171,7 @@ public class GameMapDAOIT {
 			System.out.printf("player: %s/n", selectedplayer.toString());
 
 			// Corrected: Use {} with LOGGER.debug and pass the argument separately
-			LOGGER.debug("player: {}", selectedplayer.toString());
+			LOGGER.debug("player: {}", selectedplayer);
 		}
 		assertEquals(1, updatedMap.getPlayers().size());
 		assertEquals("TestAddPlayer", updatedMap.getPlayers().get(0).getName());
@@ -513,7 +513,7 @@ public class GameMapDAOIT {
 		GameMap gameMap = new GameMap();
 		gameMap.setId(1L);
 		Mockito.when(spyEm.find(GameMap.class, 1L)).thenReturn(gameMap);
-		
+
 		Player player = new Player();
 		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
 			gameMapDAOwithSpiedEmf.addPlayerToMap(1L, player);
@@ -547,8 +547,10 @@ public class GameMapDAOIT {
 
 		// Verify that the addPlayerToMap method throws a PersistenceException due to
 		// GameMap not being found
+		Player player = new Player();
 		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
-			gameMapDAOWithSpiedEmf.addPlayerToMap(1L, new Player());
+
+			gameMapDAOWithSpiedEmf.addPlayerToMap(1L, player);
 		});
 
 		// Assert that the transaction was rolled back once
@@ -603,7 +605,7 @@ public class GameMapDAOIT {
 	void testRemovePlayerFromMap_GameMapNotFound() {
 		// Arrange
 		EntityManagerFactory emfSpy = Mockito.spy(emf);
-		GameMapDAO gameMapDAO = new GameMapDAO(emfSpy);
+		GameMapDAO gameMapDAOWithSpiedEmf = new GameMapDAO(emfSpy);
 
 		// Spy on the real EntityManager and Transaction
 		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
@@ -618,7 +620,7 @@ public class GameMapDAOIT {
 		Player player = new Player();
 		assertThrows(PersistenceException.class, () -> {
 
-			gameMapDAO.removePlayerFromMap(1L, player);
+			gameMapDAOWithSpiedEmf.removePlayerFromMap(1L, player);
 		});
 
 		// Verify that the transaction was rolled back
@@ -655,9 +657,9 @@ public class GameMapDAOIT {
 		Mockito.when(spyTransaction.isActive()).thenReturn(true);
 
 		Long id = gameMap.getId();
+		Player player = new Player();
 		assertThrows(PersistenceException.class, () -> {
-
-			gameMapDAOWithSpiedEmf.removePlayerFromMap(id, new Player());
+			gameMapDAOWithSpiedEmf.removePlayerFromMap(id, player);
 		});
 
 		// Verify that the transaction was rolled back

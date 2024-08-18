@@ -5,13 +5,12 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceUnitInfo;
 
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
@@ -102,8 +101,8 @@ public class HibernateUtil {
 			}
 		}
 	}
-
+// \\w means [a-zA-Z0-9_]
 	private static boolean isValidDatabaseName(String databaseName) {
-		return databaseName != null && databaseName.matches("^[a-zA-Z0-9_]{1,64}$");
+		return databaseName != null && databaseName.matches("^\\w{1,64}$");
 	}
 }
