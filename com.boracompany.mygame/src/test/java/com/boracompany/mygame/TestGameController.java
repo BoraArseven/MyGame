@@ -164,19 +164,6 @@ class TestGameController {
 	}
 
 	@Test
-	void DamageShouldNotNull() {
-		Player attacker = builder.resetBuilder().withDamage(-5).withName("Attacker").withHealth(30).build();
-		Player defender = builder.resetBuilder().withDamage(10).withName("Defender").withHealth(50).build();
-
-		LOGGER.debug("Attacker created with damage: {}", attacker.getDamage());
-
-		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-			gameControllerwithMocks.attack(attacker, defender);
-		});
-		assertEquals("Damage should be positive", exception.getMessage());
-	}
-
-	@Test
 	void DamageShouldBePositive() {
 		Player attacker = builder.resetBuilder().withDamage(-5).withName("Attacker").withHealth(30).build();
 		Player defender = builder.resetBuilder().withDamage(10).withName("Defender").withHealth(50).build();
@@ -284,15 +271,7 @@ class TestGameController {
 		assertTrue(defender.Isalive()); // Defender should still be alive
 	}
 
-	@Test
-	void testValidatePlayersWithNonNullValues() {
-		Player attacker = mock(Player.class);
-		Player defender = mock(Player.class);
 
-		when(attacker.getDamage()).thenReturn(10.0f);
-
-		gameControllerwithMocks.attack(attacker, defender);
-	}
 
 	@Test
 	void testValidatePlayersWithNullAttacker() {
@@ -314,13 +293,6 @@ class TestGameController {
 		assertTrue(exception.getMessage().contains("Attacker or defender is null"));
 	}
 
-	@Test
-	void testCalculateDamageWithPositiveValue() {
-		Player attacker = mock(Player.class);
-		when(attacker.getDamage()).thenReturn(10.0f);
-		// This should not throw an exception
-		gameControllerwithMocks.attack(attacker, mock(Player.class));
-	}
 
 	@Test
 	void testCalculateDamageWithZeroValue() {
@@ -409,8 +381,8 @@ class TestGameController {
 		assertFalse(defender.Isalive());
 
 		// Verify that the correct logging occurred
-		verify(logger).info(eq("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})"),
-				eq("Defender"), eq(false));
+		verify(logger).info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
+				"Defender", false);
 
 	}
 
@@ -559,8 +531,8 @@ class TestGameController {
 		controllerSpy.attack(attacker, defender);
 
 		// Verify that the correct logging occurred
-		verify(logger).info(eq("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})"),
-				eq("Defender"), eq(false));
+		verify(logger).info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
+				"Defender", false);
 	}
 
 	@Test
@@ -623,7 +595,7 @@ class TestGameController {
 		verify(defenderSpy, times(0)).setAlive(false);
 
 		// Ensure correct logging for the attack with health remaining
-		verify(logger).info(eq("Attack successful: Defender: {}'s new health: {}"), eq("Defender"), eq(1f));
+		verify(logger).info("Attack successful: Defender: {}'s new health: {}", "Defender", 1f);
 	}
 
 	@Test
@@ -648,12 +620,12 @@ class TestGameController {
 		verify(defenderSpy, times(1)).setAlive(false);
 
 		// Ensure correct logging for the attack resulting in death
-		verify(logger).info(eq("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})"),
-				eq("Defender"), eq(false));
+		verify(logger).info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
+				"Defender", false);
 	}
 
 	@Test
-	public void testCreatePlayer() {
+	void testCreatePlayer() {
 		// Arrange
 		String playerName = "TestPlayer";
 		float health = 100f;

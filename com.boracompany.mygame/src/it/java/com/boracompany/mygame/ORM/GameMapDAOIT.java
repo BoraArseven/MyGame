@@ -659,6 +659,7 @@ public class GameMapDAOIT {
 		Long id = gameMap.getId();
 		Player player = new Player();
 		assertThrows(PersistenceException.class, () -> {
+
 			gameMapDAOWithSpiedEmf.removePlayerFromMap(id, player);
 		});
 
@@ -705,9 +706,10 @@ public class GameMapDAOIT {
 		Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
 		Mockito.doReturn(transactionSpy).when(emSpy).getTransaction();
 		Mockito.when(transactionSpy.isActive()).thenReturn(true);
-
+		Long id = gameMap.getId();
 		assertThrows(PersistenceException.class, () -> {
-			gameMapDAOwithSpiedEmf.removePlayerFromMap(gameMap.getId(), player);
+			
+			gameMapDAOwithSpiedEmf.removePlayerFromMap(id, player);
 		});
 
 		// Verify that the transaction was rolled back
