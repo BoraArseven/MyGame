@@ -124,20 +124,20 @@ public class HibernateUtil {
 		}
 	}
 
-	private void createDatabase(Connection conn, String databaseName) throws SQLException {
+	private static void createDatabase(Connection conn, String databaseName) throws SQLException {
 		// Validate the database name to ensure it only contains valid characters
 		if (!isValidDatabaseName(databaseName)) {
 			throw new IllegalArgumentException("Invalid database name: " + databaseName);
-		}
-		// Safely construct and execute the CREATE DATABASE statement
-		String sql = "CREATE DATABASE " + databaseName;
-		try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-			stmt.execute();
+		} else {
+			// Safely construct and execute the CREATE DATABASE statement
+			try (PreparedStatement stmt = conn.prepareStatement("CREATE DATABASE ?")) {
+				stmt.setString(1, databaseName);
+				stmt.execute();
+			}
 		}
 	}
-
-	// \\w means [a-zA-Z0-9_]
-	private boolean isValidDatabaseName(String databaseName) {
+// \\w means [a-zA-Z0-9_]
+	private static boolean isValidDatabaseName(String databaseName) {
 		return databaseName != null && databaseName.matches("^\\w{1,64}$");
 	}
 }
