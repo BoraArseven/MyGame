@@ -19,9 +19,10 @@ public class CreatePlayerView extends JFrame {
 	private JTextField textField;
 	private JLabel lblDamage;
 	private JLabel lblHealth;
-	private JTextField textField_1;
+	private JTextField DamageText;
 	private JTextField textField_2;
 	private JButton btnNewButton;
+	private JLabel ErrorMessageLabel;
 
 	/**
 	 * Launch the application.
@@ -52,9 +53,9 @@ public class CreatePlayerView extends JFrame {
 		setContentPane(contentPane);
 		GridBagLayout gbl_contentPane = new GridBagLayout();
 		gbl_contentPane.columnWidths = new int[]{0, 0, 0};
-		gbl_contentPane.rowHeights = new int[]{0, 0, 0, 0, 0};
+		gbl_contentPane.rowHeights = new int[]{0, 0, 0, 0, 0, 0};
 		gbl_contentPane.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
-		gbl_contentPane.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_contentPane.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		contentPane.setLayout(gbl_contentPane);
 		
 		JLabel lblPlayername = new JLabel("Name:");
@@ -82,14 +83,14 @@ public class CreatePlayerView extends JFrame {
 		gbc_lblDamage.gridy = 1;
 		contentPane.add(lblDamage, gbc_lblDamage);
 		
-		textField_1 = new JTextField();
-		GridBagConstraints gbc_textField_1 = new GridBagConstraints();
-		gbc_textField_1.insets = new Insets(0, 0, 5, 0);
-		gbc_textField_1.fill = GridBagConstraints.HORIZONTAL;
-		gbc_textField_1.gridx = 1;
-		gbc_textField_1.gridy = 1;
-		contentPane.add(textField_1, gbc_textField_1);
-		textField_1.setColumns(10);
+		DamageText = new JTextField();
+		GridBagConstraints gbc_damageText = new GridBagConstraints();
+		gbc_damageText.insets = new Insets(0, 0, 5, 0);
+		gbc_damageText.fill = GridBagConstraints.HORIZONTAL;
+		gbc_damageText.gridx = 1;
+		gbc_damageText.gridy = 1;
+		contentPane.add(DamageText, gbc_damageText);
+		DamageText.setColumns(10);
 		
 		lblHealth = new JLabel("Health:");
 		GridBagConstraints gbc_lblHealth = new GridBagConstraints();
@@ -111,10 +112,18 @@ public class CreatePlayerView extends JFrame {
 		btnNewButton = new JButton("Create");
 		btnNewButton.setEnabled(false);
 		GridBagConstraints gbc_btnNewButton = new GridBagConstraints();
+		gbc_btnNewButton.insets = new Insets(0, 0, 5, 0);
 		gbc_btnNewButton.gridwidth = 2;
 		gbc_btnNewButton.gridx = 0;
 		gbc_btnNewButton.gridy = 3;
 		contentPane.add(btnNewButton, gbc_btnNewButton);
+		
+		ErrorMessageLabel = new JLabel("");
+		GridBagConstraints gbc_errorMessageLabel = new GridBagConstraints();
+		gbc_errorMessageLabel.gridwidth = 2;
+		gbc_errorMessageLabel.gridx = 0;
+		gbc_errorMessageLabel.gridy = 4;
+		contentPane.add(ErrorMessageLabel, gbc_errorMessageLabel);
 	}
 
 }

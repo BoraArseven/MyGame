@@ -2,6 +2,8 @@ package com.boracompany.mygame.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.assertj.swing.annotation.GUITest;
+import org.assertj.swing.core.matcher.JLabelMatcher;
 import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
@@ -23,6 +25,11 @@ public class CreatePlayerViewTest extends AssertJSwingJUnitTestCase {
 		window.show(); // shows the frame to test
 	}
 
+	@Test @GUITest
+	public void testControlsInitialStates() {
+	window.label(JLabelMatcher.withText("id"));
+	window.textBox("idTextBox").requireEnabled();
+	}
 	@Test
 	public void testInitialSetup() {
 
