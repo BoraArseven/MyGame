@@ -37,7 +37,7 @@ public class CreatePlayerView extends JFrame {
 					CreatePlayerView frame = new CreatePlayerView();
 					frame.setVisible(true);
 				} catch (Exception e) {
-					e.printStackTrace();
+					throw e;
 				}
 			}
 		});
