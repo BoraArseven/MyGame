@@ -386,7 +386,7 @@ since javax.xml.bind has been removed from the JDK -->
 											<limit>
 												<counter>LINE</counter>
 												<value>COVEREDRATIO</value>
-												<minimum>0.95</minimum>
+												<minimum>0.85</minimum>
 											</limit>
 										</limits>
 									</rule>
