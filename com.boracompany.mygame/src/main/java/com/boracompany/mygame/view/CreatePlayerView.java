@@ -20,7 +20,7 @@ public class CreatePlayerView extends JFrame {
 	private JLabel lblDamage;
 	private JLabel lblHealth;
 	private JTextField DamageText;
-	private JTextField textField_2;
+	private JTextField HealthText;
 	private JButton btnNewButton;
 	private JLabel ErrorMessageLabel;
 
@@ -67,6 +67,7 @@ public class CreatePlayerView extends JFrame {
 		contentPane.add(lblPlayername, gbc_lblPlayername);
 		
 		textField = new JTextField();
+		textField.setName("NameText");
 		GridBagConstraints gbc_textField = new GridBagConstraints();
 		gbc_textField.insets = new Insets(0, 0, 5, 0);
 		gbc_textField.fill = GridBagConstraints.HORIZONTAL;
@@ -84,6 +85,7 @@ public class CreatePlayerView extends JFrame {
 		contentPane.add(lblDamage, gbc_lblDamage);
 		
 		DamageText = new JTextField();
+		DamageText.setName("DamageText");
 		GridBagConstraints gbc_damageText = new GridBagConstraints();
 		gbc_damageText.insets = new Insets(0, 0, 5, 0);
 		gbc_damageText.fill = GridBagConstraints.HORIZONTAL;
@@ -100,14 +102,15 @@ public class CreatePlayerView extends JFrame {
 		gbc_lblHealth.gridy = 2;
 		contentPane.add(lblHealth, gbc_lblHealth);
 		
-		textField_2 = new JTextField();
-		GridBagConstraints gbc_textField_2 = new GridBagConstraints();
-		gbc_textField_2.insets = new Insets(0, 0, 5, 0);
-		gbc_textField_2.fill = GridBagConstraints.HORIZONTAL;
-		gbc_textField_2.gridx = 1;
-		gbc_textField_2.gridy = 2;
-		contentPane.add(textField_2, gbc_textField_2);
-		textField_2.setColumns(10);
+		HealthText = new JTextField();
+		HealthText.setName("HealthText");
+		GridBagConstraints gbc_healthText = new GridBagConstraints();
+		gbc_healthText.insets = new Insets(0, 0, 5, 0);
+		gbc_healthText.fill = GridBagConstraints.HORIZONTAL;
+		gbc_healthText.gridx = 1;
+		gbc_healthText.gridy = 2;
+		contentPane.add(HealthText, gbc_healthText);
+		HealthText.setColumns(10);
 		
 		btnNewButton = new JButton("Create");
 		btnNewButton.setEnabled(false);

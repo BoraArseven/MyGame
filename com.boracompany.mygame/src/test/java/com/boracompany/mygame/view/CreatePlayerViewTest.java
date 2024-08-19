@@ -1,13 +1,13 @@
 package com.boracompany.mygame.view;
 
-import static org.assertj.core.api.Assertions.assertThat;
+
 
 import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.matcher.JLabelMatcher;
 import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
-import org.junit.Before;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -27,8 +27,10 @@ public class CreatePlayerViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test @GUITest
 	public void testControlsInitialStates() {
-	window.label(JLabelMatcher.withText("id"));
-	window.textBox("idTextBox").requireEnabled();
+	window.label(JLabelMatcher.withText("Name:"));
+	window.textBox("NameText").requireEnabled();
+	window.textBox("DamageText").requireEnabled();
+	window.textBox("HealthText").requireEnabled();
 	}
 	@Test
 	public void testInitialSetup() {
