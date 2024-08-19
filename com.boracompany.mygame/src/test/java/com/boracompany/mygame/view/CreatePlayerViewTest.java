@@ -27,10 +27,16 @@ public class CreatePlayerViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test @GUITest
 	public void testControlsInitialStates() {
-	window.label(JLabelMatcher.withText("Name:"));
+	window.label(JLabelMatcher.withText("Name:")).requireEnabled();
+	window.label(JLabelMatcher.withText("Damage:")).requireEnabled();
+	window.label(JLabelMatcher.withText("Health:")).requireEnabled();
 	window.textBox("NameText").requireEnabled();
 	window.textBox("DamageText").requireEnabled();
 	window.textBox("HealthText").requireEnabled();
+	window.button("MainMenuButton").requireEnabled();
+	window.button("CreatePlayerButton").requireDisabled();
+	
+	
 	}
 	@Test
 	public void testInitialSetup() {
