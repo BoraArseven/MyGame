@@ -9,6 +9,7 @@ import javax.swing.border.EmptyBorder;
 import com.boracompany.mygame.controller.GameController;
 import com.boracompany.mygame.main.ExcludeFromJacocoGeneratedReport;
 import com.boracompany.mygame.model.Player;
+import com.boracompany.mygame.model.PlayerBuilder;
 
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
@@ -161,6 +162,15 @@ public class CreatePlayerView extends JFrame implements PlayerView {
 		createPlayerButton = new JButton("Create");
 		createPlayerButton.setName("CreatePlayerButton");
 		createPlayerButton.setEnabled(false);
+
+		createPlayerButton.addActionListener(e -> gameController.createPlayer(
+
+				NameText.getText(), Float.parseFloat(HealthText.getText()), // convert health to long
+				Float.parseFloat(DamageText.getText()) // convert damage to long
+		)
+
+		);
+
 		GridBagConstraints gbc_createPlayerButton = new GridBagConstraints();
 		gbc_createPlayerButton.insets = new Insets(0, 0, 5, 5);
 		gbc_createPlayerButton.gridwidth = 2;

@@ -2,7 +2,6 @@ package com.boracompany.mygame.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.verify;
 
 import java.util.Arrays;
@@ -17,7 +16,6 @@ import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JButtonFixture;
 import org.assertj.swing.fixture.JTextComponentFixture;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -170,6 +168,22 @@ public class CreatePlayerViewTest extends AssertJSwingJUnitTestCase {
 	window.textBox("HealthText").enterText("100");
 	window.button(JButtonMatcher.withText("Create")).click();
 	Player playerShouldBeAdded = new PlayerBuilder().withName("testname").withDamage(20).withHealth(100).build();
-	verify(gameController).createPlayer(playerShouldBeAdded.getName(), playerShouldBeAdded.getHealth(), playerShouldBeAdded.getHealth());
+	verify(gameController).createPlayer(playerShouldBeAdded.getName(), playerShouldBeAdded.getHealth(), playerShouldBeAdded.getDamage());
+	}
+	@Test
+	public void testDeleteButtonShouldDelegateToSchoolControllerDeleteStudent() {
+		Player playerShouldBeDeleted = new PlayerBuilder().withName("testname").withDamage(20).withHealth(100).build();
+		Player playerShouldBeDeleted2 = new PlayerBuilder().withName("testname2").withDamage(40).withHealth(50).build();
+	GuiActionRunner.execute(
+	() -> {
+	DefaultListModel<Player> listStudentsModel =
+	createPlayerView.getListPlayersModel();
+	listStudentsModel.addElement(playerShouldBeDeleted);
+	listStudentsModel.addElement(playerShouldBeDeleted2);
+	}
+	);
+	window.list("ListPlayers").selectItem(1);
+	window.button(JButtonMatcher.withText("Delete Selected")).click();
+	
 	}
 }
