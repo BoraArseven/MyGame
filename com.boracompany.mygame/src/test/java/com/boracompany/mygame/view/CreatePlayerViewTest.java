@@ -2,6 +2,8 @@ package com.boracompany.mygame.view;
 
 
 
+import static org.junit.Assert.assertNotNull;
+
 import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.matcher.JLabelMatcher;
 import org.assertj.swing.edt.GuiActionRunner;
@@ -27,6 +29,7 @@ public class CreatePlayerViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test @GUITest
 	public void testControlsInitialStates() {
+		assertNotNull(createPlayerView);
 	window.label(JLabelMatcher.withText("Name:")).requireEnabled();
 	window.label(JLabelMatcher.withText("Damage:")).requireEnabled();
 	window.label(JLabelMatcher.withText("Health:")).requireEnabled();

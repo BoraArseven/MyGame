@@ -13,12 +13,14 @@ import java.awt.Insets;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class CreatePlayerView extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
-	private JTextField textField;
+	private JTextField NameText;
 	private JLabel lblDamage;
 	private JLabel lblHealth;
 	private JTextField DamageText;
@@ -69,15 +71,25 @@ public class CreatePlayerView extends JFrame {
 		gbc_lblPlayername.gridy = 0;
 		contentPane.add(lblPlayername, gbc_lblPlayername);
 		
-		textField = new JTextField();
-		textField.setName("NameText");
-		GridBagConstraints gbc_textField = new GridBagConstraints();
-		gbc_textField.insets = new Insets(0, 0, 5, 0);
-		gbc_textField.fill = GridBagConstraints.HORIZONTAL;
-		gbc_textField.gridx = 1;
-		gbc_textField.gridy = 0;
-		contentPane.add(textField, gbc_textField);
-		textField.setColumns(10);
+		NameText = new JTextField();
+		NameText.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				createPlayerButton.setEnabled(
+						!NameText.getText().isEmpty() &&
+						!DamageText.getText().isEmpty() &&
+						!HealthText.getText().isEmpty()
+						);
+			}
+		});
+		NameText.setName("NameText");
+		GridBagConstraints gbc_nameText = new GridBagConstraints();
+		gbc_nameText.insets = new Insets(0, 0, 5, 0);
+		gbc_nameText.fill = GridBagConstraints.HORIZONTAL;
+		gbc_nameText.gridx = 1;
+		gbc_nameText.gridy = 0;
+		contentPane.add(NameText, gbc_nameText);
+		NameText.setColumns(10);
 		
 		lblDamage = new JLabel("Damage:");
 		GridBagConstraints gbc_lblDamage = new GridBagConstraints();
@@ -97,6 +109,17 @@ public class CreatePlayerView extends JFrame {
 		contentPane.add(DamageText, gbc_damageText);
 		DamageText.setColumns(10);
 		
+		DamageText.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				createPlayerButton.setEnabled(
+						!NameText.getText().isEmpty() &&
+						!DamageText.getText().isEmpty() &&
+						!HealthText.getText().isEmpty()
+						);
+			}
+		});
+		
 		lblHealth = new JLabel("Health:");
 		GridBagConstraints gbc_lblHealth = new GridBagConstraints();
 		gbc_lblHealth.anchor = GridBagConstraints.EAST;
@@ -115,6 +138,17 @@ public class CreatePlayerView extends JFrame {
 		contentPane.add(HealthText, gbc_healthText);
 		HealthText.setColumns(10);
 		
+		
+		HealthText.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				createPlayerButton.setEnabled(
+						!NameText.getText().isEmpty() &&
+						!DamageText.getText().isEmpty() &&
+						!HealthText.getText().isEmpty()
+						);
+			}
+		});
 		createPlayerButton = new JButton("Create");
 		createPlayerButton.setName("CreatePlayerButton");
 		createPlayerButton.setEnabled(false);
