@@ -113,4 +113,13 @@ public class CreatePlayerViewTest extends AssertJSwingJUnitTestCase {
 	    assertThat(listContents)
 	        .containsExactly(player1.toString(), player2.toString());
 	}
+	@Test
+	public void testShowErrorShouldShowTheMessageInTheErrorLabel() {
+		Player player1 = new PlayerBuilder().withName("testPlayer1forError").withDamage(30).withHealth(95).build();
+	GuiActionRunner.execute(
+	() -> createPlayerView.showError("error message", player1)
+	);
+	window.label("errorMessageLabel")
+	.requireText("error message: " + player1);
+	}
 }
