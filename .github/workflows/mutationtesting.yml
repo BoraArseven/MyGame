@@ -27,7 +27,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven
       - name: Build with Maven
-        run: xvfb-run mvn verify org.pitest:pitest-maven:mutationCoverage -Pmutation-testing
+        run: mvn verify org.pitest:pitest-maven:mutationCoverage -Pmutation-testing
         working-directory: com.boracompany.mygame
 
       - name: Archive Mutation Test Report
