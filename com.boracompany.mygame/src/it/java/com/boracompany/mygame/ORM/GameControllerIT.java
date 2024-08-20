@@ -1,5 +1,6 @@
 package com.boracompany.mygame.ORM;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -185,11 +186,11 @@ class GameControllerIT {
 		GameMap gameMap = new GameMap();
 		gameMap.setName("TestMap");
 		gameMapDAO.save(gameMap);
-		
+
 		Long gameMapId = gameMap.getId();
 		// Act & Assert: Try to remove a null player from the map
 		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
-			
+
 			gameMapDAO.removePlayerFromMap(gameMapId, null);
 		});
 
@@ -209,7 +210,7 @@ class GameControllerIT {
 		Long gameId = gameMap.getId();
 		// Act & Assert: Try to remove the player with null ID from the map
 		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
-			
+
 			gameMapDAO.removePlayerFromMap(gameId, playerWithNullId);
 		});
 
@@ -232,7 +233,7 @@ class GameControllerIT {
 
 		// Act & Assert: Try to remove a null player from the map
 		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
-		    gameMapDAO.removePlayerFromMap(gameMapId, null);
+			gameMapDAO.removePlayerFromMap(gameMapId, null);
 		});
 		// Assert: Verify that the exception message is as expected
 		assertEquals("Player is null or has a null ID.", thrown.getMessage());
@@ -271,15 +272,13 @@ class GameControllerIT {
 		// Create a Player object with a valid ID but do not persist it
 		Player player = new PlayerBuilder().withName("TestPlayer").build();
 		player.setId(999L);
-	
+
 		// Arrange
 		Long gameMapId = gameMap.getId();
 
-	
 		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
-		    gameMapDAO.removePlayerFromMap(gameMapId, player);
+			gameMapDAO.removePlayerFromMap(gameMapId, player);
 		});
-
 
 		// Verify that the exception message is as expected
 		assertEquals("Expected GameMap not found or Player not in this GameMap.", thrown.getMessage());
@@ -297,12 +296,84 @@ class GameControllerIT {
 
 		Long gameMapId = gameMap.getId();
 		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
-			
+
 			gameMapDAO.removePlayerFromMap(gameMapId, player);
 		});
 
 		// Assert: Verify that the exception message is as expected
 		assertEquals("Player is null or has a null ID.", thrown.getMessage());
 	}
+
+	@Test
+	void testDeletePlayerSuccessfully() {
+		// Arrange: Create and persist a player
+		Player player = new PlayerBuilder().withName("TestPlayer").withDamage(100).withHealth(200).build();
+		playerDAO.createPlayer(player); // Ensure the player is created and persisted
+
+		// Ensure the player has a valid ID after persistence
+		assertNotNull(player.getId());
+
+		// Act: Delete the player using the controller
+		controller.deletePlayer(player.getId());
+
+		// Assert: Verify that the player no longer exists in the database
+		EntityManager em = emf.createEntityManager();
+		Player deletedPlayer = em.find(Player.class, player.getId());
+		assertNull(deletedPlayer);
+		em.close();
+	}
+
+	@Test
+	void testDeletePlayer_PlayerNotFound() {
+		// Arrange: Try to delete a non-existent player
+		Long nonExistentPlayerId = 999L;
+
+		// Act & Assert: Expect an IllegalArgumentException
+		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+			controller.deletePlayer(nonExistentPlayerId);
+		});
+
+		assertEquals("Player with ID " + nonExistentPlayerId + " not found", thrown.getMessage());
+	}
+
+	@Test
+	void testDeletePlayer_DeleteFailsDueToDBError() {
+	    // Arrange: Create and persist a player
+	    Player player = new PlayerBuilder().withName("TestPlayer").withDamage(100).withHealth(200).build();
+	    playerDAO.createPlayer(player);
+	    
+	    // Retrieve the player with the persisted ID
+	    EntityManager em = emf.createEntityManager();
+	    Player persistedPlayer = em.find(Player.class, player.getId());
+	    
+	    // Ensure the player was persisted correctly
+	    assertNotNull(persistedPlayer, "Player should be persisted and retrievable from the database.");
+	    
+	    // Simulate a failure by closing the EntityManagerFactory
+	    HibernateUtil.close();
+
+	    // Act & Assert: Expect IllegalStateException with "EntityManagerFactory is closed" message
+	    IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
+	        controller.deletePlayer(player.getId());
+	    });
+
+	    // Verify: The exception message matches the expected one
+	    String expectedMessage = "EntityManagerFactory is closed";
+	    assertEquals(expectedMessage, thrown.getMessage());
+
+	    // Reinitialize Hibernate for further tests
+	    setUpAll();
+	    setUp();
+	}
+
+	@Test
+	void testDeletePlayerThrowsExceptionForNullPlayerId() {
+	    IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+	        controller.deletePlayer(null); // Pass null player ID
+	    });
+
+	    assertEquals("Player ID must not be null.", thrown.getMessage());
+	}
+
 
 }
