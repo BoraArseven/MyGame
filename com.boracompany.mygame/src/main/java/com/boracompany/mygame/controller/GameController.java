@@ -6,6 +6,8 @@ import com.boracompany.mygame.model.PlayerBuilder;
 import com.boracompany.mygame.orm.GameMapDAO;
 import com.boracompany.mygame.orm.PlayerDAOIMPL;
 
+import java.util.List;
+
 import org.apache.logging.log4j.Logger;
 
 public class GameController {
@@ -127,6 +129,17 @@ public class GameController {
 			logger.error("Player with ID {} not found", playerId);
 			throw new IllegalArgumentException("Player with ID " + playerId + " not found");
 		}
+	}
+
+	public List<Player> getAllPlayers() {
+	    try {
+	        List<Player> players = playerDAO.getAllPlayers();
+	        logger.info("Retrieved {} players from the database.", players.size());
+	        return players;
+	    } catch (RuntimeException e) {
+	        logger.error("Failed to retrieve all players from the database", e);
+	        throw new IllegalStateException("Could not retrieve players from the database", e);
+	    }
 	}
 
 }

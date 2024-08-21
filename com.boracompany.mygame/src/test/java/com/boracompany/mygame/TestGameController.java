@@ -273,8 +273,6 @@ class TestGameController {
 		assertTrue(defender.isAlive()); // Defender should still be alive
 	}
 
-
-
 	@Test
 	void testValidatePlayersWithNullAttacker() {
 		Player defender = mock(Player.class);
@@ -294,7 +292,6 @@ class TestGameController {
 		});
 		assertTrue(exception.getMessage().contains("Attacker or defender is null"));
 	}
-
 
 	@Test
 	void testCalculateDamageWithZeroValue() {
@@ -383,8 +380,8 @@ class TestGameController {
 		assertFalse(defender.isAlive());
 
 		// Verify that the correct logging occurred
-		verify(logger).info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
-				"Defender", false);
+		verify(logger).info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})", "Defender",
+				false);
 
 	}
 
@@ -533,8 +530,8 @@ class TestGameController {
 		controllerSpy.attack(attacker, defender);
 
 		// Verify that the correct logging occurred
-		verify(logger).info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
-				"Defender", false);
+		verify(logger).info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})", "Defender",
+				false);
 	}
 
 	@Test
@@ -622,8 +619,8 @@ class TestGameController {
 		verify(defenderSpy, times(1)).setAlive(false);
 
 		// Ensure correct logging for the attack resulting in death
-		verify(logger).info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
-				"Defender", false);
+		verify(logger).info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})", "Defender",
+				false);
 	}
 
 	@Test
@@ -937,69 +934,116 @@ class TestGameController {
 		verify(gameMapDAOMock).update(mockGameMap);
 		verify(logger).info("Player {} removed from map {}", playerToRemove.getName(), mockGameMap.getName());
 	}
+
 	@Test
-    public void testDeletePlayerSuccessfully() {
-        // Arrange
-        Long playerId = 1L;
-        Player player = new PlayerBuilder().withName("testPlayer").withHealth(100).withDamage(50).build();
-        when(playerDAOMock.getPlayer(playerId)).thenReturn(player);
+	public void testDeletePlayerSuccessfully() {
+		// Arrange
+		Long playerId = 1L;
+		Player player = new PlayerBuilder().withName("testPlayer").withHealth(100).withDamage(50).build();
+		when(playerDAOMock.getPlayer(playerId)).thenReturn(player);
 
-        // Act
-        gameControllerwithMocks.deletePlayer(playerId);
+		// Act
+		gameControllerwithMocks.deletePlayer(playerId);
 
-        // Assert
-        verify(playerDAOMock).deletePlayer(player);
-        verify(logger).info("Player {} with ID {} deleted successfully.", player.getName(), playerId);
-    }
+		// Assert
+		verify(playerDAOMock).deletePlayer(player);
+		verify(logger).info("Player {} with ID {} deleted successfully.", player.getName(), playerId);
+	}
 
-    @Test
-    public void testDeletePlayerThrowsExceptionWhenPlayerNotFound() {
-        // Arrange
-        Long playerId = 1L;
-        when(playerDAOMock.getPlayer(playerId)).thenReturn(null);
+	@Test
+	public void testDeletePlayerThrowsExceptionWhenPlayerNotFound() {
+		// Arrange
+		Long playerId = 1L;
+		when(playerDAOMock.getPlayer(playerId)).thenReturn(null);
 
-        // Act & Assert
-        assertThatThrownBy(() -> gameControllerwithMocks.deletePlayer(playerId))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Player with ID " + playerId + " not found");
+		// Act & Assert
+		assertThatThrownBy(() -> gameControllerwithMocks.deletePlayer(playerId))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Player with ID " + playerId + " not found");
 
-        verify(logger).error("Player with ID {} not found", playerId);
-        verify(playerDAOMock, never()).deletePlayer(any());
-    }
+		verify(logger).error("Player with ID {} not found", playerId);
+		verify(playerDAOMock, never()).deletePlayer(any());
+	}
 
-    @Test
-    public void testDeletePlayerThrowsExceptionWhenDeleteFails() {
-        // Arrange
-        Long playerId = 1L;
-        Player player = new PlayerBuilder().withName("testPlayer").withHealth(100).withDamage(50).build();
-        when(playerDAOMock.getPlayer(playerId)).thenReturn(player);
-        doThrow(new RuntimeException("Database error")).when(playerDAOMock).deletePlayer(player);
+	@Test
+	public void testDeletePlayerThrowsExceptionWhenDeleteFails() {
+		// Arrange
+		Long playerId = 1L;
+		Player player = new PlayerBuilder().withName("testPlayer").withHealth(100).withDamage(50).build();
+		when(playerDAOMock.getPlayer(playerId)).thenReturn(player);
+		doThrow(new RuntimeException("Database error")).when(playerDAOMock).deletePlayer(player);
 
-        // Act & Assert
-        assertThatThrownBy(() -> gameControllerwithMocks.deletePlayer(playerId))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("Could not delete player with ID " + playerId);
+		// Act & Assert
+		assertThatThrownBy(() -> gameControllerwithMocks.deletePlayer(playerId))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("Could not delete player with ID " + playerId);
 
-        verify(playerDAOMock).deletePlayer(player);
-        verify(logger).error("Failed to delete player with ID {}", playerId);
-    }
+		verify(playerDAOMock).deletePlayer(player);
+		verify(logger).error("Failed to delete player with ID {}", playerId);
+	}
 
-    @Test
-    public void testDeletePlayerHandlesTransactionRollbackOnException() {
-        // Arrange
-        Long playerId = 1L;
-        Player player = new PlayerBuilder().withName("testPlayer").withHealth(100).withDamage(50).build();
-        when(playerDAOMock.getPlayer(playerId)).thenReturn(player);
-        doThrow(new RuntimeException("Database error")).when(playerDAOMock).deletePlayer(player);
+	@Test
+	public void testDeletePlayerHandlesTransactionRollbackOnException() {
+		// Arrange
+		Long playerId = 1L;
+		Player player = new PlayerBuilder().withName("testPlayer").withHealth(100).withDamage(50).build();
+		when(playerDAOMock.getPlayer(playerId)).thenReturn(player);
+		doThrow(new RuntimeException("Database error")).when(playerDAOMock).deletePlayer(player);
 
-        // Act & Assert
-        assertThatThrownBy(() -> gameControllerwithMocks.deletePlayer(playerId))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("Could not delete player with ID " + playerId);
+		// Act & Assert
+		assertThatThrownBy(() -> gameControllerwithMocks.deletePlayer(playerId))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("Could not delete player with ID " + playerId);
 
-        InOrder inOrder = Mockito.inOrder(playerDAOMock, logger);
-        inOrder.verify(playerDAOMock).deletePlayer(player);
-        inOrder.verify(logger).error("Failed to delete player with ID {}", playerId);
-    }
+		InOrder inOrder = Mockito.inOrder(playerDAOMock, logger);
+		inOrder.verify(playerDAOMock).deletePlayer(player);
+		inOrder.verify(logger).error("Failed to delete player with ID {}", playerId);
+	}
+
+	@Test
+	void testGetAllPlayersSuccessfully() {
+		// Arrange
+		List<Player> players = List.of(new PlayerBuilder().withName("Player1").withHealth(100).withDamage(50).build(),
+				new PlayerBuilder().withName("Player2").withHealth(150).withDamage(70).build());
+		when(playerDAOMock.getAllPlayers()).thenReturn(players);
+
+		// Act
+		List<Player> result = gameControllerwithMocks.getAllPlayers();
+
+		// Assert
+		assertEquals(players.size(), result.size()); // Ensure the correct number of players is returned
+		assertEquals(players.get(0).getName(), result.get(0).getName()); // Ensure the players match
+		assertEquals(players.get(1).getName(), result.get(1).getName());
+		verify(logger).info("Retrieved {} players from the database.", players.size()); // Verify logging
+		verify(playerDAOMock).getAllPlayers(); // Verify DAO method was called
+	}
+
+	@Test
+	void testGetAllPlayersReturnsEmptyList() {
+		// Arrange
+		when(playerDAOMock.getAllPlayers()).thenReturn(List.of());
+
+		// Act
+		List<Player> result = gameControllerwithMocks.getAllPlayers();
+
+		// Assert
+		assertEquals(0, result.size()); // Ensure empty list is returned
+		verify(logger).info("Retrieved {} players from the database.", 0); // Verify logging with parameterized message
+		verify(playerDAOMock).getAllPlayers(); // Verify DAO method was called
+	}
+
+	@Test
+	void testGetAllPlayersThrowsException() {
+		// Arrange
+		RuntimeException exception = new RuntimeException("Database error");
+		when(playerDAOMock.getAllPlayers()).thenThrow(exception);
+
+		// Act & Assert
+		assertThatThrownBy(() -> gameControllerwithMocks.getAllPlayers()).isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("Could not retrieve players from the database");
+
+		verify(logger).error("Failed to retrieve all players from the database", exception); // Verify logging
+		verify(playerDAOMock).getAllPlayers(); // Verify DAO method was called
+	}
+
 }
-

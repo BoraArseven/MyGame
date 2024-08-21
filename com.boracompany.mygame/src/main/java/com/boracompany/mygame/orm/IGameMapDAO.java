@@ -22,4 +22,6 @@ public interface IGameMapDAO {
     void addPlayerToMap(Long mapId, Player player);
 
     void removePlayerFromMap(Long mapId, Player player);
+
+	List<Player> findAlivePlayers();
 }

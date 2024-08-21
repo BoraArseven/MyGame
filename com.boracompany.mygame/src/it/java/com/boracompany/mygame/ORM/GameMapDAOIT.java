@@ -708,7 +708,7 @@ public class GameMapDAOIT {
 		Mockito.when(transactionSpy.isActive()).thenReturn(true);
 		Long id = gameMap.getId();
 		assertThrows(PersistenceException.class, () -> {
-			
+
 			gameMapDAOwithSpiedEmf.removePlayerFromMap(id, player);
 		});
 
@@ -868,6 +868,33 @@ public class GameMapDAOIT {
 
 		// Verify that the EntityManager is closed after the operation
 		Mockito.verify(spyEm).close();
+	}
+
+	@Test
+	void testFindAlivePlayers() {
+		// Arrange: Create a few players, some alive and some dead
+		GameMap gameMap = new GameMap();
+		gameMap.setName("Map with Alive and Dead Players");
+		gameMapDAO.save(gameMap);
+
+		Player alivePlayer1 = new PlayerBuilder().withName("Alive Player 1").withIsAlive(true).build();
+		Player alivePlayer2 = new PlayerBuilder().withName("Alive Player 2").withIsAlive(true).build();
+		Player deadPlayer = new PlayerBuilder().withName("Dead Player").withIsAlive(false).build();
+
+		// Add players to the map and persist them
+		gameMapDAO.addPlayerToMap(gameMap.getId(), alivePlayer1);
+		gameMapDAO.addPlayerToMap(gameMap.getId(), alivePlayer2);
+		gameMapDAO.addPlayerToMap(gameMap.getId(), deadPlayer);
+
+		// Act: Retrieve the list of alive players
+		List<Player> alivePlayers = gameMapDAO.findAlivePlayers();
+
+		// Assert: Only alive players should be returned
+		assertNotNull(alivePlayers);
+		assertEquals(2, alivePlayers.size());
+		assertTrue(alivePlayers.stream().anyMatch(p -> p.getName().equals("Alive Player 1")));
+		assertTrue(alivePlayers.stream().anyMatch(p -> p.getName().equals("Alive Player 2")));
+		assertFalse(alivePlayers.stream().anyMatch(p -> p.getName().equals("Dead Player")));
 	}
 
 }

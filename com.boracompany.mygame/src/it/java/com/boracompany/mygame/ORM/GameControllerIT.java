@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.spy;
 
+import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
@@ -374,6 +376,64 @@ class GameControllerIT {
 
 	    assertEquals("Player ID must not be null.", thrown.getMessage());
 	}
+	@Test
+	void testGetAllPlayersReturnsEmptyList() {
+	    // Arrange: Ensure the database is empty (resetDatabase has already been called in @BeforeEach)
+	    // Act: Call the getAllPlayers method
+	    List<Player> players = controller.getAllPlayers();
+
+	    // Assert: Verify that the result is an empty list
+	    assertNotNull(players, "The list of players should not be null");
+	    assertTrue(players.isEmpty(), "The list of players should be empty");
+	    
+	    // Verify that the correct log message was generated
+	    LOGGER.info("Retrieved {} players from the database.", players.size());
+	}
+
+	@Test
+	void testGetAllPlayersReturnsMultiplePlayers() {
+	    // Arrange: Create and persist multiple players
+	    Player player1 = new PlayerBuilder().withName("Player1").withDamage(10).withHealth(100).build();
+	    Player player2 = new PlayerBuilder().withName("Player2").withDamage(20).withHealth(200).build();
+	    Player player3 = new PlayerBuilder().withName("Player3").withDamage(30).withHealth(300).build();
+
+	    playerDAO.createPlayer(player1); // Persist Player 1
+	    playerDAO.createPlayer(player2); // Persist Player 2
+	    playerDAO.createPlayer(player3); // Persist Player 3
+
+	    // Act: Call the getAllPlayers method
+	    List<Player> players = controller.getAllPlayers();
+
+	    // Assert: Verify that the list contains all the players
+	    assertNotNull(players, "The list of players should not be null");
+	    assertEquals(3, players.size(), "The list should contain three players");
+	    assertTrue(players.stream().anyMatch(p -> p.getName().equals("Player1")), "Player1 should be in the list");
+	    assertTrue(players.stream().anyMatch(p -> p.getName().equals("Player2")), "Player2 should be in the list");
+	    assertTrue(players.stream().anyMatch(p -> p.getName().equals("Player3")), "Player3 should be in the list");
+	    
+	    // Verify that the correct log message was generated
+	    LOGGER.info("Retrieved {} players from the database.", players.size());
+	}
+
+	@Test
+	void testGetAllPlayersThrowsExceptionWhenDBFails() {
+	    // Arrange: Simulate a failure by closing the EntityManagerFactory
+	    HibernateUtil.close();
+
+	    // Act & Assert: Expect an IllegalStateException
+	    IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
+	        controller.getAllPlayers();
+	    });
+
+	    // Assert: Verify the exception message
+	    String expectedMessage = "Could not retrieve players from the database";
+	    assertEquals(expectedMessage, thrown.getMessage());
+
+	    // Reinitialize Hibernate for further tests
+	    setUpAll();
+	    setUp();
+	}
+
 
 
 }

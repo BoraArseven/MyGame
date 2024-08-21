@@ -208,4 +208,15 @@ public class GameMapDAO implements IGameMapDAO {
 		}
 	}
 
+	@Override
+	public List<Player> findAlivePlayers() {
+		EntityManager entityManager = entityManagerFactory.createEntityManager();
+		try {
+			return entityManager.createQuery("SELECT p FROM Player p WHERE p.isAlive = true", Player.class)
+					.getResultList();
+		} finally {
+			entityManager.close();
+		}
+	}
+
 }

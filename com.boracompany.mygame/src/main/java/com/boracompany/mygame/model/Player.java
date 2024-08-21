@@ -8,100 +8,101 @@ import javax.persistence.*;
 @Table(name = "app_player") // Table name for the Player entity
 public class Player {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    private String name = "default";
-    
-    private float health = 10;
-    
-    private float damage;
-    
-    private boolean isalive = true;
+	private String name = "default";
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "map_id")
-    private GameMap map;
+	private float health = 10;
 
-    // Constructors
-    public Player() {}
+	private float damage;
 
-    public Player(String name, float health, float damage, boolean isalive) {
-        this.name = name;
-        this.health = health;
-        this.damage = damage;
-        this.isalive = isalive;
-    }
+	@Column(name = "is_alive") // Maps to the corresponding column in the database
+	private boolean isAlive = true;
 
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "map_id")
+	private GameMap map;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	// Constructors
+	public Player() {
+	}
 
-    public String getName() {
-        return name;
-    }
+	public Player(String name, float health, float damage, boolean isAlive) {
+		this.name = name;
+		this.health = health;
+		this.damage = damage;
+		this.isAlive = isAlive;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	// Getters and Setters
+	public Long getId() {
+		return id;
+	}
 
-    public float getHealth() {
-        return health;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public void setHealth(float health) {
-        this.health = health;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public float getDamage() {
-        return damage;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public void setDamage(float damage) {
-        this.damage = damage;
-    }
+	public float getHealth() {
+		return health;
+	}
 
-    public boolean isAlive() {
-        return isalive;
-    }
+	public void setHealth(float health) {
+		this.health = health;
+	}
 
-    public void setAlive(boolean isalive) {
-        this.isalive = isalive;
-    }
+	public float getDamage() {
+		return damage;
+	}
 
-    public GameMap getMap() {
-        return map;
-    }
+	public void setDamage(float damage) {
+		this.damage = damage;
+	}
 
-    public void setMap(GameMap map) {
-        this.map = map;
-    }
-    
-    // normally id should only be enough since it is primary key, but I wanted to guarantee the behaviour.
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-        Player player = (Player) obj;
-        return damage == player.damage &&
-               health == player.health &&
-               id == player.id&&
-               Objects.equals(name, player.name);
-    }
+	public boolean isAlive() {
+		return isAlive;
+	}
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, damage, health, id);
-    }
+	public void setAlive(boolean isAlive) {
+		this.isAlive = isAlive;
+	}
 
+	public GameMap getMap() {
+		return map;
+	}
+
+	public void setMap(GameMap map) {
+		this.map = map;
+	}
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null || getClass() != obj.getClass())
+			return false;
+		Player player = (Player) obj;
+		return Objects.equals(id, player.id); // Only compare by ID if present
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id); // Hash based on ID only
+	}
+
+	@Override
+	public String toString() {
+		return this.getName();
+	}
 }
