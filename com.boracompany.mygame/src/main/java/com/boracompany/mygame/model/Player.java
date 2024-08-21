@@ -1,5 +1,7 @@
 package com.boracompany.mygame.model;
 
+import java.util.Objects;
+
 import javax.persistence.*;
 
 @Entity
@@ -80,4 +82,26 @@ public class Player {
     public void setMap(GameMap map) {
         this.map = map;
     }
+    
+    // normally id should only be enough since it is primary key, but I wanted to guarantee the behaviour.
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        Player player = (Player) obj;
+        return damage == player.damage &&
+               health == player.health &&
+               id == player.id&&
+               Objects.equals(name, player.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, damage, health, id);
+    }
+
 }

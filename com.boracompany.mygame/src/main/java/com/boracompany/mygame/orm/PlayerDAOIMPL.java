@@ -14,19 +14,16 @@ import org.apache.logging.log4j.Logger;
 import com.boracompany.mygame.model.Player;
 
 public class PlayerDAOIMPL implements PlayerDAO {
-	
+
 	private static final Logger LOGGER = LogManager.getLogger(PlayerDAOIMPL.class);
 	private EntityManagerFactory emf;
-	
-	private EntityManager em;
-	
 
+	private EntityManager em;
 
 	@Generated("exclude-from-coverage")
 	public EntityManagerFactory getEmf() {
 		return emf;
 	}
-
 
 	public PlayerDAOIMPL(EntityManagerFactory emf) {
 		this.emf = emf;
@@ -76,7 +73,8 @@ public class PlayerDAOIMPL implements PlayerDAO {
 			if (transaction != null && transaction.isActive()) {
 				transaction.rollback();
 			}
-			 LOGGER.error("An error occurred while trying to update player with ID {}: {}", player.getId(), e.getMessage(), e);
+			LOGGER.error("An error occurred while trying to update player with ID {}: {}", player.getId(),
+					e.getMessage(), e);
 			throw e;
 		}
 
@@ -100,19 +98,49 @@ public class PlayerDAOIMPL implements PlayerDAO {
 				} else {
 					throw new IllegalStateException("Tried to delete non existing player");
 				}
-			}else {
+			} else {
 				throw new IllegalStateException("Transaction is null");
 			}
-			
+
 		} catch (RuntimeException e) {
 			if (transaction != null && transaction.isActive()) {
 				transaction.rollback();
 			}
-			 LOGGER.error("An error occurred while trying to delete player with ID {}: {}", player.getId(), e.getMessage(), e);
+			LOGGER.error("An error occurred while trying to delete player with ID {}: {}", player.getId(),
+					e.getMessage(), e);
 			throw e;
 		} finally {
 			em.close();
 		}
 	}
-	
+
+	@Override
+	public void createPlayer(Player player) throws IllegalStateException {
+		if (player == null) {
+			throw new IllegalArgumentException("Player cannot be null");
+		}
+
+		em = emf.createEntityManager();
+		EntityTransaction transaction = null;
+		try {
+			transaction = em.getTransaction();
+			if (transaction != null) {
+				transaction.begin();
+				em.persist(player); // Use persist for creation
+				transaction.commit();
+			} else {
+				throw new IllegalStateException("Transaction is null");
+			}
+		} catch (RuntimeException e) {
+			if (transaction != null && transaction.isActive()) {
+				transaction.rollback();
+			}
+			LOGGER.error("An error occurred while trying to create player with ID {}: {}", player.getId(),
+					e.getMessage(), e);
+			throw e;
+		} finally {
+			em.close();
+		}
+	}
+
 }

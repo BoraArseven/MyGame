@@ -1,5 +1,6 @@
 package com.boracompany.mygame;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -8,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -935,5 +937,69 @@ class TestGameController {
 		verify(gameMapDAOMock).update(mockGameMap);
 		verify(logger).info("Player {} removed from map {}", playerToRemove.getName(), mockGameMap.getName());
 	}
+	@Test
+    public void testDeletePlayerSuccessfully() {
+        // Arrange
+        Long playerId = 1L;
+        Player player = new PlayerBuilder().withName("testPlayer").withHealth(100).withDamage(50).build();
+        when(playerDAOMock.getPlayer(playerId)).thenReturn(player);
 
+        // Act
+        gameControllerwithMocks.deletePlayer(playerId);
+
+        // Assert
+        verify(playerDAOMock).deletePlayer(player);
+        verify(logger).info("Player {} with ID {} deleted successfully.", player.getName(), playerId);
+    }
+
+    @Test
+    public void testDeletePlayerThrowsExceptionWhenPlayerNotFound() {
+        // Arrange
+        Long playerId = 1L;
+        when(playerDAOMock.getPlayer(playerId)).thenReturn(null);
+
+        // Act & Assert
+        assertThatThrownBy(() -> gameControllerwithMocks.deletePlayer(playerId))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Player with ID " + playerId + " not found");
+
+        verify(logger).error("Player with ID {} not found", playerId);
+        verify(playerDAOMock, never()).deletePlayer(any());
+    }
+
+    @Test
+    public void testDeletePlayerThrowsExceptionWhenDeleteFails() {
+        // Arrange
+        Long playerId = 1L;
+        Player player = new PlayerBuilder().withName("testPlayer").withHealth(100).withDamage(50).build();
+        when(playerDAOMock.getPlayer(playerId)).thenReturn(player);
+        doThrow(new RuntimeException("Database error")).when(playerDAOMock).deletePlayer(player);
+
+        // Act & Assert
+        assertThatThrownBy(() -> gameControllerwithMocks.deletePlayer(playerId))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("Could not delete player with ID " + playerId);
+
+        verify(playerDAOMock).deletePlayer(player);
+        verify(logger).error("Failed to delete player with ID {}", playerId);
+    }
+
+    @Test
+    public void testDeletePlayerHandlesTransactionRollbackOnException() {
+        // Arrange
+        Long playerId = 1L;
+        Player player = new PlayerBuilder().withName("testPlayer").withHealth(100).withDamage(50).build();
+        when(playerDAOMock.getPlayer(playerId)).thenReturn(player);
+        doThrow(new RuntimeException("Database error")).when(playerDAOMock).deletePlayer(player);
+
+        // Act & Assert
+        assertThatThrownBy(() -> gameControllerwithMocks.deletePlayer(playerId))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("Could not delete player with ID " + playerId);
+
+        InOrder inOrder = Mockito.inOrder(playerDAOMock, logger);
+        inOrder.verify(playerDAOMock).deletePlayer(player);
+        inOrder.verify(logger).error("Failed to delete player with ID {}", playerId);
+    }
 }
+

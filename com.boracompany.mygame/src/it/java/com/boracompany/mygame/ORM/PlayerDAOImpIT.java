@@ -872,4 +872,137 @@ public class PlayerDAOImpIT {
 		Mockito.verify(emMock).close();
 	}
 
+	@Test
+	void testCreatePlayerSuccessfully() {
+		// Arrange: Create a new Player instance
+		Player player = new PlayerBuilder().withName("NewPlayer").withDamage(50).withHealth(100).build();
+
+		// Act: Persist the player using the DAO
+		playerDAO.createPlayer(player);
+
+		// Assert: Verify that the player was successfully persisted
+		EntityManager em = emf.createEntityManager();
+		Player persistedPlayer = em.find(Player.class, player.getId());
+		assertNotNull(persistedPlayer, "Player should be successfully created and found in the database");
+		assertEquals("NewPlayer", persistedPlayer.getName());
+		em.close();
+	}
+
+	@Test
+	void testCreatePlayerFailsDueToTransactionIssue() {
+		// Create a spy of the real EntityManagerFactory
+		EntityManagerFactory spiedEmf = Mockito.spy(emf);
+
+		// Create a spy of the real EntityManager
+		EntityManager emSpy = Mockito.spy(spiedEmf.createEntityManager());
+
+		// Mock the EntityTransaction to be null
+		Mockito.when(emSpy.getTransaction()).thenReturn(null);
+
+		// Ensure the spied EntityManagerFactory returns the spied EntityManager
+		Mockito.when(spiedEmf.createEntityManager()).thenReturn(emSpy);
+
+		// Inject the spied EntityManagerFactory into the PlayerDAOIMPL
+		PlayerDAOIMPL dao = new PlayerDAOIMPL(spiedEmf);
+
+		// Create a Player instance
+		Player player = new PlayerBuilder().withName("Test Player").build();
+
+		// Assert: Expect an IllegalStateException due to null transaction
+		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+			dao.createPlayer(player);
+		});
+
+		// Verify the exception message
+		assertEquals("Transaction is null", exception.getMessage());
+
+		// Verify that the EntityManager was closed
+		Mockito.verify(emSpy).close();
+	}
+
+	@Test
+	void testCreatePlayerRollbackOnRuntimeException() {
+		// Create a spy of the real EntityManagerFactory
+		EntityManagerFactory spiedEmf = Mockito.spy(emf);
+
+		// Spy on the real EntityManager
+		EntityManager emSpy = Mockito.spy(spiedEmf.createEntityManager());
+
+		// Spy on the EntityTransaction to observe its behavior
+		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+		// Make the spied EntityManager return the spied transaction
+		Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
+
+		// Ensure the spied EntityManagerFactory returns the spied EntityManager
+		Mockito.when(spiedEmf.createEntityManager()).thenReturn(emSpy);
+
+		// Inject the spied EntityManagerFactory into the PlayerDAOIMPL
+		PlayerDAOIMPL playerDAOTest = new PlayerDAOIMPL(spiedEmf);
+
+		// Create a Player instance
+		Player player = new PlayerBuilder().withName("Test Player").build();
+
+		// Simulate a RuntimeException during the persist operation
+		Mockito.doThrow(new RuntimeException("Simulated Exception")).when(emSpy).persist(Mockito.any(Player.class));
+
+		// Act & Assert: Ensure that the exception is thrown and rollback happens
+		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+			playerDAOTest.createPlayer(player);
+		});
+
+		// Check that the exception message is correct
+		assertEquals("Simulated Exception", exception.getMessage());
+
+		// Verify that rollback was called on the transaction
+		Mockito.verify(transactionSpy).rollback();
+
+		// Verify that the EntityManager was closed
+		Mockito.verify(emSpy).close();
+	}
+
+	@Test
+	void testCreatePlayerCommitsSuccessfully() {
+		// Create a spy of the real EntityManagerFactory
+		EntityManagerFactory spiedEmf = Mockito.spy(emf);
+
+		// Create a spy of the real EntityManager
+		EntityManager emSpy = Mockito.spy(spiedEmf.createEntityManager());
+
+		// Create a spy of the real EntityTransaction
+		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+		// Ensure the spied EntityManagerFactory returns the spied EntityManager
+		Mockito.when(spiedEmf.createEntityManager()).thenReturn(emSpy);
+
+		// Ensure the spied EntityManager returns the spied transaction
+		Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
+
+		// Create a Player instance
+		Player player = new PlayerBuilder().withName("Test Player").build();
+
+		// Inject the spied EntityManagerFactory into the PlayerDAOIMPL
+		PlayerDAOIMPL dao = new PlayerDAOIMPL(spiedEmf);
+
+		// Call the method to create the player
+		dao.createPlayer(player);
+
+		// Verify that the transaction was begun and committed
+		Mockito.verify(transactionSpy).begin();
+		Mockito.verify(transactionSpy).commit();
+
+		// Verify that the EntityManager was closed
+		Mockito.verify(emSpy).close();
+	}
+
+	@Test
+	void testCreatePlayerThrowsExceptionForNullPlayer() {
+		// Act & Assert: Attempt to create a null player and expect an exception
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+			playerDAO.createPlayer(null);
+		});
+
+		assertEquals("Player cannot be null", exception.getMessage());
+	}
+
 }

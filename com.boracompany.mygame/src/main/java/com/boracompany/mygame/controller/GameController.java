@@ -21,8 +21,6 @@ public class GameController {
 		this.logger = logger;
 	}
 
-
-
 	// Method to create a new player and add it to the database
 	public Player createPlayer(String playerName, float health, float damage) {
 		Player player = new PlayerBuilder().withName(playerName).withHealth(health).withDamage(damage).build();
@@ -97,7 +95,6 @@ public class GameController {
 	private float calculateNewHealth(float defenderHealth, float damage) {
 		return defenderHealth - damage;
 	}
-	
 
 	private void updateDefenderHealth(Player defender, float newHealth) {
 		if (newHealth > 0) {
@@ -110,4 +107,26 @@ public class GameController {
 					defender.getName(), defender.isAlive());
 		}
 	}
+
+	public void deletePlayer(Long playerId) {
+		if (playerId == null) {
+			logger.error("Player ID is null, cannot delete player.");
+			throw new IllegalArgumentException("Player ID must not be null.");
+		}
+
+		Player player = playerDAO.getPlayer(playerId);
+		if (player != null) {
+			try {
+				playerDAO.deletePlayer(player);
+				logger.info("Player {} with ID {} deleted successfully.", player.getName(), playerId);
+			} catch (RuntimeException e) {
+				logger.error("Failed to delete player with ID {}", playerId);
+				throw new IllegalStateException("Could not delete player with ID " + playerId, e);
+			}
+		} else {
+			logger.error("Player with ID {} not found", playerId);
+			throw new IllegalArgumentException("Player with ID " + playerId + " not found");
+		}
+	}
+
 }

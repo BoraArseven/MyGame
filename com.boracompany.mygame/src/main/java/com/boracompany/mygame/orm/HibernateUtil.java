@@ -26,14 +26,6 @@ public class HibernateUtil {
 	}
 
 	// Static inner class for lazy initialization and thread safety
-	private static class SingletonHelper {
-		private static final HibernateUtil INSTANCE = new HibernateUtil();
-	}
-
-	// Public method to provide access to the singleton instance
-	public static HibernateUtil getInstance() {
-		return SingletonHelper.INSTANCE;
-	}
 
 	//Double-checked locker pattern
 	// Static method to initialize the EntityManagerFactory
@@ -43,7 +35,6 @@ public class HibernateUtil {
 			// synchronized ensures that only one thread can access that at the same time.
 			synchronized (HibernateUtil.class) {
 				if (entityManagerFactory == null) {
-					getInstance();
 					HibernateUtil.initializeInternal(dbUrl, dbUser, dbPassword);
 				}
 			}
