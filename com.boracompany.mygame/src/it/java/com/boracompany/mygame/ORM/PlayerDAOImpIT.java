@@ -1225,8 +1225,7 @@ public class PlayerDAOImpIT {
 		// Simulate a RuntimeException during the persist operation
 		Mockito.doThrow(new RuntimeException("Simulated Exception")).when(emMock).persist(Mockito.any(Player.class));
 
-		// Act & Assert: Ensure that the exception is thrown
-		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+		assertThrows(RuntimeException.class, () -> {
 			dao.createPlayer(player);
 		});
 
