@@ -48,7 +48,7 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 	private FrameFixture window;
 	private CreatePlayerView createPlayerView;
 	private GameController gameController;
-	private EntityManagerFactory emf;
+	private static EntityManagerFactory emf;
 	private AutoCloseable closeable;
 
 	private static final Logger logger = LogManager.getLogger(CreatePlayerViewIT.class);
@@ -62,22 +62,59 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 	}
 
 	@BeforeClass
-	public static void setUpContainer() {
+	public static void setUpContainerAndEntityManagerFactory() {
 		postgreSQLContainer.start();
+
+		// Initialize Hibernate with the Testcontainer's JDBC URL
 		String jdbcUrl = postgreSQLContainer.getJdbcUrl();
 		String username = postgreSQLContainer.getUsername();
 		String password = postgreSQLContainer.getPassword();
-		HibernateUtil.initialize(jdbcUrl, username, password); // Initialize Hibernate with Testcontainer DB
+		HibernateUtil.initialize(jdbcUrl, username, password);
+
+		// Create the EntityManagerFactory only once
+		emf = HibernateUtil.getEntityManagerFactory();
 	}
 
-	// @BeforeEach
-	void resetDatabase() {
+	@AfterClass
+	public static void tearDownContainerAndEntityManagerFactory() {
+		// Close EntityManagerFactory only once
+		if (emf != null) {
+			emf.close();
+		}
+		HibernateUtil.close();
+		postgreSQLContainer.stop();
+	}
+
+	@Before
+	public void onSetUp() {
+		closeable = MockitoAnnotations.openMocks(this);
+
+		// Initialize the GameController with real DAOs
+		PlayerDAOIMPL playerDAO = new PlayerDAOIMPL(emf);
+		GameMapDAO gameMapDAO = new GameMapDAO(emf);
+		gameController = new GameController(playerDAO, gameMapDAO, logger);
+
+		// Initialize the CreatePlayerView on the EDT
+		createPlayerView = GuiActionRunner.execute(() -> {
+			CreatePlayerView view = new CreatePlayerView();
+			view.setSchoolController(gameController);
+			return view;
+		});
+
+		// Clean the database before each test
+		resetDatabase();
+
+		// Initialize FrameFixture for testing the GUI
+		window = new FrameFixture(robot(), createPlayerView);
+		window.show();
+	}
+
+	private void resetDatabase() {
 		EntityManager em = emf.createEntityManager();
 		EntityTransaction transaction = em.getTransaction();
 
 		try {
 			transaction.begin();
-			// Delete all data from tables
 			em.createQuery("DELETE FROM Player").executeUpdate();
 			em.createQuery("DELETE FROM GameMap").executeUpdate();
 			transaction.commit();
@@ -89,36 +126,6 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 		} finally {
 			em.close();
 		}
-	}
-
-	@Before
-	public void onSetUp() {
-		// Open Mockito mocks
-		closeable = MockitoAnnotations.openMocks(this);
-
-		// Initialize the GameController with real DAOs
-		emf = HibernateUtil.getEntityManagerFactory();
-		PlayerDAOIMPL playerDAO = new PlayerDAOIMPL(emf);
-		GameMapDAO gameMapDAO = new GameMapDAO(emf);
-		gameController = new GameController(playerDAO, gameMapDAO, logger);
-
-		// Initialize the CreatePlayerView on the EDT
-		createPlayerView = GuiActionRunner.execute(() -> {
-			CreatePlayerView view = new CreatePlayerView();
-			view.setSchoolController(gameController);
-			return view;
-		});
-		resetDatabase();
-		// Initialize FrameFixture for testing the GUI
-		window = new FrameFixture(robot(), createPlayerView);
-		window.show(); // Make the GUI visible for testing
-
-	}
-
-	@AfterClass
-	public static void tearDownContainer() {
-		HibernateUtil.close();
-		postgreSQLContainer.stop();
 	}
 
 	@Test
