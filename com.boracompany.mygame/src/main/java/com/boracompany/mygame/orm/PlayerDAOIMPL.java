@@ -15,6 +15,8 @@ import com.boracompany.mygame.model.Player;
 
 public class PlayerDAOIMPL implements PlayerDAO {
 
+	private static final String TRANSACTION_NULL_MESSAGE = "Transaction is null";
+	
 	private static final Logger LOGGER = LogManager.getLogger(PlayerDAOIMPL.class);
 	private EntityManagerFactory emf;
 
@@ -67,7 +69,7 @@ public class PlayerDAOIMPL implements PlayerDAO {
 			}
 			// Handled NullpointerException thanks to jacoco's guidance.
 			else {
-				throw new IllegalStateException("Transaction is null");
+				throw new IllegalStateException(TRANSACTION_NULL_MESSAGE);
 			}
 		} catch (RuntimeException e) {
 			if (transaction != null && transaction.isActive()) {
@@ -99,7 +101,7 @@ public class PlayerDAOIMPL implements PlayerDAO {
 					throw new IllegalStateException("Tried to delete non existing player");
 				}
 			} else {
-				throw new IllegalStateException("Transaction is null");
+				throw new IllegalStateException(TRANSACTION_NULL_MESSAGE);
 			}
 
 		} catch (RuntimeException e) {

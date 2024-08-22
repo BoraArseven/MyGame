@@ -190,4 +190,31 @@ public class CreatePlayerViewTest extends AssertJSwingJUnitTestCase {
 		window.button(JButtonMatcher.withText("Delete Selected")).click();
 
 	}
+
+	@Test
+	public void testPlayerRemovedShouldHandleEmptyListCorrectly() {
+		// setup - Add a single player to the list
+		Player playerToBeRemoved = new PlayerBuilder().withName("lastPlayer").withDamage(200).withHealth(500).build();
+
+		// Add the player to the list model
+		GuiActionRunner.execute(() -> {
+			DefaultListModel<Player> listPlayersModel = createPlayerView.getListPlayersModel();
+			listPlayersModel.addElement(playerToBeRemoved);
+		});
+
+		// execute - remove the last player (causing the list to become empty)
+		GuiActionRunner.execute(() -> createPlayerView.playerRemoved(playerToBeRemoved));
+
+		// verify - the list should now be empty
+		String[] listContents = window.list().contents();
+		assertThat(listContents).isEmpty(); // Verify the list is empty
+
+		// The ErrorMessageLabel should be reset to an empty string
+		window.label("ErrorMessageLabel").requireText("");
+
+		// Verify that the gameController's deletePlayer method was called with the
+		// correct ID
+		verify(gameController).deletePlayer(playerToBeRemoved.getId());
+	}
+
 }

@@ -1,5 +1,6 @@
 package com.boracompany.mygame.view;
 
+import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -59,7 +60,9 @@ public class CreatePlayerView extends JFrame implements PlayerView {
 	 */
 	@ExcludeFromJacocoGeneratedReport
 	public static void main(String[] args) {
+		
 		EventQueue.invokeLater(new Runnable() {
+			@ExcludeFromJacocoGeneratedReport
 			public void run() {
 				try {
 					CreatePlayerView frame = new CreatePlayerView();
@@ -220,10 +223,9 @@ public class CreatePlayerView extends JFrame implements PlayerView {
 
 		mainMenuButton = new JButton("MainMenu");
 		mainMenuButton.setName("MainMenuButton");
-		mainMenuButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-			}
-		});
+		//mainMenuButton.addActionListener(new ActionListener() {
+	//		public void actionPerformed(ActionEvent e) {
+		//	}});
 		GridBagConstraints gbc_mainMenuButton = new GridBagConstraints();
 		gbc_mainMenuButton.insets = new Insets(0, 0, 5, 5);
 		gbc_mainMenuButton.gridx = 0;
@@ -262,6 +264,7 @@ public class CreatePlayerView extends JFrame implements PlayerView {
 	@Override
 	public void showError(String errorMessage, Player player) {
 		// TODO Auto-generated method stub
+		ErrorMessageLabel.setForeground(Color.RED);
 		if (player != null) {
 
 			ErrorMessageLabel.setText(errorMessage + ": " + player);

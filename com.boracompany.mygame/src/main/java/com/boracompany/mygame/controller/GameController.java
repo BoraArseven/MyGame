@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 public class GameController {
 
+	private static final String NOT_FOUND_MESSAGE = " not found";
 	private PlayerDAOIMPL playerDAO;
 	private GameMapDAO gameMapDAO;
 	private Logger logger; // Injected logger for better testability
@@ -40,7 +41,7 @@ public class GameController {
 			logger.info("Player {} added to map {}", player.getName(), gameMap.getName());
 		} else {
 			logger.error("Map with ID {} not found", mapId);
-			throw new IllegalArgumentException("Map with ID " + mapId + " not found");
+			throw new IllegalArgumentException("Map with ID " + mapId + NOT_FOUND_MESSAGE);
 		}
 	}
 
@@ -54,7 +55,7 @@ public class GameController {
 		} else {
 			logger.error("Map with ID {} or player {} not found", mapId, player.getName());
 			throw new IllegalArgumentException(
-					"Map with ID " + mapId + " or player " + player.getName() + " not found");
+					"Map with ID " + mapId + " or player " + player.getName() + NOT_FOUND_MESSAGE);
 		}
 	}
 
@@ -127,19 +128,19 @@ public class GameController {
 			}
 		} else {
 			logger.error("Player with ID {} not found", playerId);
-			throw new IllegalArgumentException("Player with ID " + playerId + " not found");
+			throw new IllegalArgumentException("Player with ID " + playerId + NOT_FOUND_MESSAGE);
 		}
 	}
 
 	public List<Player> getAllPlayers() {
-	    try {
-	        List<Player> players = playerDAO.getAllPlayers();
-	        logger.info("Retrieved {} players from the database.", players.size());
-	        return players;
-	    } catch (RuntimeException e) {
-	        logger.error("Failed to retrieve all players from the database", e);
-	        throw new IllegalStateException("Could not retrieve players from the database", e);
-	    }
+		try {
+			List<Player> players = playerDAO.getAllPlayers();
+			logger.info("Retrieved {} players from the database.", players.size());
+			return players;
+		} catch (RuntimeException e) {
+			logger.error("Failed to retrieve all players from the database", e);
+			throw new IllegalStateException("Could not retrieve players from the database", e);
+		}
 	}
 
 }

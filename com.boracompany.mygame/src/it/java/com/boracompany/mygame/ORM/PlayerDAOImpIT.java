@@ -1005,4 +1005,236 @@ public class PlayerDAOImpIT {
 		assertEquals("Player cannot be null", exception.getMessage());
 	}
 
+	@Test
+	void testCreatePlayerTriggersRollbackOnRuntimeExceptionWhenTransactionIsActive() {
+		// Create a spy of the real EntityManagerFactory
+		EntityManagerFactory spiedEmf = Mockito.spy(emf);
+
+		// Spy on the real EntityManager
+		EntityManager emSpy = Mockito.spy(spiedEmf.createEntityManager());
+
+		// Spy on the real EntityTransaction
+		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+		// Ensure the spied EntityManagerFactory returns the spied EntityManager
+		Mockito.when(spiedEmf.createEntityManager()).thenReturn(emSpy);
+
+		// Ensure the spied EntityManager returns the spied transaction
+		Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
+
+		// Ensure the transaction begins properly and is active
+		Mockito.doNothing().when(transactionSpy).begin();
+		Mockito.when(transactionSpy.isActive()).thenReturn(true);
+
+		// Inject the spied EntityManagerFactory into the PlayerDAOIMPL
+		PlayerDAOIMPL dao = new PlayerDAOIMPL(spiedEmf);
+
+		// Create a Player instance
+		Player player = new PlayerBuilder().withName("Test Player").build();
+
+		// Simulate a RuntimeException during the persist operation
+		Mockito.doThrow(new RuntimeException("Simulated Exception")).when(emSpy).persist(Mockito.any(Player.class));
+
+		// Act & Assert: Ensure that the exception is thrown and rollback happens
+		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+			dao.createPlayer(player);
+		});
+
+		// Check that the exception message is correct
+		assertEquals("Simulated Exception", exception.getMessage());
+
+		// Verify that rollback was called on the transaction since it was active
+		Mockito.verify(transactionSpy).rollback();
+
+		// Verify that the EntityManager was closed
+		Mockito.verify(emSpy).close();
+	}
+
+	@Test
+	void testCreatePlayerThrowsExceptionWhenTransactionIsNull() {
+		// Mock the EntityManagerFactory
+		EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
+
+		// Mock the EntityManager
+		EntityManager emMock = Mockito.mock(EntityManager.class);
+
+		// Simulate the behavior of createEntityManager() returning the mock
+		// EntityManager
+		Mockito.when(emfMock.createEntityManager()).thenReturn(emMock);
+
+		// Simulate the transaction being null
+		Mockito.when(emMock.getTransaction()).thenReturn(null);
+
+		// Create a PlayerDAOIMPL instance using the mocked EntityManagerFactory
+		PlayerDAOIMPL dao = new PlayerDAOIMPL(emfMock);
+
+		// Create a Player instance
+		Player player = new PlayerBuilder().withName("Test Player").build();
+
+		// Act & Assert: Ensure that an IllegalStateException is thrown due to the null
+		// transaction
+		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+			dao.createPlayer(player);
+		});
+
+		assertEquals("Transaction is null", exception.getMessage());
+
+		// Verify that the EntityManager was closed
+		Mockito.verify(emMock).close();
+	}
+
+	@Test
+	void testCreatePlayerWithNonNullInactiveTransaction() {
+		// Mock the EntityManagerFactory
+		EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
+
+		// Mock the EntityManager
+		EntityManager emMock = Mockito.mock(EntityManager.class);
+
+		// Mock the transaction
+		EntityTransaction transactionMock = Mockito.mock(EntityTransaction.class);
+
+		// Simulate the behavior of createEntityManager() returning the mock
+		// EntityManager
+		Mockito.when(emfMock.createEntityManager()).thenReturn(emMock);
+
+		// Simulate a non-null, inactive transaction
+		Mockito.when(emMock.getTransaction()).thenReturn(transactionMock);
+		Mockito.when(transactionMock.isActive()).thenReturn(false);
+
+		// Create a PlayerDAOIMPL instance using the mocked EntityManagerFactory
+		PlayerDAOIMPL dao = new PlayerDAOIMPL(emfMock);
+
+		// Create a Player instance
+		Player player = new PlayerBuilder().withName("Test Player").build();
+
+		// Act: Call the method to create the player
+		dao.createPlayer(player);
+
+		// Verify that the transaction was started and committed
+		Mockito.verify(transactionMock).begin();
+		Mockito.verify(transactionMock).commit();
+
+		// Verify that the EntityManager was closed
+		Mockito.verify(emMock).close();
+	}
+
+	@Test
+	void testCreatePlayerTriggersRollbackWhenTransactionIsActive() {
+		// Mock the EntityManagerFactory
+		EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
+
+		// Mock the EntityManager
+		EntityManager emMock = Mockito.mock(EntityManager.class);
+
+		// Mock the transaction
+		EntityTransaction transactionMock = Mockito.mock(EntityTransaction.class);
+
+		// Simulate the behavior of createEntityManager() returning the mock
+		// EntityManager
+		Mockito.when(emfMock.createEntityManager()).thenReturn(emMock);
+
+		// Simulate an active transaction
+		Mockito.when(emMock.getTransaction()).thenReturn(transactionMock);
+		Mockito.when(transactionMock.isActive()).thenReturn(true);
+
+		// Create a PlayerDAOIMPL instance using the mocked EntityManagerFactory
+		PlayerDAOIMPL dao = new PlayerDAOIMPL(emfMock);
+
+		// Create a Player instance
+		Player player = new PlayerBuilder().withName("Test Player").build();
+
+		// Simulate a RuntimeException during the persist operation
+		Mockito.doThrow(new RuntimeException("Simulated Exception")).when(emMock).persist(Mockito.any(Player.class));
+
+		// Act & Assert: Ensure that the exception is thrown and rollback happens
+		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+			dao.createPlayer(player);
+		});
+
+		// Check that the exception message is correct
+		assertEquals("Simulated Exception", exception.getMessage());
+
+		// Verify that rollback was called on the active transaction
+		Mockito.verify(transactionMock).rollback();
+
+		// Verify that the EntityManager was closed
+		Mockito.verify(emMock).close();
+	}
+
+	@Test
+	void testCreatePlayerCommitsSuccessfullyWhenTransactionIsActive() {
+		// Mock the EntityManagerFactory
+		EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
+
+		// Mock the EntityManager
+		EntityManager emMock = Mockito.mock(EntityManager.class);
+
+		// Mock the transaction
+		EntityTransaction transactionMock = Mockito.mock(EntityTransaction.class);
+
+		// Simulate the behavior of createEntityManager() returning the mock
+		// EntityManager
+		Mockito.when(emfMock.createEntityManager()).thenReturn(emMock);
+
+		// Simulate an active transaction
+		Mockito.when(emMock.getTransaction()).thenReturn(transactionMock);
+		Mockito.when(transactionMock.isActive()).thenReturn(true);
+
+		// Create a PlayerDAOIMPL instance using the mocked EntityManagerFactory
+		PlayerDAOIMPL dao = new PlayerDAOIMPL(emfMock);
+
+		// Create a Player instance
+		Player player = new PlayerBuilder().withName("Test Player").build();
+
+		// Act: Call the method to create the player
+		dao.createPlayer(player);
+
+		// Verify that the transaction was committed successfully
+		Mockito.verify(transactionMock).commit();
+
+		// Verify that rollback was never called
+
+	}
+
+	@Test
+	void testCreatePlayerWhenTransactionNotNullButInactive() {
+		// Mock the EntityManagerFactory
+		EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
+
+		// Mock the EntityManager
+		EntityManager emMock = Mockito.mock(EntityManager.class);
+
+		// Mock the transaction
+		EntityTransaction transactionMock = Mockito.mock(EntityTransaction.class);
+
+		// Simulate the behavior of createEntityManager() returning the mock
+		// EntityManager
+		Mockito.when(emfMock.createEntityManager()).thenReturn(emMock);
+
+		// Simulate the transaction being not null but not active
+		Mockito.when(emMock.getTransaction()).thenReturn(transactionMock);
+		Mockito.when(transactionMock.isActive()).thenReturn(false);
+
+		// Create a PlayerDAOIMPL instance using the mocked EntityManagerFactory
+		PlayerDAOIMPL dao = new PlayerDAOIMPL(emfMock);
+
+		// Create a Player instance
+		Player player = new PlayerBuilder().withName("Test Player").build();
+
+		// Simulate a RuntimeException during the persist operation
+		Mockito.doThrow(new RuntimeException("Simulated Exception")).when(emMock).persist(Mockito.any(Player.class));
+
+		// Act & Assert: Ensure that the exception is thrown
+		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+			dao.createPlayer(player);
+		});
+
+		// Verify that rollback was not called since transaction was not active
+		Mockito.verify(transactionMock, Mockito.never()).rollback();
+
+		// Verify that the EntityManager was closed
+		Mockito.verify(emMock).close();
+	}
+
 }

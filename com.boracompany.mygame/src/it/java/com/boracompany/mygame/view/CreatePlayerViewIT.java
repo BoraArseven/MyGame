@@ -277,7 +277,6 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 		}
 	}
 
-
 	@Test
 	public void testDeletePlayer_NoLongerExistsInBackend() {
 		// Arrange: Create a player and delete it from the backend directly (simulate
@@ -328,6 +327,49 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 		assertThat(window.textBox("NameText").text()).isEmpty();
 		assertThat(window.textBox("DamageText").text()).isEmpty();
 		assertThat(window.textBox("HealthText").text()).isEmpty();
+	}
+
+	@Test
+	@GUITest
+	public void testRefreshPlayerList_ShouldDisplayAllPlayersFromDatabase() {
+		// Arrange: Add players to the database through the controller
+		Player player1 = new PlayerBuilder().withName("Player1").withDamage(10).withHealth(100).build();
+		Player player2 = new PlayerBuilder().withName("Player2").withDamage(20).withHealth(200).build();
+
+		GuiActionRunner.execute(() -> {
+			gameController.createPlayer(player1.getName(), player1.getHealth(), player1.getDamage());
+			gameController.createPlayer(player2.getName(), player2.getHealth(), player2.getDamage());
+		});
+
+		// Act: Refresh the player list using the method to be tested
+		GuiActionRunner.execute(() -> createPlayerView.refreshPlayerList());
+
+		// Assert: Verify that the players from the database are displayed in the list
+		String[] listContents = window.list("ListPlayers").contents();
+		assertThat(listContents).containsExactly("Player1", "Player2"); // Should display both players
+	}
+
+	@Test
+	@GUITest
+	public void testRefreshPlayerList_ShouldHandleDatabaseErrorGracefully() {
+		// Arrange: Spy on the game controller to simulate a failure when fetching
+		// players
+		GameController spyGameController = Mockito.spy(gameController);
+
+		GuiActionRunner.execute(() -> {
+			createPlayerView.setSchoolController(spyGameController);
+		});
+
+		doThrow(new RuntimeException("Database error")).when(spyGameController).getAllPlayers();
+
+		// Act: Refresh the player list (this should trigger an error)
+		GuiActionRunner.execute(() -> createPlayerView.refreshPlayerList());
+
+		// Assert: Verify that the error message is displayed and the list is not
+		// updated
+		window.label("ErrorMessageLabel").requireText("Failed to refresh player list");
+		assertThat(window.list("ListPlayers").contents()).isEmpty(); // The list should remain empty since an error
+																		// occurred
 	}
 
 }
