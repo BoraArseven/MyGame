@@ -1,4 +1,4 @@
-package com.boracompany.mygame.ORM;
+package com.boracompany.mygame.controller;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,7 +25,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.boracompany.mygame.controller.GameController;
 import com.boracompany.mygame.model.GameMap;
 import com.boracompany.mygame.model.Player;
 import com.boracompany.mygame.model.PlayerBuilder;

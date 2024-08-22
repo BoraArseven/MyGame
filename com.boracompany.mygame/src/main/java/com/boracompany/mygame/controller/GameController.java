@@ -143,4 +143,49 @@ public class GameController {
 		}
 	}
 
+	public void deleteMap(Long mapId) {
+		if (mapId == null) {
+			logger.error("Map ID is null, cannot delete map.");
+			throw new IllegalArgumentException("Map ID must not be null.");
+		}
+
+		GameMap map = gameMapDAO.findById(mapId);
+		if (map != null) {
+			try {
+				gameMapDAO.delete(mapId);
+				logger.info("Map {} with ID {} deleted successfully.", map.getName(), mapId);
+			} catch (RuntimeException e) {
+				logger.error("Failed to delete map with ID {}", mapId);
+				throw new IllegalStateException("Could not delete map with ID " + mapId, e);
+			}
+		} else {
+			logger.error("Map with ID {} not found", mapId);
+			throw new IllegalArgumentException("Map with ID " + mapId + NOT_FOUND_MESSAGE);
+		}
+	}
+
+	// Method to create a new map and add it to the database
+	public GameMap createMap(String mapName, List<Player> players) {
+		GameMap gameMap = new GameMap(mapName, players);
+		try {
+			gameMapDAO.save(gameMap);
+			logger.info("Map created: {}", gameMap.getName());
+			return gameMap;
+		} catch (Exception e) {
+			logger.error("Failed to create map: {}", mapName, e);
+			throw new IllegalStateException("Could not create map: " + mapName, e);
+		}
+	}
+
+	public List<GameMap> getAllMaps() {
+		try {
+			List<GameMap> maps = gameMapDAO.findAll();
+			logger.info("Retrieved {} maps from the database.", maps.size());
+			return maps;
+		} catch (RuntimeException e) {
+			logger.error("Failed to retrieve all maps from the database", e);
+			throw new IllegalStateException("Could not retrieve maps from the database", e);
+		}
+	}
+
 }

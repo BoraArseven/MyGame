@@ -1,4 +1,4 @@
-package com.boracompany.mygame;
+package com.boracompany.mygame.controller;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertFalse;
@@ -32,7 +32,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 
-import com.boracompany.mygame.controller.GameController;
 import com.boracompany.mygame.model.GameMap;
 import com.boracompany.mygame.model.Player;
 import com.boracompany.mygame.model.PlayerBuilder;
@@ -1046,4 +1045,155 @@ class TestGameController {
 		verify(playerDAOMock).getAllPlayers(); // Verify DAO method was called
 	}
 
+	// Test for createMap
+	@Test
+	void testCreateMapSuccessfully() {
+		// Arrange
+		String mapName = "TestMap";
+		List<Player> players = List.of(new Player());
+		GameMap expectedMap = new GameMap(mapName, players);
+
+		// Act
+		GameMap createdMap = gameControllerwithMocks.createMap(mapName, players);
+
+		// Assert
+		assertEquals(expectedMap.getName(), createdMap.getName());
+		assertEquals(expectedMap.getPlayers(), createdMap.getPlayers());
+
+		// Verify interactions
+		verify(gameMapDAOMock).save(any(GameMap.class));
+		verify(logger).info("Map created: {}", mapName);
+	}
+
+	@Test
+	void testCreateMapThrowsException() {
+		// Arrange
+		String mapName = "TestMap";
+		List<Player> players = List.of(new Player());
+		RuntimeException exception = new RuntimeException("Database error");
+
+		// Simulate a failure when creating the map
+		doThrow(exception).when(gameMapDAOMock).save(any(GameMap.class));
+
+		// Act & Assert
+		assertThatThrownBy(() -> gameControllerwithMocks.createMap(mapName, players))
+				.isInstanceOf(IllegalStateException.class).hasMessageContaining("Could not create map: " + mapName);
+
+		// Verify that the logger logged the error
+		verify(logger).error("Failed to create map: {}", mapName, exception);
+	}
+
+	// Test for deleteMap
+	@Test
+	void testDeleteMapSuccessfully() {
+		// Arrange
+		Long mapId = 1L;
+		GameMap map = new GameMap();
+		map.setId(mapId);
+		map.setName("TestMap");
+
+		when(gameMapDAOMock.findById(mapId)).thenReturn(map);
+
+		// Act
+		gameControllerwithMocks.deleteMap(mapId);
+
+		// Assert
+		long mapID = map.getId();
+		verify(gameMapDAOMock).delete(mapID);
+		verify(logger).info("Map {} with ID {} deleted successfully.", map.getName(), mapId);
+	}
+
+	@Test
+	void testDeleteMapThrowsExceptionWhenMapNotFound() {
+		// Arrange
+		Long mapId = 1L;
+		when(gameMapDAOMock.findById(mapId)).thenReturn(null);
+
+		// Act & Assert
+		assertThatThrownBy(() -> gameControllerwithMocks.deleteMap(mapId)).isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Map with ID " + mapId + " not found");
+
+		// Verify that deleteMap is never called
+		verify(gameMapDAOMock, never()).delete(any());
+		verify(logger).error("Map with ID {} not found", mapId);
+	}
+
+	@Test
+	void testDeleteMapThrowsExceptionWhenDeleteFails() {
+		// Arrange
+		Long mapId = 1L;
+		GameMap map = new GameMap();
+		map.setId(mapId);
+		map.setName("TestMap");
+
+		when(gameMapDAOMock.findById(mapId)).thenReturn(map);
+
+		doThrow(new RuntimeException("Database error")).when(gameMapDAOMock).delete(mapId);
+
+		// Act & Assert
+		assertThatThrownBy(() -> gameControllerwithMocks.deleteMap(mapId)).isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("Could not delete map with ID " + mapId);
+
+		verify(logger).error("Failed to delete map with ID {}", mapId);
+	}
+
+	// Test for getAllMaps
+	@Test
+	void testGetAllMapsSuccessfully() {
+		// Arrange
+		List<GameMap> maps = List.of(new GameMap("Map1"), new GameMap("Map2"));
+		when(gameMapDAOMock.findAll()).thenReturn(maps);
+
+		// Act
+		List<GameMap> result = gameControllerwithMocks.getAllMaps();
+
+		// Assert
+		assertEquals(maps.size(), result.size());
+		assertEquals(maps.get(0).getName(), result.get(0).getName());
+		assertEquals(maps.get(1).getName(), result.get(1).getName());
+
+		verify(logger).info("Retrieved {} maps from the database.", maps.size());
+		verify(gameMapDAOMock).findAll();
+	}
+
+	@Test
+	void testGetAllMapsReturnsEmptyList() {
+		// Arrange
+		when(gameMapDAOMock.findAll()).thenReturn(List.of());
+
+		// Act
+		List<GameMap> result = gameControllerwithMocks.getAllMaps();
+
+		// Assert
+		assertEquals(0, result.size());
+		verify(logger).info("Retrieved {} maps from the database.", 0);
+		verify(gameMapDAOMock).findAll();
+	}
+
+	@Test
+	void testGetAllMapsThrowsException() {
+		// Arrange
+		RuntimeException exception = new RuntimeException("Database error");
+		when(gameMapDAOMock.findAll()).thenThrow(exception);
+
+		// Act & Assert
+		assertThatThrownBy(() -> gameControllerwithMocks.getAllMaps()).isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("Could not retrieve maps from the database");
+
+		verify(logger).error("Failed to retrieve all maps from the database", exception);
+		verify(gameMapDAOMock).findAll();
+	}
+
+	@Test
+	void testDeleteMapThrowsExceptionWhenMapIdIsNull() {
+		// Act & Assert
+		assertThatThrownBy(() -> gameControllerwithMocks.deleteMap(null)).isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Map ID must not be null");
+
+		// Verify that logger was called with the expected message
+		verify(logger).error("Map ID is null, cannot delete map.");
+
+		// Ensure that the DAO's delete method is never called
+		verify(gameMapDAOMock, never()).delete(anyLong());
+	}
 }
