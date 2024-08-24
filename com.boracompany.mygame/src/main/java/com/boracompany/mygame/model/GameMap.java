@@ -25,6 +25,11 @@ public class GameMap {
 	public GameMap() {
 	}
 
+	public GameMap(Long id, String name) {
+		this.id = id;
+		this.name = name;
+	}
+
 	public GameMap(String name, List<Player> players) {
 		this.name = name;
 		this.players = players;

@@ -187,5 +187,8 @@ public class GameController {
 			throw new IllegalStateException("Could not retrieve maps from the database", e);
 		}
 	}
+	
+	
+	
 
 }

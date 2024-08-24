@@ -131,34 +131,54 @@ public class GameMapDAO implements IGameMapDAO {
 		}
 	}
 
-	@Override
 	public void addPlayerToMap(Long mapId, Player player) {
-		EntityManager entityManager = entityManagerFactory.createEntityManager();
-		EntityTransaction transaction = entityManager.getTransaction();
+		EntityManager em = entityManagerFactory.createEntityManager();
+		EntityTransaction transaction = em.getTransaction();
 
 		try {
-			// Check if the transaction is already active
-			if (!transaction.isActive()) {
-				transaction.begin();
-			}
+			transaction.begin();
 
-			GameMap gameMap = entityManager.find(GameMap.class, mapId);
-
+			// Find the GameMap by ID
+			if (mapId != null) {
+				
+			
+			GameMap gameMap = em.find(GameMap.class, mapId);
 			if (gameMap == null) {
 				throw new PersistenceException("GameMap with id " + mapId + " not found.");
 			}
 
-			player.setMap(gameMap);
-			entityManager.persist(player);
+			// Ensure the player is not null
+			if (player == null) {
+				throw new PersistenceException("Player cannot be null.");
+			}
+
+			// Check if the player has an ID (detached or new state)
+			if (player.getId() == null) {
+				// New player, persist it
+				em.persist(player);
+				em.flush(); // Make sure the player gets an ID after persisting
+			} else {
+				em.merge(player);
+				em.flush();
+			}
+
+			// Add the player to the map's player list
+			gameMap.getPlayers().add(player);
+
+			// Merge the GameMap to save the changes
+			em.merge(gameMap);
+
+			// Commit the transaction
 			transaction.commit();
-		} catch (PersistenceException e) {
+			}
+			else throw new IllegalArgumentException("MapId can not be null");
+		} catch (Exception e) {
 			if (transaction.isActive()) {
 				transaction.rollback();
 			}
-			logger.error("Error occurred, transaction rolled back: {}", e.getMessage());
-			throw e; // Rethrow the exception after rollback
+			throw new PersistenceException("Failed to add player to map", e);
 		} finally {
-			entityManager.close();
+			em.close();
 		}
 	}
 

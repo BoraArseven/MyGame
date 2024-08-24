@@ -5,8 +5,6 @@ import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.List;
@@ -344,5 +342,6 @@ public class CreatePlayerView extends JFrame implements PlayerView {
 			showError("Failed to refresh player list", null);
 		}
 	}
+	
 
 }
