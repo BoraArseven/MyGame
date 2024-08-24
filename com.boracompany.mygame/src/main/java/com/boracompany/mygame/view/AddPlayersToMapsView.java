@@ -25,16 +25,8 @@ import com.boracompany.mygame.model.Player;
 
 public class AddPlayersToMapsView extends JFrame {
 
-	private static Logger LOGGER = LogManager.getLogger(AddPlayersToMapsView.class);
-
-	public static Logger getLOGGER() {
-		return LOGGER;
-	}
-
-	public static void setLOGGER(Logger lOGGER) {
-		LOGGER = lOGGER;
-	}
-
+	private static final Logger LOGGER = LogManager.getLogger(AddPlayersToMapsView.class);
+	
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private JList<GameMap> mapList;
@@ -169,7 +161,7 @@ public class AddPlayersToMapsView extends JFrame {
 	}
 
 	// Method to add the selected player to the selected map using GameController
-	private void addSelectedPlayerToMap() {
+	protected void addSelectedPlayerToMap() {
 
 		GameMap selectedMap = mapList.getSelectedValue();
 		Player selectedPlayer = playerList.getSelectedValue();
@@ -199,7 +191,7 @@ public class AddPlayersToMapsView extends JFrame {
 	}
 
 	// Method to refresh the map list using the GameController (clear and repopulate)
-	public void refreshMapList() {
+	protected void refreshMapList() {
 	    DefaultListModel<GameMap> mapListModel = getMapListModel();
 	    
 	    try {
@@ -217,7 +209,7 @@ public class AddPlayersToMapsView extends JFrame {
 	}
 
 	// Method to refresh the player list using the GameController (clear and repopulate)
-	public void refreshPlayerList() {
+	protected void refreshPlayerList() {
 	    DefaultListModel<Player> playerListModel = getPlayerListModel();
 	    
 	    try {
