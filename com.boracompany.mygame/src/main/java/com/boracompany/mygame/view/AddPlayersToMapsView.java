@@ -50,7 +50,7 @@ public class AddPlayersToMapsView extends JFrame {
 					AddPlayersToMapsView frame = new AddPlayersToMapsView();
 					frame.setVisible(true);
 				} catch (Exception e) {
-					e.printStackTrace();
+					throw e;
 				}
 			}
 		});

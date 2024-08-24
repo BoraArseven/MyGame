@@ -60,7 +60,7 @@ public class CreateMapView extends JFrame {
 					CreateMapView frame = new CreateMapView();
 					frame.setVisible(true);
 				} catch (Exception e) {
-					e.printStackTrace();
+					throw e;
 				}
 			}
 		});
