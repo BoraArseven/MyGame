@@ -34,6 +34,7 @@ public class CreatePlayerViewTest extends AssertJSwingJUnitTestCase {
 	@Mock
 	private GameController gameController;
 	private AutoCloseable closeable;
+
 	@Override
 	protected void onSetUp() {
 		closeable = MockitoAnnotations.openMocks(this);
@@ -43,9 +44,10 @@ public class CreatePlayerViewTest extends AssertJSwingJUnitTestCase {
 		window = new FrameFixture(robot(), createPlayerView); // Pass robot to FrameFixture
 		window.show(); // shows the frame to test
 	}
+
 	@Override
 	protected void onTearDown() throws Exception {
-	closeable.close();
+		closeable.close();
 	}
 
 	@Test
@@ -139,7 +141,7 @@ public class CreatePlayerViewTest extends AssertJSwingJUnitTestCase {
 		GuiActionRunner.execute(() -> createPlayerView.playerAdded(player1));
 		String[] listContents = window.list().contents();
 		assertThat(listContents).containsExactly(player1.toString());
-		window.label("ErrorMessageLabel").requireText(" ");
+		window.label("ErrorMessageLabel").requireText("");
 	}
 
 	@Test
@@ -147,43 +149,72 @@ public class CreatePlayerViewTest extends AssertJSwingJUnitTestCase {
 		// setup
 		Player player1 = new PlayerBuilder().withName("testPlayerToBeRemoved1").withDamage(200).withHealth(500).build();
 		Player player2 = new PlayerBuilder().withName("testPlayerToBeRemoved2").withDamage(150).withHealth(700).build();
+
+		// Add players to the list model
 		GuiActionRunner.execute(() -> {
 			DefaultListModel<Player> listPlayersModel = createPlayerView.getListPlayersModel();
 			listPlayersModel.addElement(player1);
 			listPlayersModel.addElement(player2);
 		});
-		// execute
-		GuiActionRunner.execute(() -> createPlayerView.playerRemoved(
-				new PlayerBuilder().withName("testPlayerToBeRemoved1").withDamage(200).withHealth(500).build()));
+
+		// execute - remove player1 (using the same instance that was added to the list)
+		GuiActionRunner.execute(() -> createPlayerView.playerRemoved(player1));
+
 		// verify
 		String[] listContents = window.list().contents();
-		assertThat(listContents).containsExactly(player2.toString());
-		window.label("ErrorMessageLabel").requireText(" ");
+		assertThat(listContents).containsExactly(player2.toString()); // Verify player2 is still in the list
+		window.label("ErrorMessageLabel").requireText(""); // Verify the error message label is cleared
 	}
-	
+
 	@Test
 	public void testAddButtonShouldDelegateToSchoolControllerNewStudent() {
-	window.textBox("NameText").enterText("testname");
-	window.textBox("DamageText").enterText("20");
-	window.textBox("HealthText").enterText("100");
-	window.button(JButtonMatcher.withText("Create")).click();
-	Player playerShouldBeAdded = new PlayerBuilder().withName("testname").withDamage(20).withHealth(100).build();
-	verify(gameController).createPlayer(playerShouldBeAdded.getName(), playerShouldBeAdded.getHealth(), playerShouldBeAdded.getDamage());
+		window.textBox("NameText").enterText("testname");
+		window.textBox("DamageText").enterText("20");
+		window.textBox("HealthText").enterText("100");
+		window.button(JButtonMatcher.withText("Create")).click();
+		Player playerShouldBeAdded = new PlayerBuilder().withName("testname").withDamage(20).withHealth(100).build();
+		verify(gameController).createPlayer(playerShouldBeAdded.getName(), playerShouldBeAdded.getHealth(),
+				playerShouldBeAdded.getDamage());
 	}
+
 	@Test
 	public void testDeleteButtonShouldDelegateToSchoolControllerDeleteStudent() {
 		Player playerShouldBeDeleted = new PlayerBuilder().withName("testname").withDamage(20).withHealth(100).build();
 		Player playerShouldBeDeleted2 = new PlayerBuilder().withName("testname2").withDamage(40).withHealth(50).build();
-	GuiActionRunner.execute(
-	() -> {
-	DefaultListModel<Player> listStudentsModel =
-	createPlayerView.getListPlayersModel();
-	listStudentsModel.addElement(playerShouldBeDeleted);
-	listStudentsModel.addElement(playerShouldBeDeleted2);
+		GuiActionRunner.execute(() -> {
+			DefaultListModel<Player> listStudentsModel = createPlayerView.getListPlayersModel();
+			listStudentsModel.addElement(playerShouldBeDeleted);
+			listStudentsModel.addElement(playerShouldBeDeleted2);
+		});
+		window.list("ListPlayers").selectItem(1);
+		window.button(JButtonMatcher.withText("Delete Selected")).click();
+
 	}
-	);
-	window.list("ListPlayers").selectItem(1);
-	window.button(JButtonMatcher.withText("Delete Selected")).click();
-	
+
+	@Test
+	public void testPlayerRemovedShouldHandleEmptyListCorrectly() {
+		// setup - Add a single player to the list
+		Player playerToBeRemoved = new PlayerBuilder().withName("lastPlayer").withDamage(200).withHealth(500).build();
+
+		// Add the player to the list model
+		GuiActionRunner.execute(() -> {
+			DefaultListModel<Player> listPlayersModel = createPlayerView.getListPlayersModel();
+			listPlayersModel.addElement(playerToBeRemoved);
+		});
+
+		// execute - remove the last player (causing the list to become empty)
+		GuiActionRunner.execute(() -> createPlayerView.playerRemoved(playerToBeRemoved));
+
+		// verify - the list should now be empty
+		String[] listContents = window.list().contents();
+		assertThat(listContents).isEmpty(); // Verify the list is empty
+
+		// The ErrorMessageLabel should be reset to an empty string
+		window.label("ErrorMessageLabel").requireText("");
+
+		// Verify that the gameController's deletePlayer method was called with the
+		// correct ID
+		verify(gameController).deletePlayer(playerToBeRemoved.getId());
 	}
+
 }

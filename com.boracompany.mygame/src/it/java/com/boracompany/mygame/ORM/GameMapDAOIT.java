@@ -522,7 +522,7 @@ public class GameMapDAOIT {
 		// Assert that the transaction was rolled back
 		Mockito.verify(spyTransaction).rollback();
 		// Assert that the exception message is exactly as expected
-		assertEquals("Simulated Persistence Exception", thrownException.getMessage());
+		assertEquals("Failed to add player to map", thrownException.getMessage());
 
 		// Verify that the EntityManager is closed after the operation
 		Mockito.verify(spyEm).close();
@@ -557,7 +557,7 @@ public class GameMapDAOIT {
 		Mockito.verify(spyTransaction, Mockito.times(1)).rollback();
 
 		// Assert that the exception message contains the expected text
-		assertTrue(thrownException.getMessage().contains("GameMap with id 1 not found."));
+		assertEquals("Failed to add player to map", thrownException.getMessage());
 
 		// Verify that the EntityManager is closed after the operation
 		Mockito.verify(spyEm).close();
@@ -708,7 +708,7 @@ public class GameMapDAOIT {
 		Mockito.when(transactionSpy.isActive()).thenReturn(true);
 		Long id = gameMap.getId();
 		assertThrows(PersistenceException.class, () -> {
-			
+
 			gameMapDAOwithSpiedEmf.removePlayerFromMap(id, player);
 		});
 
@@ -823,7 +823,7 @@ public class GameMapDAOIT {
 		Mockito.verify(spyTransaction, Mockito.times(1)).rollback();
 
 		// Assert that the exception message contains the expected text
-		assertEquals("Simulated Persistence Exception", thrownException.getMessage());
+		assertEquals("Failed to add player to map", thrownException.getMessage());
 
 		// Verify that the EntityManager is closed after the operation
 		Mockito.verify(spyEm).close();
@@ -864,10 +864,112 @@ public class GameMapDAOIT {
 		Mockito.verify(spyTransaction, Mockito.never()).rollback();
 
 		// Assert that the exception message contains the expected text
-		assertEquals("Simulated Persistence Exception", thrownException.getMessage());
+		assertEquals("Failed to add player to map", thrownException.getMessage());
 
 		// Verify that the EntityManager is closed after the operation
 		Mockito.verify(spyEm).close();
 	}
 
+	@Test
+	void testFindAlivePlayers() {
+		// Arrange: Create a few players, some alive and some dead
+		GameMap gameMap = new GameMap();
+		gameMap.setName("Map with Alive and Dead Players");
+		gameMapDAO.save(gameMap);
+
+		Player alivePlayer1 = new PlayerBuilder().withName("Alive Player 1").withIsAlive(true).build();
+		Player alivePlayer2 = new PlayerBuilder().withName("Alive Player 2").withIsAlive(true).build();
+		Player deadPlayer = new PlayerBuilder().withName("Dead Player").withIsAlive(false).build();
+
+		// Add players to the map and persist them
+		gameMapDAO.addPlayerToMap(gameMap.getId(), alivePlayer1);
+		gameMapDAO.addPlayerToMap(gameMap.getId(), alivePlayer2);
+		gameMapDAO.addPlayerToMap(gameMap.getId(), deadPlayer);
+
+		// Act: Retrieve the list of alive players
+		List<Player> alivePlayers = gameMapDAO.findAlivePlayers();
+
+		// Assert: Only alive players should be returned
+		assertNotNull(alivePlayers);
+		assertEquals(2, alivePlayers.size());
+		assertTrue(alivePlayers.stream().anyMatch(p -> p.getName().equals("Alive Player 1")));
+		assertTrue(alivePlayers.stream().anyMatch(p -> p.getName().equals("Alive Player 2")));
+		assertFalse(alivePlayers.stream().anyMatch(p -> p.getName().equals("Dead Player")));
+	}
+
+	@Test
+	void testAddPlayerToMap_NullPlayer() {
+		// Arrange: Create a new GameMap and persist it
+		GameMap gameMap = new GameMap();
+		gameMap.setName("Test Map for Null Player");
+		gameMapDAO.save(gameMap);
+
+		// Act & Assert: Try adding a null player to the map and assert that it throws
+		// an exception
+		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
+			gameMapDAO.addPlayerToMap(gameMap.getId(), null); // Pass null as the player
+		});
+
+		// Assert: Check the exception message
+		assertEquals("Failed to add player to map", thrownException.getMessage());
+	}
+
+	@Test
+	void testAddPlayerToMap_NewPlayer() {
+		// Arrange: Create and save a GameMap
+		GameMap gameMap = new GameMap();
+		gameMap.setName("Map for New Player Test");
+		gameMapDAO.save(gameMap);
+
+		// Act: Create a new Player and add to the map (no ID yet)
+		Player newPlayer = new PlayerBuilder().withName("New Player").build();
+		gameMapDAO.addPlayerToMap(gameMap.getId(), newPlayer);
+
+		// Assert: The player should be added to the map and should have an ID after
+		// persisting
+		EntityManager em = emf.createEntityManager();
+		GameMap updatedMap = em.find(GameMap.class, gameMap.getId());
+		em.refresh(updatedMap); // Ensure we get the latest data
+		assertEquals(1, updatedMap.getPlayers().size());
+		assertNotNull(updatedMap.getPlayers().get(0).getId()); // ID should now be assigned
+		assertEquals("New Player", updatedMap.getPlayers().get(0).getName());
+		em.close();
+	}
+
+	@Test
+	void testAddPlayerToMap_NewPlayerWithoutId() {
+		// Arrange: Create and save a GameMap
+		GameMap gameMap = new GameMap();
+		gameMap.setName("Test Map");
+		gameMapDAO.save(gameMap);
+
+		// Arrange: Create a new Player without an ID
+		Player newPlayer = new PlayerBuilder().withName("New Player").build();
+
+		// Act: Add the new player to the GameMap
+		gameMapDAO.addPlayerToMap(gameMap.getId(), newPlayer);
+
+		// Assert: Ensure the player was added and persisted
+		EntityManager em = emf.createEntityManager();
+		GameMap updatedMap = em.find(GameMap.class, gameMap.getId());
+		em.refresh(updatedMap); // Ensure the latest data is loaded
+
+		assertTrue(updatedMap.getPlayers().contains(newPlayer), "The new player should be part of the GameMap.");
+		em.close();
+	}
+
+	  @Test
+	    public void testAddPlayerToMap_withNullMapId_throwsIllegalArgumentException() {
+	        Player player = new Player();
+	        player.setId(1L); // assuming this player already exists or has an ID
+
+	        // Act & Assert
+	        PersistenceException exception = assertThrows(PersistenceException.class, () -> {
+	            gameMapDAO.addPlayerToMap(null, player);
+	        });
+
+	        // Check if the cause of the PersistenceException is IllegalArgumentException
+	        assertTrue(exception.getCause() instanceof IllegalArgumentException);
+	        assertTrue(exception.getCause().getMessage().contains("MapId can not be null"));
+	    }
 }

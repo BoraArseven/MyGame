@@ -1,35 +1,31 @@
 package com.boracompany.mygame.view;
 
+import java.awt.Color;
 import java.awt.EventQueue;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.List;
 
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import com.boracompany.mygame.controller.GameController;
 import com.boracompany.mygame.main.ExcludeFromJacocoGeneratedReport;
 import com.boracompany.mygame.model.Player;
 import com.boracompany.mygame.model.PlayerBuilder;
-
-import java.awt.GridBagLayout;
-import javax.swing.JLabel;
-import java.awt.GridBagConstraints;
-import javax.swing.JTextField;
-import java.awt.Insets;
-
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.util.List;
-
-import javax.swing.JList;
-import javax.swing.JScrollPane;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.event.ListSelectionEvent;
 
 public class CreatePlayerView extends JFrame implements PlayerView {
 
@@ -62,7 +58,9 @@ public class CreatePlayerView extends JFrame implements PlayerView {
 	 */
 	@ExcludeFromJacocoGeneratedReport
 	public static void main(String[] args) {
+		
 		EventQueue.invokeLater(new Runnable() {
+			@ExcludeFromJacocoGeneratedReport
 			public void run() {
 				try {
 					CreatePlayerView frame = new CreatePlayerView();
@@ -163,13 +161,29 @@ public class CreatePlayerView extends JFrame implements PlayerView {
 		createPlayerButton.setName("CreatePlayerButton");
 		createPlayerButton.setEnabled(false);
 
-		createPlayerButton.addActionListener(e -> gameController.createPlayer(
+		createPlayerButton.addActionListener(e -> {
+			try {
+				// Build the player using the PlayerBuilder
+				Player player = new PlayerBuilder().withName(NameText.getText())
+						.withHealth(Float.parseFloat(HealthText.getText()))
+						.withDamage(Float.parseFloat(DamageText.getText())).build();
 
-				NameText.getText(), Float.parseFloat(HealthText.getText()), // convert health to long
-				Float.parseFloat(DamageText.getText()) // convert damage to long
-		)
+				// Add the player to the UI list
+				playerAdded(player);
 
-		);
+				// Clear the text fields after successful player creation
+				NameText.setText("");
+				DamageText.setText("");
+				HealthText.setText("");
+
+				// Optionally disable the Create button until the fields are filled again
+				createPlayerButton.setEnabled(false);
+
+			} catch (Exception ex) {
+				// Handle any exceptions (e.g., parsing or validation errors)
+				showError("Failed to create player", null);
+			}
+		});
 
 		GridBagConstraints gbc_createPlayerButton = new GridBagConstraints();
 		gbc_createPlayerButton.insets = new Insets(0, 0, 5, 5);
@@ -207,10 +221,9 @@ public class CreatePlayerView extends JFrame implements PlayerView {
 
 		mainMenuButton = new JButton("MainMenu");
 		mainMenuButton.setName("MainMenuButton");
-		mainMenuButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-			}
-		});
+		//mainMenuButton.addActionListener(new ActionListener() {
+	//		public void actionPerformed(ActionEvent e) {
+		//	}});
 		GridBagConstraints gbc_mainMenuButton = new GridBagConstraints();
 		gbc_mainMenuButton.insets = new Insets(0, 0, 5, 5);
 		gbc_mainMenuButton.gridx = 0;
@@ -220,10 +233,17 @@ public class CreatePlayerView extends JFrame implements PlayerView {
 		DeleteButton = new JButton("Delete Selected");
 		DeleteButton.setName("DeleteButton");
 		DeleteButton.setEnabled(false);
-		DeleteButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+		DeleteButton.addActionListener(e -> {
+			Player selectedPlayer = list.getSelectedValue();
+			if (selectedPlayer != null) {
+				// Call playerRemoved() if a player is selected
+				playerRemoved(selectedPlayer);
+			} else {
+				// Show error message when no player is selected
+				showError("No player selected", null);
 			}
 		});
+
 		GridBagConstraints gbc_deleteButton = new GridBagConstraints();
 		gbc_deleteButton.insets = new Insets(0, 0, 5, 5);
 		gbc_deleteButton.gridx = 1;
@@ -242,7 +262,15 @@ public class CreatePlayerView extends JFrame implements PlayerView {
 	@Override
 	public void showError(String errorMessage, Player player) {
 		// TODO Auto-generated method stub
-		ErrorMessageLabel.setText(errorMessage + ": " + player);
+		ErrorMessageLabel.setForeground(Color.RED);
+		if (player != null) {
+
+			ErrorMessageLabel.setText(errorMessage + ": " + player);
+
+		} else {
+			ErrorMessageLabel.setText(errorMessage);
+		}
+
 	}
 
 	@Override
@@ -253,24 +281,67 @@ public class CreatePlayerView extends JFrame implements PlayerView {
 
 	@Override
 	public void playerAdded(Player player) {
-		listPlayersModel.addElement(player);
 		resetErrorLabel();
-		gameController.createPlayer(player.getName(), player.getHealth(), player.getDamage());
+		try {
+			// Try to add the player to the database
+			gameController.createPlayer(player.getName(), player.getHealth(), player.getDamage());
+
+			// If the database operation is successful, add the player to the view's list
+			listPlayersModel.addElement(player);
+		} catch (Exception ex) {
+			// If there is an error, show an error message and don't add the player to the
+			// list
+			showError("Failed to create player", player);
+		}
 	}
 
 	private void resetErrorLabel() {
-		ErrorMessageLabel.setText(" ");
+		ErrorMessageLabel.setText("");
 	}
 
 	@Override
 	public void playerRemoved(Player player) {
-		// TODO Auto-generated method stub
-		listPlayersModel.removeElement(player);
-		resetErrorLabel();
+	    resetErrorLabel();
+	    listPlayersModel.removeElement(player); // This should remove the player from the list model
+
+	    // Remove the player from the database
+	    try {
+	        gameController.deletePlayer(player.getId());
+	    } catch (Exception ex) {
+	        showError("Failed to remove player from the database: " + player.getName(), player);
+	        return;
+	    }
+
+	    // Update the selection
+	    if (!listPlayersModel.isEmpty()) {
+	        list.setSelectedIndex(0); // Optionally select the first remaining player
+	    }
 	}
 
 	public void setSchoolController(GameController gameController) {
 		this.gameController = gameController;
 	}
+
+	public void refreshPlayerList() {
+		try {
+			// Fetch the list of players from the GameController
+			List<Player> players = gameController.getAllPlayers();
+
+			// Ensure updates are made on the Event Dispatch Thread (EDT)
+			EventQueue.invokeLater(() -> {
+				// Clear the current contents of the list model
+				listPlayersModel.clear();
+
+				// Add the players to the list model
+				for (Player player : players) {
+					listPlayersModel.addElement(player);
+				}
+			});
+		} catch (Exception e) {
+			// Handle exceptions and optionally show an error message
+			showError("Failed to refresh player list", null);
+		}
+	}
+	
 
 }

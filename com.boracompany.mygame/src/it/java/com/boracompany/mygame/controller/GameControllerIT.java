@@ -1,4 +1,4 @@
-package com.boracompany.mygame.ORM;
+package com.boracompany.mygame.controller;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.spy;
+
+import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -23,7 +25,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.boracompany.mygame.controller.GameController;
 import com.boracompany.mygame.model.GameMap;
 import com.boracompany.mygame.model.Player;
 import com.boracompany.mygame.model.PlayerBuilder;
@@ -245,21 +246,44 @@ class GameControllerIT {
 		// with the GameMap
 		GameMap gameMap = new GameMap();
 		gameMap.setName("TestMap");
+
+		// Persist the map
 		gameMapDAO.save(gameMap);
 
+		// Create and persist a player
 		Player player = new PlayerBuilder().withName("TestPlayer").build();
-		playerDAO.updatePlayer(player); // Persist the player
-		gameMapDAO.addPlayerToMap(gameMap.getId(), player); // Add the player to the map
+		playerDAO.createPlayer(player); // Persist the player
 
-		// Act: Remove the player from the map
+		// Manually add the player to the map by updating the map's players list and
+		// persisting it
+		EntityManager em = emf.createEntityManager();
+		EntityTransaction transaction = em.getTransaction();
+		try {
+			transaction.begin();
+			gameMap = em.find(GameMap.class, gameMap.getId());
+			gameMap.getPlayers().add(player); // Add the player to the GameMap's players list
+			em.merge(gameMap); // Merge the changes into the database
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction.isActive()) {
+				transaction.rollback();
+			}
+			throw e;
+		} finally {
+			em.close();
+		}
+
+		// Act: Remove the player from the map using the DAO
 		gameMapDAO.removePlayerFromMap(gameMap.getId(), player);
 
 		// Assert: Ensure the player was successfully removed from the map
-		EntityManager em = emf.createEntityManager();
-		GameMap updatedMap = em.find(GameMap.class, gameMap.getId());
-		em.refresh(updatedMap); // Ensure the latest data is loaded
+		EntityManager emCheck = emf.createEntityManager();
+		GameMap updatedMap = emCheck.find(GameMap.class, gameMap.getId());
+		emCheck.refresh(updatedMap); // Ensure the latest data is loaded
+
 		assertTrue(updatedMap.getPlayers().isEmpty(), "Player was not successfully removed from the map");
-		em.close();
+
+		emCheck.close();
 	}
 
 	@Test
@@ -338,42 +362,101 @@ class GameControllerIT {
 
 	@Test
 	void testDeletePlayer_DeleteFailsDueToDBError() {
-	    // Arrange: Create and persist a player
-	    Player player = new PlayerBuilder().withName("TestPlayer").withDamage(100).withHealth(200).build();
-	    playerDAO.createPlayer(player);
-	    
-	    // Retrieve the player with the persisted ID
-	    EntityManager em = emf.createEntityManager();
-	    Player persistedPlayer = em.find(Player.class, player.getId());
-	    
-	    // Ensure the player was persisted correctly
-	    assertNotNull(persistedPlayer, "Player should be persisted and retrievable from the database.");
-	    
-	    // Simulate a failure by closing the EntityManagerFactory
-	    HibernateUtil.close();
+		// Arrange: Create and persist a player
+		Player player = new PlayerBuilder().withName("TestPlayer").withDamage(100).withHealth(200).build();
+		playerDAO.createPlayer(player);
 
-	    // Act & Assert: Expect IllegalStateException with "EntityManagerFactory is closed" message
-	    IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
-	        controller.deletePlayer(player.getId());
-	    });
+		// Retrieve the player with the persisted ID
+		EntityManager em = emf.createEntityManager();
+		Player persistedPlayer = em.find(Player.class, player.getId());
 
-	    // Verify: The exception message matches the expected one
-	    String expectedMessage = "EntityManagerFactory is closed";
-	    assertEquals(expectedMessage, thrown.getMessage());
+		// Ensure the player was persisted correctly
+		assertNotNull(persistedPlayer, "Player should be persisted and retrievable from the database.");
 
-	    // Reinitialize Hibernate for further tests
-	    setUpAll();
-	    setUp();
+		// Simulate a failure by closing the EntityManagerFactory
+		HibernateUtil.close();
+
+		// Act & Assert: Expect IllegalStateException with "EntityManagerFactory is
+		// closed" message
+		IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
+			controller.deletePlayer(player.getId());
+		});
+
+		// Verify: The exception message matches the expected one
+		String expectedMessage = "EntityManagerFactory is closed";
+		assertEquals(expectedMessage, thrown.getMessage());
+
+		// Reinitialize Hibernate for further tests
+		setUpAll();
+		setUp();
 	}
 
 	@Test
 	void testDeletePlayerThrowsExceptionForNullPlayerId() {
-	    IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
-	        controller.deletePlayer(null); // Pass null player ID
-	    });
+		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+			controller.deletePlayer(null); // Pass null player ID
+		});
 
-	    assertEquals("Player ID must not be null.", thrown.getMessage());
+		assertEquals("Player ID must not be null.", thrown.getMessage());
 	}
 
+	@Test
+	void testGetAllPlayersReturnsEmptyList() {
+		// Arrange: Ensure the database is empty (resetDatabase has already been called
+		// in @BeforeEach)
+		// Act: Call the getAllPlayers method
+		List<Player> players = controller.getAllPlayers();
+
+		// Assert: Verify that the result is an empty list
+		assertNotNull(players, "The list of players should not be null");
+		assertTrue(players.isEmpty(), "The list of players should be empty");
+
+		// Verify that the correct log message was generated
+		LOGGER.info("Retrieved {} players from the database.", players.size());
+	}
+
+	@Test
+	void testGetAllPlayersReturnsMultiplePlayers() {
+		// Arrange: Create and persist multiple players
+		Player player1 = new PlayerBuilder().withName("Player1").withDamage(10).withHealth(100).build();
+		Player player2 = new PlayerBuilder().withName("Player2").withDamage(20).withHealth(200).build();
+		Player player3 = new PlayerBuilder().withName("Player3").withDamage(30).withHealth(300).build();
+
+		playerDAO.createPlayer(player1); // Persist Player 1
+		playerDAO.createPlayer(player2); // Persist Player 2
+		playerDAO.createPlayer(player3); // Persist Player 3
+
+		// Act: Call the getAllPlayers method
+		List<Player> players = controller.getAllPlayers();
+
+		// Assert: Verify that the list contains all the players
+		assertNotNull(players, "The list of players should not be null");
+		assertEquals(3, players.size(), "The list should contain three players");
+		assertTrue(players.stream().anyMatch(p -> p.getName().equals("Player1")), "Player1 should be in the list");
+		assertTrue(players.stream().anyMatch(p -> p.getName().equals("Player2")), "Player2 should be in the list");
+		assertTrue(players.stream().anyMatch(p -> p.getName().equals("Player3")), "Player3 should be in the list");
+
+		// Verify that the correct log message was generated
+		LOGGER.info("Retrieved {} players from the database.", players.size());
+	}
+
+	@Test
+	void testGetAllPlayersThrowsExceptionWhenDBFails() {
+		// Arrange: Simulate a failure by closing the EntityManagerFactory
+		HibernateUtil.close();
+
+		// Act & Assert: Expect an IllegalStateException
+		IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
+			controller.getAllPlayers();
+		});
+
+		// Assert: Verify the exception message
+		String expectedMessage = "Could not retrieve players from the database";
+		assertEquals(expectedMessage, thrown.getMessage());
+
+		// Reinitialize Hibernate for further tests
+		setUpAll();
+		setUp();
+	}
 
 }
