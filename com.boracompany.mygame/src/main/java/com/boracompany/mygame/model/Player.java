@@ -85,7 +85,6 @@ public class Player {
 		this.map = map;
 	}
 
-
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -103,6 +102,6 @@ public class Player {
 
 	@Override
 	public String toString() {
-		return this.getName();
+		return this.getName() + ", Health: " + this.getHealth() + ", Damage: " + this.getDamage();
 	}
 }

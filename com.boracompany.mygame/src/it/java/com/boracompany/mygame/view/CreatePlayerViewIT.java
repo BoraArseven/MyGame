@@ -141,7 +141,7 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 		logger.debug("List contents after creation: " + Arrays.toString(window.list("ListPlayers").contents()));
 
 		// Assert: Player is added to the list
-		assertThat(window.list("ListPlayers").contents()).contains("Player1");
+		assertThat(window.list("ListPlayers").contents()).contains("Player1, Health: 100.0, Damage: 10.0");
 
 		// Select the player and delete it
 		window.list("ListPlayers").selectItem(0);
@@ -192,7 +192,7 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 		logger.debug(
 				"List contents after multiple creations: " + Arrays.toString(window.list("ListPlayers").contents()));
 
-		assertThat(window.list("ListPlayers").contents()).containsExactly("Player1", "Player2");
+		assertThat(window.list("ListPlayers").contents()).containsExactly("Player1, Health: 100.0, Damage: 10.0", "Player2, Health: 200.0, Damage: 20.0");
 
 		EntityManager em = emf.createEntityManager();
 		try {
@@ -353,7 +353,7 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 
 		// Assert: Verify that the players from the database are displayed in the list
 		String[] listContents = window.list("ListPlayers").contents();
-		assertThat(listContents).containsExactly("Player1", "Player2"); // Should display both players
+		assertThat(listContents).containsExactly("Player1, Health: 100.0, Damage: 10.0", "Player2, Health: 200.0, Damage: 20.0"); // Should display both players
 	}
 
 	@Test
