@@ -221,61 +221,64 @@ public class CreateMapView extends JFrame {
 	public void mapAdded(GameMap map) {
 		resetErrorLabel();
 		try {
+			// Ensure the correct map name is used
+			String mapName = map.getName();
+			System.out.println("Map Name: " + mapName); // Debugging step
+
 			// Add the map to the database
-			gameController.createMap(map.getName(), map.getPlayers());
+			gameController.createMap(mapName, map.getPlayers());
 
 			// If successful, add the map to the view's list
 			listMapsModel.addElement(map);
 		} catch (Exception ex) {
-			// Handle error and do not add map to the list
 			showError("Failed to create map", map);
 		}
 	}
 
 	public void mapRemoved(GameMap map) {
-        resetErrorLabel();
-        listMapsModel.removeElement(map);
+		resetErrorLabel();
+		listMapsModel.removeElement(map);
 
-        try {
-            // Remove the map from the database
-            gameController.deleteMap(map.getId());
-        } catch (Exception ex) {
-            // Fixed: map.getName() is already included in the error message, no need to append it again
-            showError("Failed to remove map from the database: " + map.getName(), null);
-            return;
-        }
-    
+		try {
+			// Remove the map from the database
+			gameController.deleteMap(map.getId());
+		} catch (Exception ex) {
+			// Fixed: map.getName() is already included in the error message, no need to
+			// append it again
+			showError("Failed to remove map from the database: " + map.getName(), null);
+			return;
+		}
 
-	// Optionally select the first remaining map
-	if(!listMapsModel.isEmpty())
+		// Optionally select the first remaining map
+		if (!listMapsModel.isEmpty())
 
-	{
-		list.setSelectedIndex(0);
-	}
+		{
+			list.setSelectedIndex(0);
+		}
 	}
 
 	private void resetErrorLabel() {
-        errorMessageLabel.setText("");
-    }
+		errorMessageLabel.setText("");
+	}
 
 	public void setGameController(GameController gameController) {
-        this.gameController = gameController;
-    }
+		this.gameController = gameController;
+	}
 
 	public void refreshMapList() {
-        try {
-            // Fetch the list of maps from the GameController
-            List<GameMap> maps = gameController.getAllMaps();
+		try {
+			// Fetch the list of maps from the GameController
+			List<GameMap> maps = gameController.getAllMaps();
 
-            EventQueue.invokeLater(() -> {
-                // Clear the current list model
-                listMapsModel.clear();
+			EventQueue.invokeLater(() -> {
+				// Clear the current list model
+				listMapsModel.clear();
 
-                // Add the maps to the list model
-                maps.forEach(listMapsModel::addElement);
-            });
-        } catch (Exception e) {
-            showError("Failed to refresh map list", null);
-        }
-    }
+				// Add the maps to the list model
+				maps.forEach(listMapsModel::addElement);
+			});
+		} catch (Exception e) {
+			showError("Failed to refresh map list", null);
+		}
+	}
 }

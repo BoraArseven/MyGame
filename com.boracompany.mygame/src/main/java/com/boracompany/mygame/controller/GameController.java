@@ -187,8 +187,25 @@ public class GameController {
 			throw new IllegalStateException("Could not retrieve maps from the database", e);
 		}
 	}
-	
-	
+
+	// Method to retrieve players from a specific map by map ID
+	public List<Player> getPlayersFromMap(Long mapId) {
+	    if (mapId == null) {
+	        logger.error("Map ID is null, cannot retrieve players.");
+	        throw new IllegalArgumentException("Map ID must not be null.");
+	    }
+
+	    GameMap gameMap = gameMapDAO.findById(mapId);
+	    if (gameMap != null) {
+	        List<Player> players = gameMap.getPlayers();
+	        logger.info("Retrieved {} players from map {}", players.size(), gameMap.getName());
+	        return players;
+	    } else {
+	        logger.error("Map with ID {} not found", mapId);
+	        throw new IllegalArgumentException("Map with ID " + mapId + NOT_FOUND_MESSAGE);
+	    }
+	}
+
 	
 
 }
