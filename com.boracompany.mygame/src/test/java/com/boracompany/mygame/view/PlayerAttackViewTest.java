@@ -1,6 +1,7 @@
 package com.boracompany.mygame.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
@@ -20,6 +21,7 @@ import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -28,6 +30,7 @@ import com.boracompany.mygame.model.GameMap;
 import com.boracompany.mygame.model.Player;
 import com.boracompany.mygame.model.PlayerBuilder;
 
+@RunWith(org.assertj.swing.junit.runner.GUITestRunner.class)
 public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 
 	private FrameFixture window;
@@ -40,9 +43,6 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 	public void setPlayerAttackView(PlayerAttackView playerAttackView) {
 		this.playerAttackView = playerAttackView;
 	}
-
-
-
 
 	@Mock
 	private GameController mockGameController;
@@ -247,7 +247,8 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 
 		// Mock the GameController
 		when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
-		when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Collections.emptyList()); // No players associated
+		when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Collections.emptyList()); // No players
+																											// associated
 
 		// Inject the mock controller and add the map to the view
 		GuiActionRunner.execute(() -> {
@@ -364,7 +365,8 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 		alivePlayer.setMap(selectedMap); // Player belongs to the selected map
 
 		when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(selectedMap));
-		when(mockGameController.getPlayersFromMap(selectedMap.getId())).thenReturn(Collections.singletonList(alivePlayer));
+		when(mockGameController.getPlayersFromMap(selectedMap.getId()))
+				.thenReturn(Collections.singletonList(alivePlayer));
 
 		// Inject the mock controller into the view
 		GuiActionRunner.execute(() -> {
@@ -553,61 +555,59 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test
 	public void testAttackThrowsExceptionShouldShowErrorMessage() throws Exception {
-	    // Setup players and map
-	    Player player1 = new PlayerBuilder().withName("Player1").withHealth(100f).withDamage(20f).withIsAlive(true).build();
-	    player1.setId(1L);
-	    Player player2 = new PlayerBuilder().withName("Player2").withHealth(80f).withDamage(15f).withIsAlive(true).build();
-	    player2.setId(2L);
+		// Setup players and map
+		Player player1 = new PlayerBuilder().withName("Player1").withHealth(100f).withDamage(20f).withIsAlive(true)
+				.build();
+		player1.setId(1L);
+		Player player2 = new PlayerBuilder().withName("Player2").withHealth(80f).withDamage(15f).withIsAlive(true)
+				.build();
+		player2.setId(2L);
 
-	    GameMap testMap = new GameMap("TestMap");
-	    testMap.setPlayers(Arrays.asList(player1, player2));
+		GameMap testMap = new GameMap("TestMap");
+		testMap.setPlayers(Arrays.asList(player1, player2));
 
-	    // Mock the GameController to return the players when getAllPlayers() is called
-	    when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Arrays.asList(player1, player2));
+		// Mock the GameController to return the players when getAllPlayers() is called
+		when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Arrays.asList(player1, player2));
 
-	    // Populate the map and player list on the EDT
-	 // Populate the map and player list on the EDT
-	    GuiActionRunner.execute(() -> {
-	        playerAttackView.getMapListModel().addElement(testMap);
+		// Populate the map and player list on the EDT
+		// Populate the map and player list on the EDT
+		GuiActionRunner.execute(() -> {
+			playerAttackView.getMapListModel().addElement(testMap);
 
-	        // Ensure lists are updated after adding elements
-	        playerAttackView.getMapList().revalidate();
-	        playerAttackView.getMapList().repaint();
-	        
-	        // Select the map in the view to trigger player list refresh
-	        playerAttackView.getMapList().setSelectedIndex(0);
+			// Ensure lists are updated after adding elements
+			playerAttackView.getMapList().revalidate();
+			playerAttackView.getMapList().repaint();
 
+			// Select the map in the view to trigger player list refresh
+			playerAttackView.getMapList().setSelectedIndex(0);
 
-	    });
-	    // Now select the map and players in the test window
-	    window.list("mapList").selectItem(0);  // Select the first map in the list
-	    GuiActionRunner.execute(() -> {	        // Call the method to refresh player lists based on the selected map
-	        playerAttackView.refreshPlayerLists();
-	        
-	        // Ensure player lists are updated after the refresh
-	        playerAttackView.getAttackerList().revalidate();
-	        playerAttackView.getAttackerList().repaint();
-	        playerAttackView.getDefenderList().revalidate();
-	        playerAttackView.getDefenderList().repaint();});
-	    // Mock the GameController behavior to throw an exception when attack is called
-	    doThrow(new IllegalStateException("Attack failed")).when(mockGameController).attack(player1, player2);
+		});
+		// Now select the map and players in the test window
+		window.list("mapList").selectItem(0); // Select the first map in the list
+		GuiActionRunner.execute(() -> { // Call the method to refresh player lists based on the selected map
+			playerAttackView.refreshPlayerLists();
 
-	 
-	    window.list("attackerList").selectItem(0);  // Select Player1 as attacker
-	    window.list("defenderList").selectItem(1);  // Select Player2 as defender
+			// Ensure player lists are updated after the refresh
+			playerAttackView.getAttackerList().revalidate();
+			playerAttackView.getAttackerList().repaint();
+			playerAttackView.getDefenderList().revalidate();
+			playerAttackView.getDefenderList().repaint();
+		});
+		// Mock the GameController behavior to throw an exception when attack is called
+		doThrow(new IllegalStateException("Attack failed")).when(mockGameController).attack(player1, player2);
 
-	    // Simulate clicking the attack button
-	    window.button("btnAttack").click();
+		window.list("attackerList").selectItem(0); // Select Player1 as attacker
+		window.list("defenderList").selectItem(1); // Select Player2 as defender
 
-	    // Verify that the attack method was called on the controller
-	    verify(mockGameController).attack(player1, player2);
+		// Simulate clicking the attack button
+		window.button("btnAttack").click();
 
-	    // Assert that the error message is displayed after the exception
-	    window.label("errorLabel").requireText("Failed to perform attack.");
+		// Verify that the attack method was called on the controller
+		verify(mockGameController).attack(player1, player2);
+
+		// Assert that the error message is displayed after the exception
+		window.label("errorLabel").requireText("Failed to perform attack.");
 	}
-
-
-
 
 	@Test
 	public void testAttackShouldBePerformedSuccessfully() throws Exception {
@@ -624,9 +624,9 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 		when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Arrays.asList(player1, player2));
 
 		// Populate map list
-		GuiActionRunner.execute(() -> {playerAttackView.getMapListModel().addElement(testMap);});
-		
-		
+		GuiActionRunner.execute(() -> {
+			playerAttackView.getMapListModel().addElement(testMap);
+		});
 
 		// Interact with UI components via AssertJ Swing
 		window.list("mapList").selectItem(0); // Select the first map in the list
@@ -640,4 +640,74 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 		verify(mockGameController).attack(player1, player2);
 	}
 
+	@Test
+	@GUITest
+	public void testAttackFailsWhenNoPlayersSelected() {
+		// Setup the map and players
+		GameMap testMap = new GameMap(1L, "TestMap");
+		Player player1 = new PlayerBuilder().withName("Player1").withHealth(100).withDamage(20).withIsAlive(true)
+				.build();
+		Player player2 = new PlayerBuilder().withName("Player2").withHealth(80).withDamage(15).withIsAlive(true)
+				.build();
+
+		// Associate players with the map
+		player1.setMap(testMap);
+		player2.setMap(testMap);
+
+		// Mock the GameController behavior
+		when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+		when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Arrays.asList(player1, player2));
+
+		// Populate the map and player lists in the UI
+		GuiActionRunner.execute(() -> {
+			playerAttackView.getMapListModel().addElement(testMap);
+			playerAttackView.getAttackerListModel().addElement(player1);
+			playerAttackView.getDefenderListModel().addElement(player2);
+
+			// Manually enable the attack button
+			playerAttackView.getBtnAttack().setEnabled(true);
+		});
+
+		// Select the map but do not select any players from attacker or defender list
+		window.list("mapList").selectItem(0);
+
+		// Ensure no player is selected
+		window.list("attackerList").clearSelection();
+		window.list("defenderList").clearSelection();
+
+		// Invoke the attack method directly (bypassing UI checks)
+		GuiActionRunner.execute(() -> {
+			playerAttackView.attackSelectedPlayers();
+		});
+
+		// Assert that the correct error message is displayed
+		window.label("errorLabel").requireText("Attacker and defender must be selected.");
+
+		// Verify that the attack method was never called since no players were selected
+		verify(mockGameController, times(0)).attack(any(), any());
+	}
+	@Test
+	@GUITest
+	public void testRefreshMapListChangesLabelWhenThereIsException() {
+	    GameMap testMap = new GameMap(1L, "TestMap");
+	    GameMap testMap2 = new GameMap(2L, "TestMap2");
+	    when(mockGameController.getAllMaps()).thenThrow(new IllegalStateException("Failed to refresh map list."));
+	    
+	    // Build player data
+	    Player player1 = new PlayerBuilder().withName("Player1").withHealth(100).withDamage(20).withIsAlive(true)
+	            .build();
+	    Player player2 = new PlayerBuilder().withName("Player2").withHealth(80).withDamage(15).withIsAlive(true)
+	            .build();
+	    
+	    // Ensure refreshMapList() is called on the EDT
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.refreshMapList();
+	    });
+	    
+	    // Check label text after calling refreshMapList
+	    window.label("errorLabel").requireText("Failed to refresh map list.");
+	}
+
+
+	
 }
