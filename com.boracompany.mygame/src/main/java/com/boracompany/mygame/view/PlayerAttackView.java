@@ -7,7 +7,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -223,7 +222,8 @@ public class PlayerAttackView extends JFrame {
 		Player defender = defenderList.getSelectedValue();
 
 		// Check if both attacker and defender are selected
-		if (attacker != null && defender != null) {
+		if (attacker != null ) {
+			if(defender != null)
 			// Check if the attacker and defender are the same player
 			if (attacker.equals(defender)) {
 				// Prevent self-attack and show the appropriate error message
@@ -265,6 +265,10 @@ public class PlayerAttackView extends JFrame {
 
 	public JList<Player> getDefenderList() {
 		return defenderList;
+	}
+
+	protected JButton getBtnAttack() {
+		return btnAttack;
 	}
 
 	public void setDefenderList(JList<Player> defenderList) {
