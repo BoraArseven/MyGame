@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.boracompany.mygame.model.Player;
 
-public interface PlayerView {
+public interface IPlayerView {
 
 	public void showError(String errorMessage, Player player);
 

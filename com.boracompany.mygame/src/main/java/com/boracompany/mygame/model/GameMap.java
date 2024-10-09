@@ -8,6 +8,10 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "app_map") // Table name for the Map entity
+@NamedEntityGraph(
+	    name = "GameMap.players",
+	    attributeNodes = @NamedAttributeNode("players")
+	)
 public class GameMap {
 
 	@Id

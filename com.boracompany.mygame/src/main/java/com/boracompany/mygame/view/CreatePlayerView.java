@@ -27,7 +27,7 @@ import com.boracompany.mygame.main.ExcludeFromJacocoGeneratedReport;
 import com.boracompany.mygame.model.Player;
 import com.boracompany.mygame.model.PlayerBuilder;
 
-public class CreatePlayerView extends JFrame implements PlayerView {
+public class CreatePlayerView extends JFrame implements IPlayerView {
 
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
