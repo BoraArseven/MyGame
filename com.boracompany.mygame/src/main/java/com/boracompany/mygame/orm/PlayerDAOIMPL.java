@@ -131,7 +131,7 @@ public class PlayerDAOIMPL implements PlayerDAO {
 				em.persist(player); // Use persist for creation
 				transaction.commit();
 			} else {
-				throw new IllegalStateException("Transaction is null");
+				throw new IllegalStateException(TRANSACTION_NULL_MESSAGE);
 			}
 		} catch (RuntimeException e) {
 			if (transaction != null && transaction.isActive()) {
