@@ -223,7 +223,9 @@ public class PlayerAttackView extends JFrame {
 
 		// Check if both attacker and defender are selected
 		if (attacker != null ) {
-			if(defender != null)
+			if(defender != null) {
+				
+			
 			// Check if the attacker and defender are the same player
 			if (attacker.equals(defender)) {
 				// Prevent self-attack and show the appropriate error message
@@ -249,7 +251,7 @@ public class PlayerAttackView extends JFrame {
 				errorLabel.setText("Failed to perform attack.");
 				LOGGER.error("Attack failed", e);
 			}
-		} else {
+		}} else {
 			// Optionally, handle cases where no attacker or defender is selected
 			errorLabel.setText("Attacker and defender must be selected.");
 		}
