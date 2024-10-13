@@ -95,26 +95,31 @@ public class CreateMapView extends JFrame {
 		KeyAdapter btnAddEnabler = new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
-				createMapButton.setEnabled(!nameText.getText().trim().isEmpty());
+				getCreateMapButton().setEnabled(!getNameText().getText().trim().isEmpty());
 			}
 		};
 
-		nameText = new JTextField();
-		nameText.addKeyListener(btnAddEnabler);
-		nameText.setName("NameText");
+		setNameText(new JTextField());
+		getNameText().addKeyListener(btnAddEnabler);
+		getNameText().setName("NameText");
 		GridBagConstraints gbc_nameText = new GridBagConstraints();
 		gbc_nameText.insets = new Insets(0, 0, 5, 5);
 		gbc_nameText.fill = GridBagConstraints.HORIZONTAL;
 		gbc_nameText.gridx = 1;
 		gbc_nameText.gridy = 0;
-		contentPane.add(nameText, gbc_nameText);
-		nameText.setColumns(10);
+		contentPane.add(getNameText(), gbc_nameText);
+		getNameText().setColumns(10);
 
-		createMapButton = new JButton("Create Map");
-		createMapButton.setEnabled(false);
-		createMapButton.setName("CreateMapButton");
+		setCreateMapButton(new JButton("Create Map"));
+		getCreateMapButton().setEnabled(false);
+		getCreateMapButton().setName("CreateMapButton");
 		createMapButton.addActionListener(e -> {
 			try {
+				// Validate the input
+				if (nameText.getText().trim().isEmpty()) {
+					throw new IllegalArgumentException("Map name cannot be empty");
+				}
+
 				// Build the map using the GameMap constructor
 				GameMap map = new GameMap(nameText.getText());
 
@@ -129,7 +134,7 @@ public class CreateMapView extends JFrame {
 
 			} catch (Exception ex) {
 				// Handle any exceptions (e.g., validation errors)
-				showError("Failed to create map", null);
+				showError("Failed to create map: " + nameText.getText(), null);
 			}
 		});
 
@@ -138,7 +143,7 @@ public class CreateMapView extends JFrame {
 		gbc_createMapButton.gridwidth = 2;
 		gbc_createMapButton.gridx = 0;
 		gbc_createMapButton.gridy = 2;
-		contentPane.add(createMapButton, gbc_createMapButton);
+		contentPane.add(getCreateMapButton(), gbc_createMapButton);
 
 		lblMapList = new JLabel("Map List:");
 		GridBagConstraints gbc_lblMapList = new GridBagConstraints();
@@ -160,7 +165,7 @@ public class CreateMapView extends JFrame {
 		list = new JList<>(listMapsModel);
 		list.addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
-				deleteButton.setEnabled(list.getSelectedIndex() != -1);
+				getDeleteButton().setEnabled(list.getSelectedIndex() != -1);
 			}
 		});
 		list.setName("ListMaps");
@@ -176,10 +181,10 @@ public class CreateMapView extends JFrame {
 		gbc_mainMenuButton.gridy = 7;
 		contentPane.add(mainMenuButton, gbc_mainMenuButton);
 
-		deleteButton = new JButton("Delete Selected");
-		deleteButton.setName("DeleteButton");
-		deleteButton.setEnabled(false);
-		deleteButton.addActionListener(e -> {
+		setDeleteButton(new JButton("Delete Selected"));
+		getDeleteButton().setName("DeleteButton");
+		getDeleteButton().setEnabled(false);
+		getDeleteButton().addActionListener(e -> {
 			GameMap selectedMap = list.getSelectedValue();
 			if (selectedMap != null) {
 				// Call mapRemoved() if a map is selected
@@ -194,7 +199,7 @@ public class CreateMapView extends JFrame {
 		gbc_deleteButton.insets = new Insets(0, 0, 5, 5);
 		gbc_deleteButton.gridx = 1;
 		gbc_deleteButton.gridy = 7;
-		contentPane.add(deleteButton, gbc_deleteButton);
+		contentPane.add(getDeleteButton(), gbc_deleteButton);
 
 		errorMessageLabel = new JLabel("");
 		errorMessageLabel.setName("ErrorMessageLabel");
@@ -280,5 +285,29 @@ public class CreateMapView extends JFrame {
 		} catch (Exception e) {
 			showError("Failed to refresh map list", null);
 		}
+	}
+
+	public JTextField getNameText() {
+		return nameText;
+	}
+
+	public void setNameText(JTextField nameText) {
+		this.nameText = nameText;
+	}
+
+	public JButton getCreateMapButton() {
+		return createMapButton;
+	}
+
+	public void setCreateMapButton(JButton createMapButton) {
+		this.createMapButton = createMapButton;
+	}
+
+	public JButton getDeleteButton() {
+		return deleteButton;
+	}
+
+	public void setDeleteButton(JButton deleteButton) {
+		this.deleteButton = deleteButton;
 	}
 }

@@ -335,5 +335,111 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 		assertThat(window.label("ErrorMessageLabel").text()).contains("Failed to create map");
 		assertThat(window.list("ListMaps").contents()).isEmpty(); // Ensure no map was added
 	}
+	@Test
+	public void testMapAddedWithExceptionHandling() {
+	    // Arrange: Set a valid map name
+	    window.textBox("NameText").enterText("TestMap");
+
+	    // Mock GameController to throw an exception during map creation to trigger the catch block
+	    doThrow(new RuntimeException("Simulated failure")).when(gameController).createMap(anyString(), anyList());
+
+	    // Act: Call mapAdded directly to simulate the map addition process
+	    GuiActionRunner.execute(() -> {
+	        // Simulate map addition in the GUI, which should trigger the catch block
+	        createMapView.mapAdded(new GameMap("TestMap"));
+	    });
+
+	    // Assert: Verify that the error message now includes the name of the map being created
+	    window.label("ErrorMessageLabel").requireText("Failed to create map: TestMap");
+
+	    // Verify that the map was not added to the list model due to the exception
+	    DefaultListModel<GameMap> listModel = createMapView.getListMapsModel();
+	    assertThat(listModel.getSize()).isEqualTo(0);  // No map should be present in the list
+	}
+	@Test
+	public void testCreateMap_EmptyNameText_ShouldShowError() {
+	    // Arrange: Set nameText to an empty string
+	    GuiActionRunner.execute(() -> {
+	        createMapView.getNameText().setText("");  // Set empty input programmatically
+	        createMapView.getCreateMapButton().setEnabled(true);  // Enable button to simulate click even if input is empty
+	    });
+
+	    // Act: Simulate button click to try creating a map with an empty name
+	    GuiActionRunner.execute(() -> createMapView.getCreateMapButton().doClick());
+
+	    // Assert: Verify that the error message is displayed properly
+	    window.label("ErrorMessageLabel").requireText("Failed to create map: ");
+
+	    // Verify the map was NOT added to the list
+	    DefaultListModel<GameMap> listModel = createMapView.getListMapsModel();
+	    assertThat(listModel.getSize()).isEqualTo(0);  // No map should be present in the list
+	}
+
+
+	@Test
+	public void testCreateMap_ExceptionDuringMapCreation_ShouldShowError() {
+	    // Arrange: Set a valid map name
+	    window.textBox("NameText").enterText("TestMap");
+
+	    // Mock the GameMap creation to throw an exception
+	    doThrow(new RuntimeException("Simulated failure during map creation"))
+	        .when(gameController).createMap(anyString(), anyList());
+
+	    // Act: Click the Create Map button
+	    window.button("CreateMapButton").click();
+
+	    // Assert: Verify that the error message is displayed and includes the map name
+	    window.label("ErrorMessageLabel").requireText("Failed to create map: TestMap");
+
+	    // Verify the map was NOT added to the list
+	    DefaultListModel<GameMap> listModel = createMapView.getListMapsModel();
+	    assertThat(listModel.getSize()).isEqualTo(0);  // No map should be present in the list
+	}
+	@Test
+	public void testShowErrorOnUIUpdateFailure() {
+	    // Simulate an error message without involving the create map process
+	    GuiActionRunner.execute(() -> createMapView.showError("Error updating UI", null));
+
+	    // Assert: Verify that the error message is displayed properly
+	    window.label("ErrorMessageLabel").requireText("Error updating UI");
+	}
+	@Test
+	public void testCreateMap_ExceptionBeforeNameText_ShouldShowError() {
+	    // Arrange: Set a valid map name
+	    window.textBox("NameText").enterText("TestMap");
+
+	    // Mock an exception during GameMap creation (e.g., failure before fetching map name)
+	    doThrow(new RuntimeException("Simulated failure before nameText.getText()"))
+	        .when(gameController).createMap(anyString(), anyList());
+
+	    // Act: Click the Create Map button
+	    window.button("CreateMapButton").click();
+
+	    // Assert: Verify that the error message is displayed even when exception happens before fetching nameText
+	    window.label("ErrorMessageLabel").requireText("Failed to create map: TestMap");
+
+	    // Verify the map was NOT added to the list
+	    DefaultListModel<GameMap> listModel = createMapView.getListMapsModel();
+	    assertThat(listModel.getSize()).isEqualTo(0);  // No map should be present in the list
+	}
+	@Test
+	public void testDeleteMap_NoMapSelected_ShouldShowError() {
+	    // Arrange: Ensure no map is selected in the list
+	    GuiActionRunner.execute(() -> {
+	        createMapView.getListMapsModel().clear(); // Make sure the list is empty
+	        createMapView.getDeleteButton().setEnabled(true); // Force enable the delete button for testing
+	    });
+
+	    // Act: Try to click the delete button when no map is selected
+	    GuiActionRunner.execute(() -> createMapView.getDeleteButton().doClick());
+
+	    // Assert: Verify that the error message "No map selected" is displayed
+	    window.label("ErrorMessageLabel").requireText("No map selected");
+
+	    // Verify that the map list remains empty
+	    DefaultListModel<GameMap> listModel = createMapView.getListMapsModel();
+	    assertThat(listModel.getSize()).isEqualTo(0);  // No map should be present in the list
+	}
+
 
 }
