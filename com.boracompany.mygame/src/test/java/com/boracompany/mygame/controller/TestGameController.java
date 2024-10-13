@@ -1196,5 +1196,48 @@ class TestGameController {
 		// Ensure that the DAO's delete method is never called
 		verify(gameMapDAOMock, never()).delete(anyLong());
 	}
-	
+	  @Test
+	    void testGetPlayersFromMap_WhenMapIdIsNull_ShouldThrowIllegalArgumentException() {
+	        // Act & Assert
+	        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+	            gameControllerwithMocks.getPlayersFromMap(null);
+	        });
+
+	        // Assert
+	        assertEquals("Map ID must not be null.", exception.getMessage());
+	        verify(logger).error("Map ID is null, cannot retrieve players.");
+	    }
+
+	    @Test
+	    void testGetPlayersFromMap_WhenMapNotFound_ShouldThrowIllegalArgumentException() {
+	        // Arrange
+	        Long mapId = 1L;
+	        when(gameMapDAOMock.findById(mapId)).thenReturn(null);
+
+	        // Act & Assert
+	        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+	            gameControllerwithMocks.getPlayersFromMap(mapId);
+	        });
+
+	        // Assert
+	        assertEquals("Map with ID " + mapId + " not found", exception.getMessage());
+	        verify(logger).error("Map with ID {} not found", mapId);
+	    }
+
+	    @Test
+	    void testGetPlayersFromMap_WhenMapIsFound_ShouldReturnPlayers() {
+	        // Arrange
+	        Long mapId = 1L;
+	        List<Player> players = List.of(new PlayerBuilder().withName("Player1").build());
+	        GameMap mockGameMap = new GameMap("TestMap", players);
+	        when(gameMapDAOMock.findById(mapId)).thenReturn(mockGameMap);
+
+	        // Act
+	        List<Player> result = gameControllerwithMocks.getPlayersFromMap(mapId);
+
+	        // Assert
+	        assertEquals(players.size(), result.size());
+	        assertEquals(players.get(0).getName(), result.get(0).getName());
+	        verify(logger).info("Retrieved {} players from map {}", players.size(), mockGameMap.getName());
+	    }
 }
