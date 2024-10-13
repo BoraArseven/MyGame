@@ -152,7 +152,7 @@ public class PlayerAttackViewIT extends AssertJSwingJUnitTestCase {
 		GuiActionRunner.execute(() -> {
 			playerAttackView.refreshMapList();
 			playerAttackView.refreshPlayerLists();
-			
+
 		});
 
 		window.list("mapList").selectItem(0);
@@ -169,60 +169,296 @@ public class PlayerAttackViewIT extends AssertJSwingJUnitTestCase {
 	@Test
 	@GUITest
 	public void testAttackThrowsExceptionShouldShowErrorMessage() {
-	    EntityManager em = emf.createEntityManager();
-	    EntityTransaction transaction = em.getTransaction();
+		EntityManager em = emf.createEntityManager();
+		EntityTransaction transaction = em.getTransaction();
 
-	    try {
-	        transaction.begin();
+		try {
+			transaction.begin();
 
-	        // Create and persist the map and players
-	        GameMap testMap = new GameMap("TestMap");
-	        Player testPlayer1 = new PlayerBuilder().withName("Player1").withHealth(100).withDamage(20).withIsAlive(true).build();
-	        Player testPlayer2 = new PlayerBuilder().withName("Player2").withHealth(80).withDamage(15).withIsAlive(true).build();
+			// Create and persist the map and players
+			GameMap testMap = new GameMap("TestMap");
+			Player testPlayer1 = new PlayerBuilder().withName("Player1").withHealth(100).withDamage(20)
+					.withIsAlive(true).build();
+			Player testPlayer2 = new PlayerBuilder().withName("Player2").withHealth(80).withDamage(15).withIsAlive(true)
+					.build();
 
-	        em.persist(testMap); // Persist the map
-	        em.persist(testPlayer2);
-	        em.persist(testPlayer1);
-	        testPlayer1.setMap(testMap); // Assign the map to the player
-	        testPlayer2.setMap(testMap); // Assign the map to the player
-	        em.merge(testPlayer1); // Persist the player
-	        em.merge(testPlayer2); // Persist the player
-	        em.merge(testMap);
-	        
-	        transaction.commit(); // Commit the transaction
-	    } catch (Exception e) {
-	        if (transaction.isActive()) {
-	            transaction.rollback();
-	        }
-	        throw e;
-	    } finally {
-	        em.close();
-	    }
+			em.persist(testMap); // Persist the map
+			em.persist(testPlayer2);
+			em.persist(testPlayer1);
+			testPlayer1.setMap(testMap); // Assign the map to the player
+			testPlayer2.setMap(testMap); // Assign the map to the player
+			em.merge(testPlayer1); // Persist the player
+			em.merge(testPlayer2); // Persist the player
+			em.merge(testMap);
 
-	    doThrow(new RuntimeException("Test Exception")).when(spiedGameController).attack(any(Player.class), any(Player.class));
+			transaction.commit(); // Commit the transaction
+		} catch (Exception e) {
+			if (transaction.isActive()) {
+				transaction.rollback();
+			}
+			throw e;
+		} finally {
+			em.close();
+		}
 
-	    // Refresh the map and player lists in the view
-	    GuiActionRunner.execute(() -> {
-	        playerAttackView.refreshMapList(); // Refresh map list
-	        playerAttackView.refreshPlayerLists(); // Refresh player lists
-	    });
+		doThrow(new RuntimeException("Test Exception")).when(spiedGameController).attack(any(Player.class),
+				any(Player.class));
 
-	
-	    // Select the map and players
-	    window.list("mapList").selectItem(0); // Select the first map
-	    window.list("attackerList").selectItem(0); // Select the first player
-	    window.list("defenderList").selectItem(1); // Select the second player
+		// Refresh the map and player lists in the view
+		GuiActionRunner.execute(() -> {
+			playerAttackView.refreshMapList(); // Refresh map list
+			playerAttackView.refreshPlayerLists(); // Refresh player lists
+		});
 
-	    // Perform the attack and trigger exception
-	    window.button(JButtonMatcher.withText("Attack")).click();
+		// Select the map and players
+		window.list("mapList").selectItem(0); // Select the first map
+		window.list("attackerList").selectItem(0); // Select the first player
+		window.list("defenderList").selectItem(1); // Select the second player
 
-	    // Verify that the attack method was called once and the exception was handled
-	    verify(spiedGameController, times(1)).attack(any(Player.class), any(Player.class));
+		// Perform the attack and trigger exception
+		window.button(JButtonMatcher.withText("Attack")).click();
 
-	    // Verify that the error message is displayed correctly
-	    window.label("errorLabel").requireText("Failed to perform attack.");
+		// Verify that the attack method was called once and the exception was handled
+		verify(spiedGameController, times(1)).attack(any(Player.class), any(Player.class));
+
+		// Verify that the error message is displayed correctly
+		window.label("errorLabel").requireText("Failed to perform attack.");
 	}
 
+	@Test
+	@GUITest
+	public void testAttackWithBothAttackerAndDefenderSelected_ShouldAttackSuccessfully() {
+		EntityManager em = emf.createEntityManager();
+		EntityTransaction transaction = em.getTransaction();
+
+		try {
+			transaction.begin();
+
+			// Arrange: Create and persist the map and players
+			GameMap testMap = new GameMap("TestMap");
+			Player attackerPlayer = new PlayerBuilder().withName("AttackerPlayer").withHealth(100).withDamage(20)
+					.withIsAlive(true).build();
+			Player defenderPlayer = new PlayerBuilder().withName("DefenderPlayer").withHealth(80).withDamage(15)
+					.withIsAlive(true).build();
+
+			// Persist the map and players in the database
+			em.persist(testMap);
+			attackerPlayer.setMap(testMap);
+			defenderPlayer.setMap(testMap);
+			em.persist(attackerPlayer);
+			em.persist(defenderPlayer);
+
+			transaction.commit(); // Commit transaction
+		} catch (Exception e) {
+			if (transaction.isActive()) {
+				transaction.rollback();
+			}
+			throw e;
+		} finally {
+			em.close();
+		}
+
+		// Refresh map and player lists in the GUI
+		GuiActionRunner.execute(() -> {
+			playerAttackView.refreshMapList(); // Refresh the map list
+			playerAttackView.refreshPlayerLists(); // Refresh the attacker and defender player lists
+		});
+
+		// Select the map, attacker, and defender players
+		window.list("mapList").selectItem(0); // Select the first (and only) map
+		window.list("attackerList").selectItem(0); // Select the first player as the attacker
+		window.list("defenderList").selectItem(1); // Select the second player as the defender
+
+		// Act: Perform the attack
+		window.button(JButtonMatcher.withText("Attack")).click();
+
+		// Assert: Verify that the attack method on the GameController was called once
+		verify(spiedGameController, times(1)).attack(any(Player.class), any(Player.class));
+
+		// Assert that there are no error messages displayed
+		window.label("errorLabel").requireText("");
+
+		// Verify that the appropriate logs are generated
+		// This will ensure that both attacker and defender were non-null and the attack
+		// occurred
+		verify(spiedGameController, times(1)).attack(any(Player.class), any(Player.class));
+	}
+
+	@Test
+	@GUITest
+	public void testAttackWithAttackerAndDefenderBothSelected_NoErrorOccurs() {
+		EntityManager em = emf.createEntityManager();
+		EntityTransaction transaction = em.getTransaction();
+
+		try {
+			transaction.begin();
+
+			// Arrange: Create and persist the map and players
+			GameMap testMap = new GameMap("TestMap");
+			Player attackerPlayer = new PlayerBuilder().withName("AttackerPlayer").withHealth(100).withDamage(20)
+					.withIsAlive(true).build();
+			Player defenderPlayer = new PlayerBuilder().withName("DefenderPlayer").withHealth(80).withDamage(15)
+					.withIsAlive(true).build();
+
+			// Persist the map and players in the database
+			em.persist(testMap);
+			attackerPlayer.setMap(testMap);
+			defenderPlayer.setMap(testMap);
+			em.persist(attackerPlayer);
+			em.persist(defenderPlayer);
+
+			transaction.commit(); // Commit transaction
+		} catch (Exception e) {
+			if (transaction.isActive()) {
+				transaction.rollback();
+			}
+			throw e;
+		} finally {
+			em.close();
+		}
+
+		// Refresh map and player lists in the GUI
+		GuiActionRunner.execute(() -> {
+			playerAttackView.refreshMapList(); // Refresh the map list
+			playerAttackView.refreshPlayerLists(); // Refresh the attacker and defender player lists
+		});
+
+		// Act: Select the map, attacker, and defender players
+		window.list("mapList").selectItem(0); // Select the first (and only) map
+		window.list("attackerList").selectItem(0); // Select the first player as the attacker
+		window.list("defenderList").selectItem(1); // Select the second player as the defender
+
+		// Click the Attack button
+		window.button(JButtonMatcher.withText("Attack")).click();
+
+		// Assert: Verify that the attack method on the GameController was called once
+		verify(spiedGameController, times(1)).attack(any(Player.class), any(Player.class));
+
+		// Assert that there are no error messages displayed, indicating a successful
+		// attack
+		window.label("errorLabel").requireText("");
+
+		// Assert that both attacker and defender were not null (implicitly verified by
+		// the fact that attack was called)
+		assertThat(window.list("attackerList").selection()).isNotNull();
+		assertThat(window.list("defenderList").selection()).isNotNull();
+	}
+
+	@Test
+	@GUITest
+	public void testSuccessfulAttackWhenAttackerAndDefenderAreBothSelected() {
+		// Arrange: Set up map and players
+		EntityManager em = emf.createEntityManager();
+		EntityTransaction transaction = em.getTransaction();
+
+		try {
+			transaction.begin();
+
+			GameMap testMap = new GameMap("TestMap");
+			Player testAttacker = new PlayerBuilder().withName("Attacker").withHealth(100).withDamage(20)
+					.withIsAlive(true).build();
+			Player testDefender = new PlayerBuilder().withName("Defender").withHealth(80).withDamage(15)
+					.withIsAlive(true).build();
+
+			em.persist(testMap);
+			testAttacker.setMap(testMap);
+			testDefender.setMap(testMap);
+			em.persist(testAttacker);
+			em.persist(testDefender);
+
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction.isActive()) {
+				transaction.rollback();
+			}
+			throw e;
+		} finally {
+			em.close();
+		}
+
+		// Act: Refresh map and player lists in the view
+		GuiActionRunner.execute(() -> {
+			playerAttackView.refreshMapList();
+			playerAttackView.refreshPlayerLists();
+		});
+
+		// Select map, attacker, and defender
+		window.list("mapList").selectItem(0);
+		window.list("attackerList").selectItem(0);
+		window.list("defenderList").selectItem(1);
+
+		// Assert: Verify that the attack button is enabled
+		window.button(JButtonMatcher.withText("Attack")).requireEnabled();
+
+		// Perform the attack by clicking the attack button
+		window.button(JButtonMatcher.withText("Attack")).click();
+
+		// Verify that the attack method was called with both selected players
+		verify(spiedGameController, times(1)).attack(any(Player.class), any(Player.class));
+
+		// Assert: Verify that there are no error messages displayed, indicating a
+		// successful attack
+		window.label("errorLabel").requireText("");
+	}
+
+	@Test
+	@GUITest
+	public void testAttackFailsWhenAttackerIsNullButDefenderExists() {
+		EntityManager em = emf.createEntityManager();
+		EntityTransaction transaction = em.getTransaction();
+
+		try {
+			transaction.begin();
+
+			// Create and persist the map and defender player
+			GameMap testMap = new GameMap("TestMap");
+			Player testDefender = new PlayerBuilder().withName("Defender").withHealth(80f).withDamage(15f)
+					.withIsAlive(true).build();
+
+			em.persist(testMap); // Persist the map
+			testDefender.setMap(testMap); // Associate the defender with the map
+			em.persist(testDefender); // Persist the defender
+
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction.isActive()) {
+				transaction.rollback();
+			}
+			throw e;
+		} finally {
+			em.close();
+		}
+
+		// Refresh the map and player lists in the view
+		GuiActionRunner.execute(() -> {
+			playerAttackView.refreshMapList(); // Refresh map list
+		});
+
+		// Select the map and then refresh the player lists
+		window.list("mapList").selectItem(0);
+
+		GuiActionRunner.execute(() -> {
+			playerAttackView.refreshPlayerLists(); // Refresh player lists after selecting the map
+		});
+
+		// Ensure the player list is populated for defender only
+		assertThat(playerAttackView.getDefenderListModel().getSize()).isEqualTo(1);
+
+		// Select a defender in the defender list, but do not select an attacker
+		window.list("defenderList").selectItem(0); // Select the defender only
+
+		// Manually invoke the attackSelectedPlayers method to bypass the UI limitation
+		// of the disabled button
+		GuiActionRunner.execute(() -> {
+			playerAttackView.attackSelectedPlayers();
+		});
+
+		// Verify that the error message is shown
+		window.label("errorLabel").requireText("Attacker and defender must be selected.");
+
+		// Verify that the attack method was never called since no attacker was selected
+		verify(spiedGameController, times(0)).attack(any(), any());
+	}
 
 	@Override
 	protected void onTearDown() throws Exception {

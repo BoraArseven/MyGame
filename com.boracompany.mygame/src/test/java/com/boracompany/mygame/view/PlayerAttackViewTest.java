@@ -708,6 +708,5 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 	    window.label("errorLabel").requireText("Failed to refresh map list.");
 	}
 
-
 	
 }

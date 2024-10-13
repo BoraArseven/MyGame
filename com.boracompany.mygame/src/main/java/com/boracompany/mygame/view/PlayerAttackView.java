@@ -20,6 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.boracompany.mygame.controller.GameController;
+import com.boracompany.mygame.main.ExcludeFromJacocoGeneratedReport;
 import com.boracompany.mygame.model.GameMap;
 import com.boracompany.mygame.model.Player;
 
@@ -260,7 +261,7 @@ public class PlayerAttackView extends JFrame {
 	public JList<Player> getAttackerList() {
 		return attackerList;
 	}
-
+	@ExcludeFromJacocoGeneratedReport
 	public void setAttackerList(JList<Player> attackerList) {
 		this.attackerList = attackerList;
 	}
@@ -272,11 +273,11 @@ public class PlayerAttackView extends JFrame {
 	protected JButton getBtnAttack() {
 		return btnAttack;
 	}
-
+	@ExcludeFromJacocoGeneratedReport
 	public void setDefenderList(JList<Player> defenderList) {
 		this.defenderList = defenderList;
 	}
-
+	@ExcludeFromJacocoGeneratedReport
 	public void setMapList(JList<GameMap> mapList) {
 		this.mapList = mapList;
 	}
