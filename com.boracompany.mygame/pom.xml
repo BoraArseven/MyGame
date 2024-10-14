@@ -28,7 +28,7 @@
 		<postresql.version>42.7.3</postresql.version>
 		<sonar.organization>boraarseven</sonar.organization>
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
-		<pitest.version>1.16.1</pitest.version>
+		 <pitest.version>1.9.11</pitest.version>
 	</properties>
 
 	<dependencies>
