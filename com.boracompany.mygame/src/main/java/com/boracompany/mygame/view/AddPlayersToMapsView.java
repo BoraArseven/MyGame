@@ -20,6 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.boracompany.mygame.controller.GameController;
+import com.boracompany.mygame.main.ExcludeFromJacocoGeneratedReport;
 import com.boracompany.mygame.model.GameMap;
 import com.boracompany.mygame.model.Player;
 
@@ -43,6 +44,7 @@ public class AddPlayersToMapsView extends JFrame {
 	/**
 	 * Launch the application.
 	 */
+	@ExcludeFromJacocoGeneratedReport
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
