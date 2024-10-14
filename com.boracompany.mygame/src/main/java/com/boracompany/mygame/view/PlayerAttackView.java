@@ -48,7 +48,9 @@ public class PlayerAttackView extends JFrame {
 	 */
 	@ExcludeFromJacocoGeneratedReport
 	public static void main(String[] args) {
+		
 		EventQueue.invokeLater(new Runnable() {
+			@ExcludeFromJacocoGeneratedReport
 			public void run() {
 				try {
 					PlayerAttackView frame = new PlayerAttackView();
