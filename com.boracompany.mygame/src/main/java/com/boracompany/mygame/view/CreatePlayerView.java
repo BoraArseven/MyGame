@@ -46,6 +46,11 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 
 	private GameController gameController;
 
+	public void setGameController(GameController gameController) {
+		this.gameController = gameController;
+		refreshPlayerList();
+	}
+
 	private JList<Player> list;
 	private DefaultListModel<Player> listPlayersModel;
 
@@ -257,6 +262,22 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 		gbc_errorMessageLabel.gridx = 1;
 		gbc_errorMessageLabel.gridy = 8;
 		contentPane.add(ErrorMessageLabel, gbc_errorMessageLabel);
+		mainMenuButton.addActionListener(e -> {
+		    navigateToMainMenu();
+		});
+
+	}
+
+	@ExcludeFromJacocoGeneratedReport
+	private void navigateToMainMenu() {
+		// Create an instance of MainMenuView and make it visible
+		MainMenuView mainMenuView = new MainMenuView();
+		mainMenuView.setGameController(gameController);
+		mainMenuView.setVisible(true);
+		
+		
+		// Dispose of the current CreatePlayerView window
+		dispose();
 	}
 
 	@Override

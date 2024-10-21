@@ -1,5 +1,8 @@
-# Ignore everything...
+# Ignore everything
 **
 
-# ...but the JAR file
-!/target/*-with-dependencies.jar
+# ...but allow these specific files or directories
+!target/*-jar-with-dependencies.jar
+!Dockerfile
+!entrypoint.sh
+!wait-for-it.sh

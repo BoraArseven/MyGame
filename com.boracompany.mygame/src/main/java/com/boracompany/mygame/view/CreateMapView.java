@@ -180,7 +180,10 @@ public class CreateMapView extends JFrame {
 		gbc_mainMenuButton.gridx = 0;
 		gbc_mainMenuButton.gridy = 7;
 		contentPane.add(mainMenuButton, gbc_mainMenuButton);
-
+		// Add action listener for mainMenuButton
+		mainMenuButton.addActionListener(e -> {
+		    navigateToMainMenu();
+		});
 		setDeleteButton(new JButton("Delete Selected"));
 		getDeleteButton().setName("DeleteButton");
 		getDeleteButton().setEnabled(false);
@@ -208,6 +211,16 @@ public class CreateMapView extends JFrame {
 		gbc_errorMessageLabel.gridx = 1;
 		gbc_errorMessageLabel.gridy = 8;
 		contentPane.add(errorMessageLabel, gbc_errorMessageLabel);
+	}
+
+	private void navigateToMainMenu() {
+		// Dispose of the current CreateMapView window
+		dispose();
+		
+		// Open the MainMenuView
+		MainMenuView mainMenu = new MainMenuView();
+		mainMenu.setGameController(gameController);
+		mainMenu.setVisible(true);
 	}
 
 	public void showError(String errorMessage, GameMap map) {
@@ -268,8 +281,8 @@ public class CreateMapView extends JFrame {
 
 	public void setGameController(GameController gameController) {
 		this.gameController = gameController;
+		   refreshMapList(); // Fetch and display the existing maps
 	}
-
 	public void refreshMapList() {
 		try {
 			// Fetch the list of maps from the GameController

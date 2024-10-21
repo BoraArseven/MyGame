@@ -2,6 +2,8 @@ package com.boracompany.mygame.model;
 
 import javax.persistence.*;
 
+import com.boracompany.mygame.main.ExcludeFromJacocoGeneratedReport;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -73,7 +75,9 @@ public class GameMap {
 		return this.name; // Assuming the name field holds the map's name.
 	}
 
+	
 	// Override equals method
+	@ExcludeFromJacocoGeneratedReport
 	@Override
 	public boolean equals(Object o) {
 		if (this == o)

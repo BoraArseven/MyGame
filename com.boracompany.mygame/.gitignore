@@ -1,2 +1,7 @@
 /bin/
 /target/
+.env
+# Ignore the secret file
+postgres_password.txt
+postgres_user.txt
+postgres_db.txt

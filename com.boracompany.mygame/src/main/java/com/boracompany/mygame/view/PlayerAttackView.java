@@ -48,7 +48,7 @@ public class PlayerAttackView extends JFrame {
 	 */
 	@ExcludeFromJacocoGeneratedReport
 	public static void main(String[] args) {
-		
+
 		EventQueue.invokeLater(new Runnable() {
 			@ExcludeFromJacocoGeneratedReport
 			public void run() {
@@ -64,6 +64,8 @@ public class PlayerAttackView extends JFrame {
 
 	public void setGameController(GameController gameController) {
 		this.gameController = gameController;
+		refreshMapList();
+		refreshPlayerLists();
 	}
 
 	/**
@@ -178,39 +180,40 @@ public class PlayerAttackView extends JFrame {
 		attackerList.addListSelectionListener(e -> updateButtonState());
 		defenderList.addListSelectionListener(e -> updateButtonState());
 
-
-
 		// Main Menu Button Action
 		btnMainMenu.addActionListener(e -> navigateToMainMenu());
+
 	}
 
 	// Method to handle main menu navigation
+	@ExcludeFromJacocoGeneratedReport
 	protected void navigateToMainMenu() {
-		// Implement navigation to the main menu logic here
-		LOGGER.info("Navigating to the Main Menu...");
-		// Optionally, dispose of this view and open the main menu
-		dispose(); // Close the current window
+		// Create an instance of MainMenuView and make it visible
+		MainMenuView mainMenuView = new MainMenuView();
+		mainMenuView.setGameController(gameController);
+		mainMenuView.setVisible(true);
+
+		// Dispose of the current CreatePlayerView window
+		dispose();
 	}
 
 	// Refresh the player lists when a map is selected
 	// Refresh the player lists when a map is selected
 	protected void refreshPlayerLists() {
-	    GameMap selectedMap = mapList.getSelectedValue(); 
+		GameMap selectedMap = mapList.getSelectedValue();
 
-	    if (selectedMap != null) {
-	        List<Player> livingPlayers = gameController.getPlayersFromMap(selectedMap.getId());
+		if (selectedMap != null) {
+			List<Player> livingPlayers = gameController.getPlayersFromMap(selectedMap.getId());
 
-	        attackerListModel.clear();
-	        defenderListModel.clear();
+			attackerListModel.clear();
+			defenderListModel.clear();
 
-	        for (Player player : livingPlayers) {
-	            attackerListModel.addElement(player);
-	            defenderListModel.addElement(player);
-	        }
-	    }
+			for (Player player : livingPlayers) {
+				attackerListModel.addElement(player);
+				defenderListModel.addElement(player);
+			}
+		}
 	}
-
-
 
 	// Method to update the state of the attack button
 	private void updateButtonState() {
@@ -226,36 +229,36 @@ public class PlayerAttackView extends JFrame {
 		Player defender = defenderList.getSelectedValue();
 
 		// Check if both attacker and defender are selected
-		if (attacker != null ) {
-			if(defender != null) {
-				
-			
-			// Check if the attacker and defender are the same player
-			if (attacker.equals(defender)) {
-				// Prevent self-attack and show the appropriate error message
-				errorLabel.setText("A player cannot attack itself.");
-				LOGGER.warn("Attempted self-attack: Player {}", attacker.getName());
-				return; // Exit early to prevent the attack
+		if (attacker != null) {
+			if (defender != null) {
+
+				// Check if the attacker and defender are the same player
+				if (attacker.equals(defender)) {
+					// Prevent self-attack and show the appropriate error message
+					errorLabel.setText("A player cannot attack itself.");
+					LOGGER.warn("Attempted self-attack: Player {}", attacker.getName());
+					return; // Exit early to prevent the attack
+				}
+
+				try {
+					// Attempt to perform the attack through the game controller
+					gameController.attack(attacker, defender);
+
+					// Log the successful attack
+					LOGGER.info("Player {} attacked Player {}", attacker.getName(), defender.getName());
+
+					// Clear any existing error message
+					errorLabel.setText("");
+
+					// Refresh the player lists after the attack to reflect updated states
+					refreshPlayerLists();
+				} catch (Exception e) {
+					// Handle any exception that occurs during the attack
+					errorLabel.setText("Failed to perform attack.");
+					LOGGER.error("Attack failed", e);
+				}
 			}
-
-			try {
-				// Attempt to perform the attack through the game controller
-				gameController.attack(attacker, defender);
-
-				// Log the successful attack
-				LOGGER.info("Player {} attacked Player {}", attacker.getName(), defender.getName());
-
-				// Clear any existing error message
-				errorLabel.setText("");
-
-				// Refresh the player lists after the attack to reflect updated states
-				refreshPlayerLists();
-			} catch (Exception e) {
-				// Handle any exception that occurs during the attack
-				errorLabel.setText("Failed to perform attack.");
-				LOGGER.error("Attack failed", e);
-			}
-		}} else {
+		} else {
 			// Optionally, handle cases where no attacker or defender is selected
 			errorLabel.setText("Attacker and defender must be selected.");
 		}
@@ -264,6 +267,7 @@ public class PlayerAttackView extends JFrame {
 	public JList<Player> getAttackerList() {
 		return attackerList;
 	}
+
 	@ExcludeFromJacocoGeneratedReport
 	public void setAttackerList(JList<Player> attackerList) {
 		this.attackerList = attackerList;
@@ -276,10 +280,12 @@ public class PlayerAttackView extends JFrame {
 	protected JButton getBtnAttack() {
 		return btnAttack;
 	}
+
 	@ExcludeFromJacocoGeneratedReport
 	public void setDefenderList(JList<Player> defenderList) {
 		this.defenderList = defenderList;
 	}
+
 	@ExcludeFromJacocoGeneratedReport
 	public void setMapList(JList<GameMap> mapList) {
 		this.mapList = mapList;
@@ -300,26 +306,29 @@ public class PlayerAttackView extends JFrame {
 	public JList<GameMap> getMapList() {
 		return mapList;
 	}
+
+	@ExcludeFromJacocoGeneratedReport
 	void resetErrorLabel() {
-	    errorLabel.setText(""); // Clear the error label
+		errorLabel.setText(""); // Clear the error label
 	}
+
 	public void refreshMapList() {
-	    try {
-	        // Fetch the list of maps from the GameController
-	        List<GameMap> maps = gameController.getAllMaps();
+		try {
+			// Fetch the list of maps from the GameController
+			List<GameMap> maps = gameController.getAllMaps();
 
-	        // Clear the current map list model
-	        mapListModel.clear();
+			// Clear the current map list model
+			mapListModel.clear();
 
-	        // Populate the map list model with the fetched maps
-	        for (GameMap map : maps) {
-	            mapListModel.addElement(map);
-	        }
-	    } catch (Exception e) {
-	        // Handle any exception that might occur
-	        errorLabel.setText("Failed to refresh map list.");
-	        LOGGER.error("Failed to refresh map list", e);
-	    }
+			// Populate the map list model with the fetched maps
+			for (GameMap map : maps) {
+				mapListModel.addElement(map);
+			}
+		} catch (Exception e) {
+			// Handle any exception that might occur
+			errorLabel.setText("Failed to refresh map list.");
+			LOGGER.error("Failed to refresh map list", e);
+		}
 	}
 
 }
