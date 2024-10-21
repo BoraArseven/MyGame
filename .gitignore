@@ -23,3 +23,8 @@
 hs_err_pid*
 replay_pid*
 
+#important files
+.env
+postgres_password.txt
+postgres_user.txt
+postgres_db.txt

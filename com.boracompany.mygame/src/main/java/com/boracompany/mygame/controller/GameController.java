@@ -100,17 +100,25 @@ public class GameController {
 	}
 
 	private void updateDefenderHealth(Player defender, float newHealth) {
-		if (newHealth > 0) {
-			defender.setHealth(newHealth);
-			logger.info("Attack successful: Defender: {}'s new health: {}", defender.getName(), newHealth);
-		} else {
-			defender.setHealth(0);
-			defender.setAlive(false);
-			logger.info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
-					defender.getName(), defender.isAlive());
-		}
-	}
+	    if (newHealth > 0) {
+	        defender.setHealth(newHealth);
+	        logger.info("Attack successful: Defender: {}'s new health: {}", defender.getName(), newHealth);
+	    } else {
+	        defender.setHealth(0);
+	        defender.setAlive(false);
+	        logger.info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
+	                defender.getName(), defender.isAlive());
+	    }
 
+	    // Save the updated defender to the database
+	    try {
+	        playerDAO.updatePlayer(defender);
+	    } catch (Exception e) {
+	        logger.error("Failed to update defender {} in the database", defender.getName(), e);
+	        throw new IllegalStateException("Could not update defender in the database", e);
+	    }
+	}
+	
 	public void deletePlayer(Long playerId) {
 		if (playerId == null) {
 			logger.error("Player ID is null, cannot delete player.");

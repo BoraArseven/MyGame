@@ -33,6 +33,13 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>com.zaxxer</groupId>
+			<artifactId>HikariCP</artifactId>
+			<version>5.0.1</version>
+		</dependency>
+
+		<dependency>
+
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>${junit.version}</version>
@@ -235,7 +242,7 @@
 							<archive>
 								<manifest>
 									<mainClass>
-										com.boracompany.mygame.Main</mainClass>
+										com.boracompany.mygame.main.Main</mainClass>
 								</manifest>
 							</archive>
 						</configuration>
@@ -306,7 +313,7 @@ since javax.xml.bind has been removed from the JDK -->
 							<param>org.apache.logging.log4j.Logger::info</param>
 							<param>org.apache.logging.log4j.Logger::error</param>
 						</excludedMethods>
-						<mutationThreshold>75</mutationThreshold>
+						<mutationThreshold>95</mutationThreshold>
 						<avoidCallsTo>
 							<avoidCallsTo>java.util.logging</avoidCallsTo>
 							<avoidCallsTo>org.apache.log4j</avoidCallsTo>
@@ -363,6 +370,7 @@ since javax.xml.bind has been removed from the JDK -->
 							<exclude>**/main/**</exclude>
 							<exclude>**/model/**</exclude>
 							<exclude>**/Hibernate*</exclude>
+							<exclude>**/MainMenuView*</exclude>
 
 						</excludes>
 					</configuration>

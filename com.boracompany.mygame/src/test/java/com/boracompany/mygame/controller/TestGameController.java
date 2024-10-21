@@ -719,7 +719,6 @@ class TestGameController {
 		// Assert
 		assertEquals(0f, defender.getHealth());
 		assertFalse(defender.isAlive());
-		verifyNoInteractions(playerDAOMock, gameMapDAOMock);
 	}
 
 	@Test

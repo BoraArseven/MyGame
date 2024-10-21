@@ -458,5 +458,42 @@ class GameControllerIT {
 		setUpAll();
 		setUp();
 	}
+	@Test
+	void testAttackDefeatsDefenderAndUpdatesDatabase() {
+	    // Arrange: Create and persist two players and a game map
+	    Player attacker = playerBuilder.resetBuilder().withName("StrongAttacker").withHealth(100).withDamage(70).build();
+	    Player defender = playerBuilder.resetBuilder().withName("WeakDefender").withHealth(50).withDamage(20).build();
 
+	    // Do not set the id field manually
+	    playerDAO.createPlayer(attacker);
+	    playerDAO.createPlayer(defender);
+
+	    GameMap gameMap = new GameMap();
+	    gameMap.setName("FinalBattle");
+	    gameMapDAO.save(gameMap);
+
+	    // Add both players to the map
+	    gameMapDAO.addPlayerToMap(gameMap.getId(), attacker);
+	    gameMapDAO.addPlayerToMap(gameMap.getId(), defender);
+
+	    // Act: Perform an attack
+	    controller.attack(attacker, defender);
+
+	    // Assert: Check that the defender's health and alive status are updated in the database
+	    EntityManager em = emf.createEntityManager();
+	    try {
+	        Player updatedDefender = em.find(Player.class, defender.getId());
+	        assertNotNull(updatedDefender, "Defender should exist in the database.");
+
+	        float expectedHealth = 0.0f; // Defender's health cannot be negative
+	        assertEquals(expectedHealth, updatedDefender.getHealth(), 0.01, "Defender's health should be 0.");
+
+	        // Defender should be marked as not alive
+	        assertFalse(updatedDefender.isAlive(), "Defender should be marked as not alive.");
+
+	        LOGGER.info("Defender's health after attack: {}, isAlive: {}", updatedDefender.getHealth(), updatedDefender.isAlive());
+	    } finally {
+	        em.close();
+	    }
+	}
 }

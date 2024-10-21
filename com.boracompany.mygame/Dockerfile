@@ -1,10 +1,11 @@
-FROM openjdk:8-jre
+FROM fedora:latest
 
+RUN dnf update -y && \
+    dnf install -y java-17-openjdk libXext libXrender libXtst libXi openjfx Xvfb
+
+WORKDIR /app
 COPY /target/*-jar-with-dependencies.jar /app/app.jar
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Add wait-for-it and make it executable
-
-ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh /
-RUN chmod +x wait-for-it.sh
-
-CMD ["./wait-for-it.sh", "postgresdb:5432", "--timeout=30", "--strict", "--","java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["/entrypoint.sh"]
