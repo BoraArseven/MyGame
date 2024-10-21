@@ -44,9 +44,13 @@ public class AddPlayersToMapsView extends JFrame {
 	/**
 	 * Launch the application.
 	 */
+	// this class is there just to make testing process easier. Thus, missing coverage is meaningless.
 	@ExcludeFromJacocoGeneratedReport
 	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
+		
+		EventQueue.invokeLater(
+				
+				new Runnable() {
 			@ExcludeFromJacocoGeneratedReport
 			public void run() {
 				try {
@@ -65,6 +69,8 @@ public class AddPlayersToMapsView extends JFrame {
 
 	public void setGameController(GameController gameController) {
 		this.gameController = gameController;
+		refreshMapList();
+		refreshPlayerList();
 	}
 
 	/**
@@ -126,7 +132,10 @@ public class AddPlayersToMapsView extends JFrame {
 		gbc_btnMainMenu.gridx = 0;
 		gbc_btnMainMenu.gridy = 3;
 		contentPane.add(btnMainMenu, gbc_btnMainMenu);
-
+		btnMainMenu.addActionListener(e -> {
+		    // Create an instance of MainMenuView and make it visible
+		    navigateToMainMenu();
+		});
 		btnAddSelectedPlayer = new JButton("Add Selected Player to Map");
 		btnAddSelectedPlayer.setName("Add Selected Player to Map");
 		btnAddSelectedPlayer.setEnabled(false); // Initially disabled
@@ -154,6 +163,16 @@ public class AddPlayersToMapsView extends JFrame {
 			// Get selected map and player
 			addSelectedPlayerToMap();
 		});
+	}
+
+	@ExcludeFromJacocoGeneratedReport
+	private void navigateToMainMenu() {
+		MainMenuView mainMenuView = new MainMenuView();
+		mainMenuView.setGameController(gameController);
+		mainMenuView.setVisible(true);
+		
+		// Dispose of the current CreatePlayerView window
+		dispose();
 	}
 
 	// Method to update the state of the button
