@@ -1230,7 +1230,6 @@ class TestGameController {
 	        List<Player> players = List.of(new PlayerBuilder().withName("Player1").build());
 	        GameMap mockGameMap = new GameMap("TestMap", players);
 	        when(gameMapDAOMock.findById(mapId)).thenReturn(mockGameMap);
-
 	        // Act
 	        List<Player> result = gameControllerwithMocks.getPlayersFromMap(mapId);
 
@@ -1238,5 +1237,24 @@ class TestGameController {
 	        assertEquals(players.size(), result.size());
 	        assertEquals(players.get(0).getName(), result.get(0).getName());
 	        verify(logger).info("Retrieved {} players from map {}", players.size(), mockGameMap.getName());
+	    }
+	    @Test
+	    void testUpdateDefenderHealthDatabaseFailure() {
+	        // Arrange
+	        Player defender = new PlayerBuilder().withName("Defender").withHealth(50).withDamage(10).build();
+
+	        // Mock playerDAO to throw an exception when updatePlayer is called
+	        doThrow(new RuntimeException("Database error")).when(playerDAOMock).updatePlayer(Mockito.any(Player.class));
+
+	        // Act & Assert
+	        IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
+	            gameControllerwithMocks.attack(new PlayerBuilder().resetBuilder().withName("Attacker").withHealth(100).withDamage(20).build(), defender);
+	        });
+
+	        // Assert exception message
+	        assertEquals("Could not update defender in the database", thrown.getMessage());
+
+	        // Verify logging
+	        verify(logger).error("Failed to update defender {} in the database", defender.getName(), thrown.getCause());
 	    }
 }
