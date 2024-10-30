@@ -9,6 +9,10 @@ import com.boracompany.mygame.orm.HibernateUtil;
 import com.boracompany.mygame.orm.PlayerDAOIMPL;
 import com.boracompany.mygame.view.MainMenuView;
 
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+
 import java.awt.EventQueue;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,14 +20,25 @@ import java.nio.file.Paths;
 
 import javax.persistence.EntityManagerFactory;
 
-public class Main {
+@Command(name = "MyGame", mixinStandardHelpOptions = true, version = "1.0",
+        description = "Starts the MyGame application")
+public class Main implements Runnable {
+
     private static final Logger LOGGER = LogManager.getLogger(Main.class);
+
+    @Option(names = { "--dburl" }, description = "PostgreSQL host URL address")
+    private String dbUrl = "jdbc:postgresql://localhost:5432/bora"; // default value
 
     public static void main(String[] args) {
         LOGGER.info("App started");
+        // Parse command-line arguments using Picocli
+        int exitCode = new CommandLine(new Main()).execute(args);
+        LOGGER.info("App Terminated with exit code: " + exitCode);
+        // Removed System.exit(exitCode);
+    }
 
-        // Set default database properties
-        String dbUrl = "jdbc:postgresql://localhost:5432/bora"; // Use localhost since DB is in Docker container
+    @Override
+    public void run() {
         String dbUser = null;
         String dbPassword = null;
 
@@ -48,7 +63,7 @@ public class Main {
         }
 
         try {
-            // **Initialize Hibernate, which will create the database if it does not exist**
+            // Initialize Hibernate, which will create the database if it does not exist
             HibernateUtil.initialize(dbUrl, dbUser, dbPassword);
             LOGGER.info("Database initialized successfully");
         } catch (Exception e) {
@@ -80,7 +95,5 @@ public class Main {
                 LOGGER.error("Failed to open Main Menu", e);
             }
         });
-
-        LOGGER.info("App Terminated");
     }
 }
