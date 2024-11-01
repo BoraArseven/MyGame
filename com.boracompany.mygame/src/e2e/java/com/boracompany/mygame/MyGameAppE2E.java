@@ -9,10 +9,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.io.IOException;
-import java.io.FileNotFoundException;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,53 +21,31 @@ public class MyGameAppE2E extends AssertJSwingJUnitTestCase {
 
     private static final Logger logger = LogManager.getLogger(MyGameAppE2E.class);
     private static PostgreSQLContainer<?> postgreSQLContainer;
-    
-    
     private FrameFixture window;
-    
-    private static PostgreSQLContainer<?> extracted() {
-		return new PostgreSQLContainer<>("postgres:13.3");
-	}
-
-    // Helper method to read the file content as a String from classpath
-    private String readFileContent(String filename) throws IOException {
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(filename)) {
-            if (is == null) {
-                throw new FileNotFoundException("File not found: " + filename);
-            }
-            return new String(is.readAllBytes(), StandardCharsets.UTF_8).trim();
-        }
-    }
 
     @Override
     protected void onSetUp() throws Exception {
-        logger.info("Setting up PostgreSQL container with values from text files");
+        logger.info("Setting up PostgreSQL container");
 
-        // Read database credentials from text files
-        String dbName = readFileContent("postgres_db.txt");
-        String dbUser = readFileContent("postgres_user.txt");
-        String dbPassword = readFileContent("postgres_password.txt");
-
-        logger.debug("Database name: {}, User: {}, Password: {}", dbName, dbUser, dbPassword);
-        
-        
-
-        // Initialize the PostgreSQLContainer with values from the files
-        postgreSQLContainer = extracted()
-                .withDatabaseName(dbName)
-                .withUsername(dbUser)
-                .withPassword(dbPassword);
-
+        // Initialize PostgreSQLContainer with default values
+        postgreSQLContainer = new PostgreSQLContainer<>("postgres:13.3");
         postgreSQLContainer.start();
         logger.info("PostgreSQL container started at URL: {}", postgreSQLContainer.getJdbcUrl());
 
         String dbUrl = postgreSQLContainer.getJdbcUrl();
-        logger.debug("Database URL: {}", dbUrl);
+        String dbUser = postgreSQLContainer.getUsername();
+        String dbPassword = postgreSQLContainer.getPassword();
 
-        // Start the application with the dbUrl as an argument
-        logger.info("Launching application with dbUrl: {}", dbUrl);
+        logger.debug("Database URL: {}", dbUrl);
+        logger.debug("Database user: {}", dbUser);
+        logger.debug("Database password: [PROTECTED]");
+
+        // Launch the application with the dbUrl and other parameters as arguments
+        logger.info("Launching application with dbUrl and credentials.");
         application("com.boracompany.mygame.main.Main")
-                .withArgs("--dburl=" + dbUrl)
+                .withArgs("--dburl=" + dbUrl,
+                          "--dbuser=" + dbUser,
+                          "--dbpassword=" + dbPassword)
                 .start();
 
         // Wait for a short period to allow the window to appear
@@ -101,14 +75,28 @@ public class MyGameAppE2E extends AssertJSwingJUnitTestCase {
     @Test
     public void testMainMenuOpensCorrectly() {
         logger.info("Starting test to check if main menu opens correctly");
-        
-        // Verify that the window is visible
         window.requireVisible();
-        
-        // Verify that the window has the correct title
         window.requireTitle("Main Menu");
-        
         logger.info("Main menu opened correctly with title 'Main Menu'");
+    }
+
+    @Test
+    public void testMainMenuButtonsArePresent() {
+        logger.info("Starting test to check if all main menu buttons are present");
+
+        // Verify that the "Create Map" button is present
+        window.button("Create Map").requireVisible();
+
+        // Verify that the "Create Player" button is present
+        window.button("Create Player").requireVisible();
+
+        // Verify that the "Add Players to Maps" button is present
+        window.button("Add Players to Maps").requireVisible();
+
+        // Verify that the "Play" button is present
+        window.button("Play").requireVisible();
+
+        logger.info("All main menu buttons are present and visible");
     }
 
     @Override

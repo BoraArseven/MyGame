@@ -43,6 +43,7 @@ public class MainMenuView extends JFrame {
         contentPane.setLayout(gbl_contentPane);
 
         JButton btnCreateMap = new JButton("Create Map");
+        btnCreateMap.setName("Create Map");
         btnCreateMap.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 CreateMapView createMapView = new CreateMapView();
@@ -59,6 +60,7 @@ public class MainMenuView extends JFrame {
         contentPane.add(btnCreateMap, gbc_btnCreateMap);
 
         JButton btnCreatePlayer = new JButton("Create Player");
+        btnCreatePlayer.setName("Create Player");
         btnCreatePlayer.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 navigateToCreatePlayerView();
@@ -78,6 +80,7 @@ public class MainMenuView extends JFrame {
         contentPane.add(btnCreatePlayer, gbc_btnCreatePlayer);
 
         JButton btnAddPlayersTo = new JButton("Add Players to Maps");
+        btnAddPlayersTo.setName("Add Players to Maps");
         btnAddPlayersTo.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 AddPlayersToMapsView addPlayersToMapsView = new AddPlayersToMapsView();
@@ -93,6 +96,7 @@ public class MainMenuView extends JFrame {
         contentPane.add(btnAddPlayersTo, gbc_btnAddPlayersTo);
 
         JButton btnPlay = new JButton("Play");
+        btnPlay.setName("Play");
         btnPlay.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 navigateToPlayerAttackView();

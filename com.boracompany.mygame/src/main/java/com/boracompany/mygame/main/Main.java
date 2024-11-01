@@ -14,9 +14,6 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 import java.awt.EventQueue;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import javax.persistence.EntityManagerFactory;
 
@@ -26,35 +23,27 @@ public class Main implements Runnable {
 
     private static final Logger LOGGER = LogManager.getLogger(Main.class);
 
-    @Option(names = { "--dburl" }, description = "PostgreSQL host URL address")
-    private String dbUrl = "jdbc:postgresql://localhost:5432/bora"; // default value
+    @Option(names = { "--dburl" }, description = "PostgreSQL JDBC URL", required = true)
+    private String dbUrl;
+
+    @Option(names = { "--dbuser" }, description = "PostgreSQL database user", required = true)
+    private String dbUser;
+
+    @Option(names = { "--dbpassword" }, description = "PostgreSQL database password", required = true)
+    private String dbPassword;
 
     public static void main(String[] args) {
         LOGGER.info("App started");
         // Parse command-line arguments using Picocli
         int exitCode = new CommandLine(new Main()).execute(args);
         LOGGER.info("App Terminated with exit code: " + exitCode);
-        // Removed System.exit(exitCode);
     }
 
     @Override
     public void run() {
-        String dbUser = null;
-        String dbPassword = null;
-
-        try {
-            // Read the database user from a local file (e.g., "postgres_user.txt")
-            dbUser = new String(Files.readAllBytes(Paths.get("postgres_user.txt"))).trim();
-            // Read the database password from a local file (e.g., "postgres_password.txt")
-            dbPassword = new String(Files.readAllBytes(Paths.get("postgres_password.txt"))).trim();
-        } catch (IOException e) {
-            LOGGER.error("Failed to read database credentials from files", e);
-            return; // Exit the application if any secret cannot be read
-        }
-
-        LOGGER.info("DB URL: " + dbUrl);
-        LOGGER.info("DB User: " + (dbUser != null ? dbUser : "Not provided"));
-        LOGGER.info("DB Password Read: " + (dbPassword != null ? "Success" : "Failed"));
+        LOGGER.info("DB URL: {}", dbUrl);
+        LOGGER.info("DB User: {}", dbUser);
+        LOGGER.info("DB Password: [PROTECTED]");
 
         // Check if all required database credentials are set
         if (dbUser == null || dbPassword == null || dbUrl == null) {
@@ -63,7 +52,7 @@ public class Main implements Runnable {
         }
 
         try {
-            // Initialize Hibernate, which will create the database if it does not exist
+            // Initialize Hibernate with the provided configurations
             HibernateUtil.initialize(dbUrl, dbUser, dbPassword);
             LOGGER.info("Database initialized successfully");
         } catch (Exception e) {
