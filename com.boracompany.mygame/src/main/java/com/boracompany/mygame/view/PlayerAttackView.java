@@ -72,6 +72,7 @@ public class PlayerAttackView extends JFrame {
 	 * Create the frame.
 	 */
 	public PlayerAttackView() {
+		setTitle("Player Attack");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 600, 400);
 		contentPane = new JPanel();
@@ -145,6 +146,7 @@ public class PlayerAttackView extends JFrame {
 
 		// Main Menu Button
 		btnMainMenu = new JButton("Main Menu");
+		btnMainMenu.setName("Main Menu");
 		GridBagConstraints gbc_btnMainMenu = new GridBagConstraints();
 		gbc_btnMainMenu.insets = new Insets(0, 0, 5, 5);
 		gbc_btnMainMenu.gridx = 0;
