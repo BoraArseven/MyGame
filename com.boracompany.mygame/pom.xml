@@ -32,7 +32,7 @@
 	</properties>
 
 	<dependencies>
-	
+
 		<dependency>
 			<groupId>com.zaxxer</groupId>
 			<artifactId>HikariCP</artifactId>
@@ -306,9 +306,6 @@ since javax.xml.bind has been removed from the JDK -->
 							<param>com.boracompany.mygame.*</param>
 						</targetTests>
 						<excludedClasses>
-							<param>com.boracompany.mygame.IT.*</param> <!--
-							Exclude IT folder -->
-							<param>com.boracompany.mygame.e2e.*</param>
 							<param>com.boracompany.mygame.main.*</param> <!--
 							Exclude Main folder -->
 							<param>com.boracompany.mygame.orm.*</param><!--
@@ -317,6 +314,9 @@ since javax.xml.bind has been removed from the JDK -->
 							<param>com.boracompany.mygame.view.*</param>
 						</excludedClasses>
 						<excludedTestClasses>
+							<param>com.boracompany.mygame.IT.*</param> <!--
+							Exclude IT folder -->
+							<param>com.boracompany.mygame.e2e.*</param>
 							<param>com.boracompany.mygame.view.*</param> <!--
 							Exclude tests for the view package -->
 						</excludedTestClasses>
