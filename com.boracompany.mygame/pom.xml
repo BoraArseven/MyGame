@@ -312,8 +312,10 @@ since javax.xml.bind has been removed from the JDK -->
 							Exclude ORM folder -->
 							<param>com.boracompany.mygame.model.*</param>
 							<param>com.boracompany.mygame.view.*</param>
+							<param>com.boracompany.mygame.e2e.*</param>
 						</excludedClasses>
 						<excludedTestClasses>
+						 <param>com.boracompany.mygame.MyGameAppE2E</param>
 							<param>com.boracompany.mygame.IT.*</param> <!--
 							Exclude IT folder -->
 							<param>com.boracompany.mygame.e2e.*</param>
