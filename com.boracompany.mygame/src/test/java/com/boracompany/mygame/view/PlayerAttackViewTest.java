@@ -686,27 +686,20 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 		// Verify that the attack method was never called since no players were selected
 		verify(mockGameController, times(0)).attack(any(), any());
 	}
+
 	@Test
 	@GUITest
 	public void testRefreshMapListChangesLabelWhenThereIsException() {
-	    GameMap testMap = new GameMap(1L, "TestMap");
-	    GameMap testMap2 = new GameMap(2L, "TestMap2");
-	    when(mockGameController.getAllMaps()).thenThrow(new IllegalStateException("Failed to refresh map list."));
-	    
-	    // Build player data
-	    Player player1 = new PlayerBuilder().withName("Player1").withHealth(100).withDamage(20).withIsAlive(true)
-	            .build();
-	    Player player2 = new PlayerBuilder().withName("Player2").withHealth(80).withDamage(15).withIsAlive(true)
-	            .build();
-	    
-	    // Ensure refreshMapList() is called on the EDT
-	    GuiActionRunner.execute(() -> {
-	        playerAttackView.refreshMapList();
-	    });
-	    
-	    // Check label text after calling refreshMapList
-	    window.label("errorLabel").requireText("Failed to refresh map list.");
+
+		when(mockGameController.getAllMaps()).thenThrow(new IllegalStateException("Failed to refresh map list."));
+
+		// Ensure refreshMapList() is called on the EDT
+		GuiActionRunner.execute(() -> {
+			playerAttackView.refreshMapList();
+		});
+
+		// Check label text after calling refreshMapList
+		window.label("errorLabel").requireText("Failed to refresh map list.");
 	}
 
-	
 }

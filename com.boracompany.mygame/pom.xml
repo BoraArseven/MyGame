@@ -23,7 +23,7 @@
 		<mongo.driver.version>3.12.10</mongo.driver.version>
 		<mongo.java.server.version>1.39.0</mongo.java.server.version>
 		<testcontainers.version>1.19.3</testcontainers.version>
-		<picocli.version>4.6.1</picocli.version>
+		<picocli.version>4.7.6</picocli.version>
 		<cucumber.version>5.5.0</cucumber.version>
 		<postresql.version>42.7.3</postresql.version>
 		<sonar.organization>boraarseven</sonar.organization>
@@ -32,6 +32,7 @@
 	</properties>
 
 	<dependencies>
+
 		<dependency>
 			<groupId>com.zaxxer</groupId>
 			<artifactId>HikariCP</artifactId>
@@ -44,11 +45,6 @@
 			<artifactId>junit</artifactId>
 			<version>${junit.version}</version>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.zaxxer</groupId>
-			<artifactId>HikariCP</artifactId>
-			<version>5.0.1</version>
 		</dependency>
 
 		<dependency>
@@ -220,6 +216,7 @@
 								<resource>
 									<directory>src/bdd/resources</directory>
 									<directory>src/it/resources</directory>
+									<directory>src/e2e/resources</directory>
 								</resource>
 							</resources>
 						</configuration>
@@ -255,10 +252,26 @@
 				<version>2.22.1</version>
 				<executions>
 					<execution>
+						<id>default-it</id>
 						<goals>
 							<goal>integration-test</goal>
 							<goal>verify</goal>
 						</goals>
+					</execution>
+					<execution>
+						<id>e2e-tests</id>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+						<configuration>
+							<excludes>
+								<exclude>**/*IT.java</exclude>
+							</excludes>
+							<includes>
+								<include>**/*E2E.java</include>
+							</includes>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
@@ -293,16 +306,19 @@ since javax.xml.bind has been removed from the JDK -->
 							<param>com.boracompany.mygame.*</param>
 						</targetTests>
 						<excludedClasses>
-							<param>com.boracompany.mygame.IT.*</param> <!--
-							Exclude IT folder -->
 							<param>com.boracompany.mygame.main.*</param> <!--
 							Exclude Main folder -->
 							<param>com.boracompany.mygame.orm.*</param><!--
 							Exclude ORM folder -->
 							<param>com.boracompany.mygame.model.*</param>
 							<param>com.boracompany.mygame.view.*</param>
+							<param>com.boracompany.mygame.e2e.*</param>
 						</excludedClasses>
 						<excludedTestClasses>
+						 <param>com.boracompany.mygame.MyGameAppE2E</param>
+							<param>com.boracompany.mygame.IT.*</param> <!--
+							Exclude IT folder -->
+							<param>com.boracompany.mygame.e2e.*</param>
 							<param>com.boracompany.mygame.view.*</param> <!--
 							Exclude tests for the view package -->
 						</excludedTestClasses>

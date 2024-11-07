@@ -9,37 +9,41 @@ import com.boracompany.mygame.orm.HibernateUtil;
 import com.boracompany.mygame.orm.PlayerDAOIMPL;
 import com.boracompany.mygame.view.MainMenuView;
 
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+
 import java.awt.EventQueue;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import javax.persistence.EntityManagerFactory;
 
-public class Main {
+@Command(name = "MyGame", mixinStandardHelpOptions = true, version = "1.0",
+        description = "Starts the MyGame application")
+public class Main implements Runnable {
+
     private static final Logger LOGGER = LogManager.getLogger(Main.class);
+
+    @Option(names = { "--dburl" }, description = "PostgreSQL JDBC URL", required = true)
+    private String dbUrl;
+
+    @Option(names = { "--dbuser" }, description = "PostgreSQL database user", required = true)
+    private String dbUser;
+
+    @Option(names = { "--dbpassword" }, description = "PostgreSQL database password", required = true)
+    private String dbPassword;
 
     public static void main(String[] args) {
         LOGGER.info("App started");
+        // Parse command-line arguments using Picocli
+        int exitCode = new CommandLine(new Main()).execute(args);
+        LOGGER.info("App Terminated with exit code: " + exitCode);
+    }
 
-        // Set default database properties
-        String dbUrl = "jdbc:postgresql://localhost:5432/bora"; // Use localhost since DB is in Docker container
-        String dbUser = null;
-        String dbPassword = null;
-
-        try {
-            // Read the database user from a local file (e.g., "postgres_user.txt")
-            dbUser = new String(Files.readAllBytes(Paths.get("postgres_user.txt"))).trim();
-            // Read the database password from a local file (e.g., "postgres_password.txt")
-            dbPassword = new String(Files.readAllBytes(Paths.get("postgres_password.txt"))).trim();
-        } catch (IOException e) {
-            LOGGER.error("Failed to read database credentials from files", e);
-            return; // Exit the application if any secret cannot be read
-        }
-
-        LOGGER.info("DB URL: " + dbUrl);
-        LOGGER.info("DB User: " + (dbUser != null ? dbUser : "Not provided"));
-        LOGGER.info("DB Password Read: " + (dbPassword != null ? "Success" : "Failed"));
+    @Override
+    public void run() {
+        LOGGER.info("DB URL: {}", dbUrl);
+        LOGGER.info("DB User: {}", dbUser);
+        LOGGER.info("DB Password: [PROTECTED]");
 
         // Check if all required database credentials are set
         if (dbUser == null || dbPassword == null || dbUrl == null) {
@@ -48,7 +52,7 @@ public class Main {
         }
 
         try {
-            // **Initialize Hibernate, which will create the database if it does not exist**
+            // Initialize Hibernate with the provided configurations
             HibernateUtil.initialize(dbUrl, dbUser, dbPassword);
             LOGGER.info("Database initialized successfully");
         } catch (Exception e) {
@@ -80,7 +84,5 @@ public class Main {
                 LOGGER.error("Failed to open Main Menu", e);
             }
         });
-
-        LOGGER.info("App Terminated");
     }
 }

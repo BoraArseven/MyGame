@@ -77,7 +77,7 @@ public class AddPlayersToMapsView extends JFrame {
 	 * Create the frame.
 	 */
 	public AddPlayersToMapsView() { // Pass GameController to constructor
-
+		setTitle("Add Players to Maps");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
 		contentPane = new JPanel();
@@ -127,6 +127,7 @@ public class AddPlayersToMapsView extends JFrame {
 		contentPane.add(playerList, gbc_playerList);
 
 		JButton btnMainMenu = new JButton("Main Menu");
+		btnMainMenu.setName("Main Menu");
 		GridBagConstraints gbc_btnMainMenu = new GridBagConstraints();
 		gbc_btnMainMenu.insets = new Insets(0, 0, 5, 5);
 		gbc_btnMainMenu.gridx = 0;
