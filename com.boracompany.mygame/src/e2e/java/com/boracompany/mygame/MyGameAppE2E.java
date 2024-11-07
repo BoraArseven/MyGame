@@ -6,6 +6,7 @@ import org.assertj.swing.finder.WindowFinder;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
 import org.junit.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.runner.RunWith;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -19,6 +20,7 @@ import static org.assertj.swing.launcher.ApplicationLauncher.application;
 
 @RunWith(org.assertj.swing.junit.runner.GUITestRunner.class)
 @Testcontainers
+@TestInstance(TestInstance.Lifecycle.PER_METHOD)
 public class MyGameAppE2E extends AssertJSwingJUnitTestCase {
 
     private static final Logger logger = LogManager.getLogger(MyGameAppE2E.class);
@@ -259,6 +261,8 @@ public class MyGameAppE2E extends AssertJSwingJUnitTestCase {
 
         logger.info("Full application flow test completed successfully");
     }
+   
+
     private FrameFixture findWindowByTitle(String title) throws Exception {
         return WindowFinder.findFrame(new GenericTypeMatcher<JFrame>(JFrame.class) {
             @Override
