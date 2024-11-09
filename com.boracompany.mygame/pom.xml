@@ -34,6 +34,13 @@
 	<dependencies>
 
 		<dependency>
+			<groupId>org.awaitility</groupId>
+			<artifactId>awaitility</artifactId>
+			<version>4.2.0</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>com.zaxxer</groupId>
 			<artifactId>HikariCP</artifactId>
 			<version>5.0.1</version>
@@ -315,7 +322,7 @@ since javax.xml.bind has been removed from the JDK -->
 							<param>com.boracompany.mygame.e2e.*</param>
 						</excludedClasses>
 						<excludedTestClasses>
-						 <param>com.boracompany.mygame.MyGameAppE2E</param>
+							<param>com.boracompany.mygame.MyGameAppE2E</param>
 							<param>com.boracompany.mygame.IT.*</param> <!--
 							Exclude IT folder -->
 							<param>com.boracompany.mygame.e2e.*</param>
@@ -499,49 +506,6 @@ since javax.xml.bind has been removed from the JDK -->
 			<id>docker</id>
 			<build>
 				<plugins>
-
-					<!--<plugin>
-						<groupId>io.fabric8</groupId>
-						<artifactId>docker-maven-plugin</artifactId>
-						<version>0.44.0</version>
-						<configuration>
-							 Docker custom networks mentioned in the run
-							image configurations 
-                will be created automatically during "start" and removed during "stop". 
-							<autoCreateCustomNetworks>true</autoCreateCustomNetworks>
-							<images>
-								<image>
-									<alias>app</alias>
-									<external>
-										<type>compose</type>
-										<basedir>${project.basedir}</basedir>
-									</external>
-									<run>
-										<wait>
-											<log>Hello World!</log>
-											<time>10000</time>
-										</wait>
-									</run>
-								</image>
-							</images>
-						</configuration>
-						<executions>
-							<execution>
-								<id>docker-start</id>
-								<phase>pre-integration-test</phase>
-								<goals>
-									<goal>start</goal>
-								</goals>
-							</execution>
-							<execution>
-								<id>docker-stop</id>
-								<phase>post-integration-test</phase>
-								<goals>
-									<goal>stop</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>-->
 				</plugins>
 			</build>
 		</profile>
