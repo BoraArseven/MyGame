@@ -1,6 +1,15 @@
 package com.boracompany.mygame;
 
+import static org.assertj.swing.launcher.ApplicationLauncher.application;
+import static org.awaitility.Awaitility.await;
+
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
+
 import javax.swing.JFrame;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.assertj.swing.core.GenericTypeMatcher;
 import org.assertj.swing.finder.WindowFinder;
 import org.assertj.swing.fixture.FrameFixture;
@@ -10,13 +19,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.runner.RunWith;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import static org.assertj.swing.launcher.ApplicationLauncher.application;
 
 @RunWith(org.assertj.swing.junit.runner.GUITestRunner.class)
 @Testcontainers
@@ -27,54 +29,56 @@ public class MyGameAppE2E extends AssertJSwingJUnitTestCase {
     private static PostgreSQLContainer<?> postgreSQLContainer;
     private FrameFixture window;
 
-    @Override
-    protected void onSetUp() throws Exception {
-        logger.info("Setting up PostgreSQL container");
 
-        // Initialize PostgreSQLContainer with default values
-        postgreSQLContainer = new PostgreSQLContainer<>("postgres:13.3");
-        postgreSQLContainer.start();
-        logger.info("PostgreSQL container started at URL: {}", postgreSQLContainer.getJdbcUrl());
+@Override
+protected void onSetUp() throws Exception {
+    logger.info("Setting up PostgreSQL container");
 
-        String dbUrl = postgreSQLContainer.getJdbcUrl();
-        String dbUser = postgreSQLContainer.getUsername();
-        String dbPassword = postgreSQLContainer.getPassword();
+    // Initialize PostgreSQLContainer with default values
+    postgreSQLContainer = new PostgreSQLContainer<>("postgres:13.3");
+    postgreSQLContainer.start();
+    logger.info("PostgreSQL container started at URL: {}", postgreSQLContainer.getJdbcUrl());
 
-        logger.debug("Database URL: {}", dbUrl);
-        logger.debug("Database user: {}", dbUser);
-        logger.debug("Database password: [PROTECTED]");
+    String dbUrl = postgreSQLContainer.getJdbcUrl();
+    String dbUser = postgreSQLContainer.getUsername();
+    String dbPassword = postgreSQLContainer.getPassword();
 
-        // Launch the application with the dbUrl and other parameters as arguments
-        logger.info("Launching application with dbUrl and credentials.");
-        application("com.boracompany.mygame.main.Main")
-                .withArgs("--dburl=" + dbUrl,
-                          "--dbuser=" + dbUser,
-                          "--dbpassword=" + dbPassword)
-                .start();
+    logger.debug("Database URL: {}", dbUrl);
+    logger.debug("Database user: {}", dbUser);
+    logger.debug("Database password: [PROTECTED]");
 
-        // Wait for a short period to allow the window to appear
-        TimeUnit.SECONDS.sleep(2);
+    // Launch the application with the dbUrl and other parameters as arguments
+    logger.info("Launching application with dbUrl and credentials.");
+    application("com.boracompany.mygame.main.Main")
+            .withArgs("--dburl=" + dbUrl,
+                      "--dbuser=" + dbUser,
+                      "--dbpassword=" + dbPassword)
+            .start();
 
-        // Attempt to find the main menu window with a timeout
-        logger.info("Attempting to find the Main Menu window.");
+    // Use Awaitility to wait until the Main Menu window appears
+    logger.info("Waiting for the Main Menu window to appear.");
+    await().atMost(10, TimeUnit.SECONDS).until(() -> {
         try {
             window = WindowFinder.findFrame(new GenericTypeMatcher<JFrame>(JFrame.class) {
                 @Override
                 protected boolean isMatching(JFrame frame) {
                     return "Main Menu".equals(frame.getTitle()) && frame.isShowing();
                 }
-            }).withTimeout(10, TimeUnit.SECONDS).using(robot());
-
-            if (window != null) {
-                logger.info("Main Menu window found.");
-            } else {
-                logger.error("Main Menu window not found within the timeout.");
-            }
+            }).using(robot());
+            return window != null;
         } catch (Exception e) {
-            logger.error("Exception while finding the Main Menu window", e);
-            throw e; // Rethrow to fail the test setup
+            // Window not found yet
+            return false;
         }
+    });
+
+    if (window != null) {
+        logger.info("Main Menu window found.");
+    } else {
+        logger.error("Main Menu window not found within the timeout.");
+        throw new AssertionError("Main Menu window not found within the timeout.");
     }
+}
 
     @Test
     public void testFullApplicationFlow() throws Exception {
