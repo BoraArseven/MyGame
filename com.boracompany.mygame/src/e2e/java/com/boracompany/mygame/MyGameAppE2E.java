@@ -51,10 +51,7 @@ public class MyGameAppE2E extends AssertJSwingJUnitTestCase {
                           "--dbuser=" + dbUser,
                           "--dbpassword=" + dbPassword)
                 .start();
-
-        // Wait for a short period to allow the window to appear
-        TimeUnit.SECONDS.sleep(2);
-
+        Thread.sleep(1000);
         // Attempt to find the main menu window with a timeout
         logger.info("Attempting to find the Main Menu window.");
         try {
