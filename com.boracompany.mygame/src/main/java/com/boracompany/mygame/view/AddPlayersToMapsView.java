@@ -78,7 +78,8 @@ public class AddPlayersToMapsView extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	@Generated("Swing Designer")
+	//Generated method
+	@ExcludeFromJacocoGeneratedReport
 	public AddPlayersToMapsView() { // Pass GameController to constructor
 		setTitle("Add Players to Maps");
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);

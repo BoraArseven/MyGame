@@ -81,7 +81,7 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 	/**
 	 * Create the frame.
 	 */
-	@Generated("Swing Designer")
+	@ExcludeFromJacocoGeneratedReport
 	public CreatePlayerView() {
 
 		setTitle("Create Player");

@@ -5,6 +5,8 @@ import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 import com.boracompany.mygame.controller.GameController;
+import com.boracompany.mygame.main.ExcludeFromJacocoGeneratedReport;
+
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
@@ -30,7 +32,7 @@ public class MainMenuView extends JFrame {
         
     }
 
-    @Generated("Swing Designer")
+    @ExcludeFromJacocoGeneratedReport
     private void initialize() {
         setTitle("Main Menu");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
