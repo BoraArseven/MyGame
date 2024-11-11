@@ -9,6 +9,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.List;
 
+import javax.annotation.Generated;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -41,7 +42,6 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 	private JLabel ErrorMessageLabel;
 	private JButton mainMenuButton;
 	private JLabel lblPlayerlist;
-
 	private JScrollPane scrollPane;
 	private JButton DeleteButton;
 
@@ -64,7 +64,7 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 	 */
 	@ExcludeFromJacocoGeneratedReport
 	public static void main(String[] args) {
-		
+
 		EventQueue.invokeLater(new Runnable() {
 			@ExcludeFromJacocoGeneratedReport
 			public void run() {
@@ -81,6 +81,7 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 	/**
 	 * Create the frame.
 	 */
+	@Generated("Swing Designer")
 	public CreatePlayerView() {
 
 		setTitle("Create Player");
@@ -227,9 +228,9 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 
 		mainMenuButton = new JButton("MainMenu");
 		mainMenuButton.setName("MainMenuButton");
-		//mainMenuButton.addActionListener(new ActionListener() {
-	//		public void actionPerformed(ActionEvent e) {
-		//	}});
+		// mainMenuButton.addActionListener(new ActionListener() {
+		// public void actionPerformed(ActionEvent e) {
+		// }});
 		GridBagConstraints gbc_mainMenuButton = new GridBagConstraints();
 		gbc_mainMenuButton.insets = new Insets(0, 0, 5, 5);
 		gbc_mainMenuButton.gridx = 0;
@@ -264,7 +265,7 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 		gbc_errorMessageLabel.gridy = 8;
 		contentPane.add(ErrorMessageLabel, gbc_errorMessageLabel);
 		mainMenuButton.addActionListener(e -> {
-		    navigateToMainMenu();
+			navigateToMainMenu();
 		});
 
 	}
@@ -275,8 +276,7 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 		MainMenuView mainMenuView = new MainMenuView();
 		mainMenuView.setGameController(gameController);
 		mainMenuView.setVisible(true);
-		
-		
+
 		// Dispose of the current CreatePlayerView window
 		dispose();
 	}
@@ -323,21 +323,21 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 
 	@Override
 	public void playerRemoved(Player player) {
-	    resetErrorLabel();
-	    listPlayersModel.removeElement(player); // This should remove the player from the list model
+		resetErrorLabel();
+		listPlayersModel.removeElement(player); // This should remove the player from the list model
 
-	    // Remove the player from the database
-	    try {
-	        gameController.deletePlayer(player.getId());
-	    } catch (Exception ex) {
-	        showError("Failed to remove player from the database: " + player.getName(), player);
-	        return;
-	    }
+		// Remove the player from the database
+		try {
+			gameController.deletePlayer(player.getId());
+		} catch (Exception ex) {
+			showError("Failed to remove player from the database: " + player.getName(), player);
+			return;
+		}
 
-	    // Update the selection
-	    if (!listPlayersModel.isEmpty()) {
-	        list.setSelectedIndex(0); // Optionally select the first remaining player
-	    }
+		// Update the selection
+		if (!listPlayersModel.isEmpty()) {
+			list.setSelectedIndex(0); // Optionally select the first remaining player
+		}
 	}
 
 	public void setSchoolController(GameController gameController) {
@@ -364,6 +364,5 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 			showError("Failed to refresh player list", null);
 		}
 	}
-	
 
 }

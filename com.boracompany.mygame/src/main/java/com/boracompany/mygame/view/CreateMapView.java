@@ -9,6 +9,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.List;
 
+import javax.annotation.Generated;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -70,6 +71,7 @@ public class CreateMapView extends JFrame {
 	/**
 	 * Create the frame.
 	 */
+	@Generated("Swing Designer")
 	public CreateMapView() {
 
 		setTitle("Create Map");
