@@ -34,18 +34,7 @@ public class MainMenuView extends JFrame {
 
     @ExcludeFromJacocoGeneratedReport
     private void initialize() {
-        setTitle("Main Menu");
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setBounds(100, 100, 450, 300);
-        contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-        setContentPane(contentPane);
-        GridBagLayout gbl_contentPane = new GridBagLayout();
-        gbl_contentPane.columnWidths = new int[] { 0, 0, 0, 0, 0, 0 };
-        gbl_contentPane.rowHeights = new int[] { 0, 0 };
-        gbl_contentPane.columnWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
-        gbl_contentPane.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
-        contentPane.setLayout(gbl_contentPane);
+        extracted();
 
         JButton btnCreateMap = new JButton("Create Map");
         btnCreateMap.setName("Create Map");
@@ -119,4 +108,19 @@ public class MainMenuView extends JFrame {
         gbc_btnPlay.gridy = 0;
         contentPane.add(btnPlay, gbc_btnPlay);
     }
+
+	private void extracted() {
+		setTitle("Main Menu");
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setBounds(100, 100, 450, 300);
+        contentPane = new JPanel();
+        contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+        setContentPane(contentPane);
+        GridBagLayout gbl_contentPane = new GridBagLayout();
+        gbl_contentPane.columnWidths = new int[] { 0, 0, 0, 0, 0, 0 };
+        gbl_contentPane.rowHeights = new int[] { 0, 0 };
+        gbl_contentPane.columnWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+        gbl_contentPane.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
+        contentPane.setLayout(gbl_contentPane);
+	}
 }

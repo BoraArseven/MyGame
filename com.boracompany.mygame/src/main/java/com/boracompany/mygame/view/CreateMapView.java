@@ -74,18 +74,7 @@ public class CreateMapView extends JFrame {
 	@Generated("Swing Designer")
 	public CreateMapView() {
 
-		setTitle("Create Map");
-		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		setBounds(100, 100, 450, 300);
-		contentPane = new JPanel();
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		setContentPane(contentPane);
-		GridBagLayout gbl_contentPane = new GridBagLayout();
-		gbl_contentPane.columnWidths = new int[] { 0, 0, 0 };
-		gbl_contentPane.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-		gbl_contentPane.columnWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
-		gbl_contentPane.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE };
-		contentPane.setLayout(gbl_contentPane);
+		createWindow();
 
 		JLabel lblMapName = new JLabel("Map Name:");
 		GridBagConstraints gbc_lblMapName = new GridBagConstraints();
@@ -214,6 +203,21 @@ public class CreateMapView extends JFrame {
 		gbc_errorMessageLabel.gridx = 1;
 		gbc_errorMessageLabel.gridy = 8;
 		contentPane.add(errorMessageLabel, gbc_errorMessageLabel);
+	}
+
+	private void createWindow() {
+		setTitle("Create Map");
+		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		setBounds(100, 100, 450, 300);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		GridBagLayout gbl_contentPane = new GridBagLayout();
+		gbl_contentPane.columnWidths = new int[] { 0, 0, 0 };
+		gbl_contentPane.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+		gbl_contentPane.columnWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
+		gbl_contentPane.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE };
+		contentPane.setLayout(gbl_contentPane);
 	}
 
 	private void navigateToMainMenu() {
