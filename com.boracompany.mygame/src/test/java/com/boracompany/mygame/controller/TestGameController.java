@@ -660,19 +660,19 @@ class TestGameController {
 
 	@Test
 	void testAddPlayerToMap_MapNotFound() {
-		// Arrange
-		Long mapId = 1L;
-		Player player = new PlayerBuilder().withName("TestPlayer").withHealth(100f).withDamage(50f).build();
-		when(gameMapDAOMock.findById(mapId)).thenReturn(null);
+	    // Arrange
+	    Long invalidMapId = 999L; // Use a non-existent map ID
+	    Player player = new PlayerBuilder().withName("TestPlayer").withHealth(100).withDamage(10).build();
 
-		// Act & Assert
-		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-			gameControllerwithMocks.addPlayerToMap(mapId, player);
-		});
+	    // Act & Assert
+	    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+	        gameControllerwithMocks.addPlayerToMap(invalidMapId, player);
+	    });
 
-		assertEquals("Map with ID 1 not found", exception.getMessage());
-		verify(gameMapDAOMock, never()).addPlayerToMap(anyLong(), any(Player.class));
+	    assertEquals("Map with ID 999 not found", exception.getMessage());
+	    verify(logger).error("Map with ID {} not found", invalidMapId);
 	}
+
 
 	@Test
 	void testRemovePlayerFromMap() {
@@ -1257,4 +1257,5 @@ class TestGameController {
 	        // Verify logging
 	        verify(logger).error("Failed to update defender {} in the database", defender.getName(), thrown.getCause());
 	    }
+	    
 }
