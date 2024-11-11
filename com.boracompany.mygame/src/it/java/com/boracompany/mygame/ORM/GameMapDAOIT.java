@@ -958,18 +958,18 @@ public class GameMapDAOIT {
 		em.close();
 	}
 
-	  @Test
-	    public void testAddPlayerToMap_withNullMapId_throwsIllegalArgumentException() {
-	        Player player = new Player();
-	        player.setId(1L); // assuming this player already exists or has an ID
+	@Test
+	void testAddPlayerToMap_withNullMapId_throwsIllegalArgumentException() {
+		Player player = new Player();
+		player.setId(1L); // assuming this player already exists or has an ID
 
-	        // Act & Assert
-	        PersistenceException exception = assertThrows(PersistenceException.class, () -> {
-	            gameMapDAO.addPlayerToMap(null, player);
-	        });
+		// Act & Assert
+		PersistenceException exception = assertThrows(PersistenceException.class, () -> {
+			gameMapDAO.addPlayerToMap(null, player);
+		});
 
-	        // Check if the cause of the PersistenceException is IllegalArgumentException
-	        assertTrue(exception.getCause() instanceof IllegalArgumentException);
-	        assertTrue(exception.getCause().getMessage().contains("MapId can not be null"));
-	    }
+		// Check if the cause of the PersistenceException is IllegalArgumentException
+		assertTrue(exception.getCause() instanceof IllegalArgumentException);
+		assertTrue(exception.getCause().getMessage().contains("MapId can not be null"));
+	}
 }

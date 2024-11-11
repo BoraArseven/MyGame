@@ -15,6 +15,9 @@ public class GameController {
 	private static final String NOT_FOUND_MESSAGE = " not found";
 	private PlayerDAOIMPL playerDAO;
 	private GameMapDAO gameMapDAO;
+	
+	private final String ERROR_MAPNOTFOUND = "Map with ID {} not found";
+	
 	private Logger logger; // Injected logger for better testability
 
 	// Constructor with dependency injection
@@ -38,7 +41,7 @@ public class GameController {
 		if (gameMap != null) {
 			gameMapDAO.addPlayerToMap(mapId, player);
 			gameMapDAO.update(gameMap);
-			logger.info("Player {} added to map {}", player.getName(), gameMap.getName());
+			logger.info(ERROR_MAPNOTFOUND, player.getName(), gameMap.getName());
 		} else {
 			logger.error("Map with ID {} not found", mapId);
 			throw new IllegalArgumentException("Map with ID " + mapId + NOT_FOUND_MESSAGE);
@@ -167,7 +170,7 @@ public class GameController {
 				throw new IllegalStateException("Could not delete map with ID " + mapId, e);
 			}
 		} else {
-			logger.error("Map with ID {} not found", mapId);
+			logger.error(ERROR_MAPNOTFOUND, mapId);
 			throw new IllegalArgumentException("Map with ID " + mapId + NOT_FOUND_MESSAGE);
 		}
 	}
@@ -209,7 +212,7 @@ public class GameController {
 				logger.info("Retrieved {} players from map {}", players.size(), gameMap.getName());
 				return players;
 			} else {
-				logger.error("Map with ID {} not found", mapId);
+				logger.error(ERROR_MAPNOTFOUND, mapId);
 				throw new IllegalArgumentException("Map with ID " + mapId + NOT_FOUND_MESSAGE);
 			}
 		}
