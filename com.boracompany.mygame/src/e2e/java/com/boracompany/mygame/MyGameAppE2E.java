@@ -2,13 +2,12 @@ package com.boracompany.mygame;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.swing.launcher.ApplicationLauncher.application;
+import static org.awaitility.Awaitility.await;
 
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import javax.swing.JFrame;
-
-import static org.awaitility.Awaitility.await;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,6 +20,8 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.runner.RunWith;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
+
+import com.boracompany.mygame.orm.HibernateUtil;
 
 @RunWith(org.assertj.swing.junit.runner.GUITestRunner.class)
 @Testcontainers
@@ -260,7 +261,7 @@ public class MyGameAppE2E extends AssertJSwingJUnitTestCase {
 	@Override
 	protected void onTearDown() {
 		logger.info("Tearing down PostgreSQL container and cleaning up window resources");
-
+		HibernateUtil.close();
 		if (postgreSQLContainer != null) {
 			postgreSQLContainer.stop();
 			logger.info("PostgreSQL container stopped");
