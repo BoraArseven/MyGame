@@ -39,7 +39,7 @@ public class CreateMapView extends JFrame {
 	private JScrollPane scrollPane;
 	private JButton deleteButton;
 
-	private GameController gameController;
+	private transient GameController gameController;
 
 	private JList<GameMap> list;
 	private DefaultListModel<GameMap> listMapsModel;
