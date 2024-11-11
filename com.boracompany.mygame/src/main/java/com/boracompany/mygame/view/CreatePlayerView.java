@@ -44,7 +44,7 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 	private JScrollPane scrollPane;
 	private JButton DeleteButton;
 
-	private GameController gameController;
+	private transient GameController gameController;
 
 	public void setGameController(GameController gameController) {
 		this.gameController = gameController;

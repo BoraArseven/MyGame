@@ -39,7 +39,7 @@ public class AddPlayersToMapsView extends JFrame {
 	private DefaultListModel<GameMap> mapListModel;
 	private DefaultListModel<Player> playerListModel;
 
-	private GameController gameController; // Add a reference to GameController
+	private transient GameController gameController; // Add a reference to GameController
 
 	/**
 	 * Launch the application.

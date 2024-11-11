@@ -16,7 +16,7 @@ public class MainMenuView extends JFrame {
 
     private static final long serialVersionUID = 1L;
     private JPanel contentPane;
-    private GameController gameController; // Add this line
+    private transient GameController gameController; // Add this line
 
     public MainMenuView() {
         initialize();
