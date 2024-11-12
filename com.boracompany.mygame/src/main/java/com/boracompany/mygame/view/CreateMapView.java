@@ -24,9 +24,13 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.boracompany.mygame.controller.GameController;
 import com.boracompany.mygame.main.ExcludeFromJacocoGeneratedReport;
 import com.boracompany.mygame.model.GameMap;
+
 
 public class CreateMapView extends JFrame {
 
@@ -49,7 +53,7 @@ public class CreateMapView extends JFrame {
 	DefaultListModel<GameMap> getListMapsModel() {
 		return listMapsModel;
 	}
-
+	Logger mapViewLogger = LogManager.getLogger(CreateMapView.class);
 	/**
 	 * Launch the application.
 	 */
@@ -248,7 +252,7 @@ public class CreateMapView extends JFrame {
 		try {
 			// Ensure the correct map name is used
 			String mapName = map.getName();
-			System.out.println("Map Name: " + mapName); // Debugging step
+		mapViewLogger.info("Map Name: " + mapName); // Debugging step
 
 			// Add the map to the database
 			gameController.createMap(mapName, map.getPlayers());

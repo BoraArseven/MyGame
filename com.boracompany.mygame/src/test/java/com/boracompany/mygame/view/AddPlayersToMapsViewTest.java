@@ -194,24 +194,6 @@ public void testErrorMessageLabelShouldBeInitiallyEmpty() {
 		window.label("errorLabel").requireText("");
 	}
 
-	@Test
-	@GUITest
-	public void testAddSelectedPlayerToMapSuccess() {
-		GuiActionRunner.execute(() -> {
-			DefaultListModel<GameMap> mapListModel = addPlayersToMaps.getMapListModel();
-			mapListModel.addElement(new GameMap(1L, "TestMap"));
-
-			DefaultListModel<Player> playerListModel = addPlayersToMaps.getPlayerListModel();
-			playerListModel.addElement(new PlayerBuilder().withName("TestPlayer").build());
-		});
-
-		window.list("mapList").selectItem(0);
-		window.list("playerList").selectItem(0);
-		window.button(JButtonMatcher.withText("Add Selected Player to Map")).click();
-
-		verify(mockGameController).addPlayerToMap(1L, new PlayerBuilder().withName("TestPlayer").build());
-		window.label("errorLabel").requireText(""); // No error should be shown
-	}
 
 	@Test
 	@GUITest

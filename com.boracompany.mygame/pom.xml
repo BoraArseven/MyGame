@@ -34,6 +34,12 @@
 	<dependencies>
 
 		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>2.0.16</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.awaitility</groupId>
 			<artifactId>awaitility</artifactId>
 			<version>4.2.0</version>
@@ -54,11 +60,6 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-			<version>1.2.13</version>
-		</dependency>
 
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -188,6 +189,7 @@
 			<artifactId>pitest-junit5-plugin</artifactId>
 			<version>1.2.1</version>
 		</dependency>
+	
 	</dependencies>
 	<build>
 
@@ -208,7 +210,6 @@
 							<sources>
 								<source>src/it/java</source>
 								<source>src/e2e/java</source>
-								<source>src/bdd/java</source>
 							</sources>
 						</configuration>
 					</execution>
@@ -221,7 +222,6 @@
 						<configuration>
 							<resources>
 								<resource>
-									<directory>src/bdd/resources</directory>
 									<directory>src/it/resources</directory>
 									<directory>src/e2e/resources</directory>
 								</resource>

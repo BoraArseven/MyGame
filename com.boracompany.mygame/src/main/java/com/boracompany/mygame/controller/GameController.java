@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 public class GameController {
 
 	private static final String NOT_FOUND_MESSAGE = " not found";
+	private static final String MAP_WITH_ID = "Map with ID ";
 	private PlayerDAOIMPL playerDAO;
 	private GameMapDAO gameMapDAO;
 	
@@ -43,8 +44,8 @@ public class GameController {
 			gameMapDAO.update(gameMap);
 			logger.info(ERROR_MAPNOTFOUND, player.getName(), gameMap.getName());
 		} else {
-			logger.error("Map with ID {} not found", mapId);
-			throw new IllegalArgumentException("Map with ID " + mapId + NOT_FOUND_MESSAGE);
+			logger.error(ERROR_MAPNOTFOUND, mapId);
+			throw new IllegalArgumentException(MAP_WITH_ID + mapId + NOT_FOUND_MESSAGE);
 		}
 	}
 
@@ -58,7 +59,7 @@ public class GameController {
 		} else {
 			logger.error("Map with ID {} or player {} not found", mapId, player.getName());
 			throw new IllegalArgumentException(
-					"Map with ID " + mapId + " or player " + player.getName() + NOT_FOUND_MESSAGE);
+					MAP_WITH_ID + mapId + " or player " + player.getName() + NOT_FOUND_MESSAGE);
 		}
 	}
 
@@ -213,7 +214,7 @@ public class GameController {
 				return players;
 			} else {
 				logger.error(ERROR_MAPNOTFOUND, mapId);
-				throw new IllegalArgumentException("Map with ID " + mapId + NOT_FOUND_MESSAGE);
+				throw new IllegalArgumentException(MAP_WITH_ID + mapId + NOT_FOUND_MESSAGE);
 			}
 		}
 	}
