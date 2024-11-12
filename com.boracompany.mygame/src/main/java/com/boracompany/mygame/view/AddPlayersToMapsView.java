@@ -28,7 +28,7 @@ import com.boracompany.mygame.model.Player;
 public class AddPlayersToMapsView extends JFrame {
 
 	private static final Logger LOGGER = LogManager.getLogger(AddPlayersToMapsView.class);
-	
+
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private JList<GameMap> mapList;
@@ -41,7 +41,6 @@ public class AddPlayersToMapsView extends JFrame {
 	private DefaultListModel<Player> playerListModel;
 
 	private transient GameController gameController; // Add a reference to GameController
-
 
 	public GameController getGameController() {
 		return gameController;
@@ -56,7 +55,7 @@ public class AddPlayersToMapsView extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	//Generated method
+	// Generated method
 	@Generated("Swing Designer")
 	public AddPlayersToMapsView() { // Pass GameController to constructor
 		setTitle("Add Players to Maps");
@@ -116,8 +115,8 @@ public class AddPlayersToMapsView extends JFrame {
 		gbc_btnMainMenu.gridy = 3;
 		contentPane.add(btnMainMenu, gbc_btnMainMenu);
 		btnMainMenu.addActionListener(e -> {
-		    // Create an instance of MainMenuView and make it visible
-		    navigateToMainMenu();
+			// Create an instance of MainMenuView and make it visible
+			navigateToMainMenu();
 		});
 		btnAddSelectedPlayer = new JButton("Add Selected Player to Map");
 		btnAddSelectedPlayer.setName("Add Selected Player to Map");
@@ -153,7 +152,7 @@ public class AddPlayersToMapsView extends JFrame {
 		MainMenuView mainMenuView = new MainMenuView();
 		mainMenuView.setGameController(gameController);
 		mainMenuView.setVisible(true);
-		
+
 		// Dispose of the current CreatePlayerView window
 		dispose();
 	}
@@ -167,70 +166,66 @@ public class AddPlayersToMapsView extends JFrame {
 
 	// Method to add the selected player to the selected map using GameController
 	protected void addSelectedPlayerToMap() {
-
 		GameMap selectedMap = mapList.getSelectedValue();
 		Player selectedPlayer = playerList.getSelectedValue();
-
 		if (selectedMap != null && selectedPlayer != null) {
 			try {
 				// Add player to map via the controller
 				gameController.addPlayerToMap(selectedMap.getId(), selectedPlayer);
-
 				// Log success
 				LOGGER.info("Player {} added to map {}", selectedPlayer.getName(), selectedMap.getName());
-
 				// Clear error message
 				errorLabel.setText("");
-
 				// Refresh the view after successful addition
 				refreshMapList();
 				refreshPlayerList();
-
 			} catch (Exception e) {
 				// Show error message if something goes wrong
 				errorLabel.setText("Failed to add player to map: " + selectedMap.getName());
-				
-				LOGGER.error("Failed to add player to map: " + selectedMap.getName() + e.getStackTrace(), e);
+
+				// Log error using format specifiers
+				LOGGER.error("Failed to add player to map: {}", selectedMap.getName(), e);
 			}
 		}
 	}
 
-	// Method to refresh the map list using the GameController (clear and repopulate)
+	// Method to refresh the map list using the GameController (clear and
+	// repopulate)
 	protected void refreshMapList() {
-	    DefaultListModel<GameMap> mapListModel = getMapListModel();
-	    
-	    try {
-	        // Clear the list model before repopulating
-	        mapListModel.clear();
-	        
-	        // Fetch all maps using the GameController and repopulate the list
-	        List<GameMap> allMaps = gameController.getAllMaps();
-	        for (GameMap map : allMaps) {
-	            mapListModel.addElement(map);
-	        }
-	    } catch (Exception e) {
-	        LOGGER.error("Failed to refresh map list", e);
-	    }
+		DefaultListModel<GameMap> mapListModel = getMapListModel();
+
+		try {
+			// Clear the list model before repopulating
+			mapListModel.clear();
+
+			// Fetch all maps using the GameController and repopulate the list
+			List<GameMap> allMaps = gameController.getAllMaps();
+			for (GameMap map : allMaps) {
+				mapListModel.addElement(map);
+			}
+		} catch (Exception e) {
+			LOGGER.error("Failed to refresh map list", e);
+		}
 	}
 
-	// Method to refresh the player list using the GameController (clear and repopulate)
+	// Method to refresh the player list using the GameController (clear and
+	// repopulate)
 	protected void refreshPlayerList() {
-	    DefaultListModel<Player> playerListModel = getPlayerListModel();
-	    
-	    try {
-	        // Clear the list model before repopulating
-	        playerListModel.clear();
-	        
-	        // Fetch all players using the GameController and repopulate the list
-	        List<Player> allPlayers = gameController.getAllPlayers();
-	        for (Player player : allPlayers) {
-	            playerListModel.addElement(player);
-	        }
-	    } catch (Exception e) {
-	        LOGGER.error("Failed to refresh player list", e);
-	    }
-	}
+		DefaultListModel<Player> playerListModel = getPlayerListModel();
 
+		try {
+			// Clear the list model before repopulating
+			playerListModel.clear();
+
+			// Fetch all players using the GameController and repopulate the list
+			List<Player> allPlayers = gameController.getAllPlayers();
+			for (Player player : allPlayers) {
+				playerListModel.addElement(player);
+			}
+		} catch (Exception e) {
+			LOGGER.error("Failed to refresh player list", e);
+		}
+	}
 
 	public DefaultListModel<GameMap> getMapListModel() {
 		return mapListModel;

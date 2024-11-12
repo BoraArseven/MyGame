@@ -183,46 +183,74 @@ public void testErrorMessageLabelShouldBeInitiallyEmpty() {
 		verify(mockGameController).addPlayerToMap(1L, new PlayerBuilder().withName("TestPlayer").build());
 	}
 
-	@Test
-	@GUITest
-	public void testButtonShouldNotBeClickableWhenBothItemsIsNotSelecteds() {
-		GuiActionRunner.execute(() -> {
-			DefaultListModel<GameMap> mapListModel = addPlayersToMaps.getMapListModel();
-			mapListModel.addElement(new GameMap("Map1"));
-		});
+	  @Test
+	    @GUITest
+	    public void testButtonShouldNotBeClickableWhenBothItemsIsNotSelecteds() {
+	        // Set up the GUI with one map but no players
+	        GuiActionRunner.execute(() -> {
+	            DefaultListModel<GameMap> mapListModel = addPlayersToMaps.getMapListModel();
+	            mapListModel.addElement(new GameMap("Map1"));
+	            // Assuming the player list model is empty to simulate no player selection
+	        });
 
-		// Clear any selection from the player list to simulate the error condition
-		window.list("mapList").selectItem(0); // Only map is selected
-		window.list("playerList").clearSelection(); // Player is not selected
+	        // Select the map and ensure the player list has no selection
+	        window.list("mapList").selectItem(0); // Only map is selected
+	        window.list("playerList").clearSelection(); // Player is not selected
 
-		// Click the button
-		window.button(JButtonMatcher.withText("Add Selected Player to Map")).click();
+	        // Retrieve the button to check its enabled state
+	        JButton addButton = window.button(JButtonMatcher.withText("Add Selected Player to Map")).target();
 
-		// Check the error message in the error label
-		window.label("errorLabel").requireText("");
-	}
+	        // **Assertion 1: Assert that the button is disabled**
+	        assertThat(addButton.isEnabled())
+	            .as("Button should be disabled when a player is not selected")
+	            .isFalse();
 
+	        // Attempt to click the button (optional, since it should be disabled)
+	        // This is to verify that clicking the button does not perform the action
+	        window.button(JButtonMatcher.withText("Add Selected Player to Map")).click();
 
-	@Test
-	@GUITest
-	public void testAddSelectedPlayerToMapErrorHandling() {
-		GuiActionRunner.execute(() -> {
-			DefaultListModel<GameMap> mapListModel = addPlayersToMaps.getMapListModel();
-			mapListModel.addElement(new GameMap(1L, "TestMap"));
+	        // **Assertion 2: Check the error message in the error label**
+	        String errorMessage = window.label("errorLabel").text();
+	        assertThat(errorMessage)
+	            .as("No error since button is already disabled")
+	            .isEqualTo("");
 
-			DefaultListModel<Player> playerListModel = addPlayersToMaps.getPlayerListModel();
-			playerListModel.addElement(new PlayerBuilder().withName("TestPlayer").build());
-		});
+	        // Alternatively, if the error label should remain empty because the button is disabled and does not trigger an error
+	        // assertThat(errorMessage).isEmpty();
+	    }
+	  @Test
+	    @GUITest
+	    public void testAddSelectedPlayerToMapErrorHandling() {
+	        // Set up the GUI with a map and a player
+	        GuiActionRunner.execute(() -> {
+	            DefaultListModel<GameMap> mapListModel = addPlayersToMaps.getMapListModel();
+	            mapListModel.addElement(new GameMap(1L, "TestMap"));
+	            DefaultListModel<Player> playerListModel = addPlayersToMaps.getPlayerListModel();
+	            playerListModel.addElement(new PlayerBuilder().withName("TestPlayer").build());
+	        });
 
-		doThrow(new IllegalStateException("Test Exception")).when(mockGameController).addPlayerToMap(anyLong(),
-				any(Player.class));
+	        // Simulate exception when attempting to add the player to the map
+	        doThrow(new IllegalStateException("Test Exception")).when(mockGameController).addPlayerToMap(anyLong(), any(Player.class));
 
-		window.list("mapList").selectItem(0);
-		window.list("playerList").selectItem(0);
-		window.button(JButtonMatcher.withText("Add Selected Player to Map")).click();
+	        // Select the map and player from the lists
+	        window.list("mapList").selectItem(0);
+	        window.list("playerList").selectItem(0);
 
-		window.label("errorLabel").requireText("Failed to add player to map: TestMap");
-	}
+	        // Retrieve the button and check its enabled state before clicking
+	        JButton addButton = window.button(JButtonMatcher.withText("Add Selected Player to Map")).target();
+	        assertThat(addButton.isEnabled())
+	            .as("Button should be enabled before the click")
+	            .isTrue();
+
+	        // Click the button, which should trigger the error handling
+	        window.button(JButtonMatcher.withText("Add Selected Player to Map")).click();
+
+	        // Assertion: Check that the error label displays the correct message
+	        String errorMessage = window.label("errorLabel").text();
+	        assertThat(errorMessage)
+	            .as("Error message should indicate failure to add player to map")
+	            .isEqualTo("Failed to add player to map: TestMap");
+	    }
 
 	@Test
 	@GUITest
