@@ -34,9 +34,11 @@ public class Main implements Runnable {
 
     public static void main(String[] args) {
         LOGGER.info("App started");
+        
         // Parse command-line arguments using Picocli
         int exitCode = new CommandLine(new Main()).execute(args);
-        LOGGER.info("App Terminated with exit code: " + exitCode);
+        
+        LOGGER.info("App Terminated with exit code: {}", exitCode);
     }
 
     @Override

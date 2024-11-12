@@ -249,7 +249,7 @@ public class MyGameAppE2E extends AssertJSwingJUnitTestCase {
 		logger.info("Full application flow test completed successfully");
 	}
 
-	private FrameFixture findWindowByTitle(String title) throws Exception {
+	private FrameFixture findWindowByTitle(String title) {
 		return WindowFinder.findFrame(new GenericTypeMatcher<JFrame>(JFrame.class) {
 			@Override
 			protected boolean isMatching(JFrame frame) {

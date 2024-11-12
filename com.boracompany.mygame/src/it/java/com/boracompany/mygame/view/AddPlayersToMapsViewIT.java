@@ -202,8 +202,8 @@ public class AddPlayersToMapsViewIT extends AssertJSwingJUnitTestCase {
 		});
 
 		// Verify that the lists are not empty
-		assertThat(window.list("mapList").target().getModel().getSize()).isGreaterThan(0);
-		assertThat(window.list("playerList").target().getModel().getSize()).isGreaterThan(0);
+		assertThat(window.list("mapList").target().getModel().getSize()).isPositive();
+		assertThat(window.list("playerList").target().getModel().getSize()).isPositive();
 
 		// Select the map and player from the lists in the UI
 		window.list("mapList").selectItem(0);

@@ -42,7 +42,7 @@ public class PlayerAttackView extends JFrame {
 	private DefaultListModel<Player> attackerListModel;
 	private DefaultListModel<Player> defenderListModel;
 
-	private GameController gameController;
+	private transient GameController gameController;
 
 	/**
 	 * Launch the application.

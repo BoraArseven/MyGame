@@ -59,24 +59,6 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 		return listPlayersModel;
 	}
 
-	/**
-	 * Launch the application.
-	 */
-	@ExcludeFromJacocoGeneratedReport
-	public static void main(String[] args) {
-
-		EventQueue.invokeLater(new Runnable() {
-			@ExcludeFromJacocoGeneratedReport
-			public void run() {
-				try {
-					CreatePlayerView frame = new CreatePlayerView();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					throw e;
-				}
-			}
-		});
-	}
 
 	/**
 	 * Create the frame.

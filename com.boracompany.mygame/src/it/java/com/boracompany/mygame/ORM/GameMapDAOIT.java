@@ -908,10 +908,11 @@ public class GameMapDAOIT {
 		gameMap.setName("Test Map for Null Player");
 		gameMapDAO.save(gameMap);
 
+		Long mapId = gameMap.getId();
 		// Act & Assert: Try adding a null player to the map and assert that it throws
 		// an exception
 		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
-			gameMapDAO.addPlayerToMap(gameMap.getId(), null); // Pass null as the player
+			gameMapDAO.addPlayerToMap(mapId, null); // Pass null as the player
 		});
 
 		// Assert: Check the exception message

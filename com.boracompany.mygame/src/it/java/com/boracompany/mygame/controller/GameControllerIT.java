@@ -376,10 +376,11 @@ class GameControllerIT {
 		// Simulate a failure by closing the EntityManagerFactory
 		HibernateUtil.close();
 
+		Long playerId = player.getId();
 		// Act & Assert: Expect IllegalStateException with "EntityManagerFactory is
 		// closed" message
 		IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
-			controller.deletePlayer(player.getId());
+			controller.deletePlayer(playerId);
 		});
 
 		// Verify: The exception message matches the expected one

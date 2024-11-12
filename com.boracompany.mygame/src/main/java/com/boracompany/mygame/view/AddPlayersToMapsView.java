@@ -2,7 +2,6 @@ package com.boracompany.mygame.view;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -43,27 +42,6 @@ public class AddPlayersToMapsView extends JFrame {
 
 	private transient GameController gameController; // Add a reference to GameController
 
-	/**
-	 * Launch the application.
-	 */
-	// this class is there just to make testing process easier. Thus, missing coverage is meaningless.
-	@ExcludeFromJacocoGeneratedReport
-	public static void main(String[] args) {
-		
-		EventQueue.invokeLater(
-				
-				new Runnable() {
-			@ExcludeFromJacocoGeneratedReport
-			public void run() {
-				try {
-					AddPlayersToMapsView frame = new AddPlayersToMapsView();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					throw e;
-				}
-			}
-		});
-	}
 
 	public GameController getGameController() {
 		return gameController;
