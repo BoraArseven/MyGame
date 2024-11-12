@@ -14,7 +14,6 @@ import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 
 import com.boracompany.mygame.controller.GameController;
-import com.boracompany.mygame.main.ExcludeFromJacocoGeneratedReport;
 
 public class MainMenuView extends JFrame {
 
