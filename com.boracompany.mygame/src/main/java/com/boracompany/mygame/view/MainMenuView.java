@@ -1,20 +1,20 @@
 package com.boracompany.mygame.view;
 
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.annotation.Generated;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
+
 import com.boracompany.mygame.controller.GameController;
 import com.boracompany.mygame.main.ExcludeFromJacocoGeneratedReport;
-
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
-
-import javax.annotation.Generated;
-import javax.swing.JButton;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 
 public class MainMenuView extends JFrame {
 
@@ -32,7 +32,7 @@ public class MainMenuView extends JFrame {
         
     }
 
-    @ExcludeFromJacocoGeneratedReport
+	@Generated("Swing Designer")
     private void initialize() {
         extracted();
 
@@ -109,6 +109,7 @@ public class MainMenuView extends JFrame {
         contentPane.add(btnPlay, gbc_btnPlay);
     }
 
+	@Generated("Swing Designer")
 	private void extracted() {
 		setTitle("Main Menu");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);

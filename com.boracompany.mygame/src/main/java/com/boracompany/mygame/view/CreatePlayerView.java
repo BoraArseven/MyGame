@@ -257,7 +257,7 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 		});
 
 	}
-
+	@Generated("Swing Designer")
 	private void extracted() {
 		setTitle("Create Player");
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);

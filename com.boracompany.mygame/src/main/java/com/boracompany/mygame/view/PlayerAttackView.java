@@ -8,6 +8,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.List;
 
+import javax.annotation.Generated;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -71,6 +72,7 @@ public class PlayerAttackView extends JFrame {
 	/**
 	 * Create the frame.
 	 */
+	@Generated("Swing Designer")
 	public PlayerAttackView() {
 		extracted();
 
@@ -176,6 +178,7 @@ public class PlayerAttackView extends JFrame {
 
 	}
 
+	@Generated("Swing Designer")
 	private void extracted() {
 		setTitle("Player Attack");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

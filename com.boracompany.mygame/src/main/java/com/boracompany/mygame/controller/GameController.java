@@ -16,7 +16,7 @@ public class GameController {
 	private PlayerDAOIMPL playerDAO;
 	private GameMapDAO gameMapDAO;
 	
-	private final String ERROR_MAPNOTFOUND = "Map with ID {} not found";
+	private static final String ERROR_MAPNOTFOUND = "Map with ID {} not found";
 	
 	private Logger logger; // Injected logger for better testability
 
