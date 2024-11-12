@@ -9,6 +9,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.List;
 
+import javax.annotation.Generated;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -18,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -40,11 +42,10 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 	private JLabel ErrorMessageLabel;
 	private JButton mainMenuButton;
 	private JLabel lblPlayerlist;
-
 	private JScrollPane scrollPane;
 	private JButton DeleteButton;
 
-	private GameController gameController;
+	private transient GameController gameController;
 
 	public void setGameController(GameController gameController) {
 		this.gameController = gameController;
@@ -63,7 +64,7 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 	 */
 	@ExcludeFromJacocoGeneratedReport
 	public static void main(String[] args) {
-		
+
 		EventQueue.invokeLater(new Runnable() {
 			@ExcludeFromJacocoGeneratedReport
 			public void run() {
@@ -80,21 +81,10 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 	/**
 	 * Create the frame.
 	 */
+	@Generated("Swing Designer")
 	public CreatePlayerView() {
 
-		setTitle("Create Player");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 450, 300);
-		contentPane = new JPanel();
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-
-		setContentPane(contentPane);
-		GridBagLayout gbl_contentPane = new GridBagLayout();
-		gbl_contentPane.columnWidths = new int[] { 0, 0, 0 };
-		gbl_contentPane.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-		gbl_contentPane.columnWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
-		gbl_contentPane.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE };
-		contentPane.setLayout(gbl_contentPane);
+		extracted();
 
 		JLabel lblPlayername = new JLabel("Name:");
 		GridBagConstraints gbc_lblPlayername = new GridBagConstraints();
@@ -226,9 +216,9 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 
 		mainMenuButton = new JButton("MainMenu");
 		mainMenuButton.setName("MainMenuButton");
-		//mainMenuButton.addActionListener(new ActionListener() {
-	//		public void actionPerformed(ActionEvent e) {
-		//	}});
+		// mainMenuButton.addActionListener(new ActionListener() {
+		// public void actionPerformed(ActionEvent e) {
+		// }});
 		GridBagConstraints gbc_mainMenuButton = new GridBagConstraints();
 		gbc_mainMenuButton.insets = new Insets(0, 0, 5, 5);
 		gbc_mainMenuButton.gridx = 0;
@@ -263,9 +253,25 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 		gbc_errorMessageLabel.gridy = 8;
 		contentPane.add(ErrorMessageLabel, gbc_errorMessageLabel);
 		mainMenuButton.addActionListener(e -> {
-		    navigateToMainMenu();
+			navigateToMainMenu();
 		});
 
+	}
+	@Generated("Swing Designer")
+	private void extracted() {
+		setTitle("Create Player");
+		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		setBounds(100, 100, 450, 300);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+
+		setContentPane(contentPane);
+		GridBagLayout gbl_contentPane = new GridBagLayout();
+		gbl_contentPane.columnWidths = new int[] { 0, 0, 0 };
+		gbl_contentPane.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+		gbl_contentPane.columnWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
+		gbl_contentPane.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE };
+		contentPane.setLayout(gbl_contentPane);
 	}
 
 	@ExcludeFromJacocoGeneratedReport
@@ -274,8 +280,7 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 		MainMenuView mainMenuView = new MainMenuView();
 		mainMenuView.setGameController(gameController);
 		mainMenuView.setVisible(true);
-		
-		
+
 		// Dispose of the current CreatePlayerView window
 		dispose();
 	}
@@ -322,21 +327,21 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 
 	@Override
 	public void playerRemoved(Player player) {
-	    resetErrorLabel();
-	    listPlayersModel.removeElement(player); // This should remove the player from the list model
+		resetErrorLabel();
+		listPlayersModel.removeElement(player); // This should remove the player from the list model
 
-	    // Remove the player from the database
-	    try {
-	        gameController.deletePlayer(player.getId());
-	    } catch (Exception ex) {
-	        showError("Failed to remove player from the database: " + player.getName(), player);
-	        return;
-	    }
+		// Remove the player from the database
+		try {
+			gameController.deletePlayer(player.getId());
+		} catch (Exception ex) {
+			showError("Failed to remove player from the database: " + player.getName(), player);
+			return;
+		}
 
-	    // Update the selection
-	    if (!listPlayersModel.isEmpty()) {
-	        list.setSelectedIndex(0); // Optionally select the first remaining player
-	    }
+		// Update the selection
+		if (!listPlayersModel.isEmpty()) {
+			list.setSelectedIndex(0); // Optionally select the first remaining player
+		}
 	}
 
 	public void setSchoolController(GameController gameController) {
@@ -363,6 +368,5 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 			showError("Failed to refresh player list", null);
 		}
 	}
-	
 
 }

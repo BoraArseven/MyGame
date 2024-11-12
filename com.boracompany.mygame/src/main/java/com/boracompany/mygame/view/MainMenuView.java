@@ -1,22 +1,26 @@
 package com.boracompany.mygame.view;
 
-import java.awt.EventQueue;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.annotation.Generated;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
+
 import com.boracompany.mygame.controller.GameController;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
-import javax.swing.JButton;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
+import com.boracompany.mygame.main.ExcludeFromJacocoGeneratedReport;
 
 public class MainMenuView extends JFrame {
 
     private static final long serialVersionUID = 1L;
     private JPanel contentPane;
-    private GameController gameController; // Add this line
+    private transient GameController gameController; // Add this line
 
     public MainMenuView() {
         initialize();
@@ -28,19 +32,9 @@ public class MainMenuView extends JFrame {
         
     }
 
+	@Generated("Swing Designer")
     private void initialize() {
-        setTitle("Main Menu");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBounds(100, 100, 450, 300);
-        contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-        setContentPane(contentPane);
-        GridBagLayout gbl_contentPane = new GridBagLayout();
-        gbl_contentPane.columnWidths = new int[] { 0, 0, 0, 0, 0, 0 };
-        gbl_contentPane.rowHeights = new int[] { 0, 0 };
-        gbl_contentPane.columnWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
-        gbl_contentPane.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
-        contentPane.setLayout(gbl_contentPane);
+        extracted();
 
         JButton btnCreateMap = new JButton("Create Map");
         btnCreateMap.setName("Create Map");
@@ -114,4 +108,20 @@ public class MainMenuView extends JFrame {
         gbc_btnPlay.gridy = 0;
         contentPane.add(btnPlay, gbc_btnPlay);
     }
+
+	@Generated("Swing Designer")
+	private void extracted() {
+		setTitle("Main Menu");
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setBounds(100, 100, 450, 300);
+        contentPane = new JPanel();
+        contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+        setContentPane(contentPane);
+        GridBagLayout gbl_contentPane = new GridBagLayout();
+        gbl_contentPane.columnWidths = new int[] { 0, 0, 0, 0, 0, 0 };
+        gbl_contentPane.rowHeights = new int[] { 0, 0 };
+        gbl_contentPane.columnWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+        gbl_contentPane.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
+        contentPane.setLayout(gbl_contentPane);
+	}
 }

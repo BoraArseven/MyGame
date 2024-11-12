@@ -8,12 +8,14 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.List;
 
+import javax.annotation.Generated;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 
 import org.apache.logging.log4j.LogManager;
@@ -39,7 +41,7 @@ public class AddPlayersToMapsView extends JFrame {
 	private DefaultListModel<GameMap> mapListModel;
 	private DefaultListModel<Player> playerListModel;
 
-	private GameController gameController; // Add a reference to GameController
+	private transient GameController gameController; // Add a reference to GameController
 
 	/**
 	 * Launch the application.
@@ -76,9 +78,11 @@ public class AddPlayersToMapsView extends JFrame {
 	/**
 	 * Create the frame.
 	 */
+	//Generated method
+	@Generated("Swing Designer")
 	public AddPlayersToMapsView() { // Pass GameController to constructor
 		setTitle("Add Players to Maps");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));

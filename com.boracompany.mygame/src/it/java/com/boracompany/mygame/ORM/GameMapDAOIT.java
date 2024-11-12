@@ -55,8 +55,7 @@ public class GameMapDAOIT {
 		HibernateUtil.initialize(dbUrl, dbUser, dbPassword);
 		emf = HibernateUtil.getEntityManagerFactory();
 		gameMapDAO = new GameMapDAO(emf);
-	}
-
+	} 
 	@AfterAll
 	void tearDown() {
 		HibernateUtil.close();
@@ -64,26 +63,31 @@ public class GameMapDAOIT {
 			postgreSQLContainer.stop();
 		}
 	}
-
 	@BeforeEach
 	void resetDatabase() {
-		EntityManager em = emf.createEntityManager();
-		EntityTransaction transaction = em.getTransaction();
+	    EntityManager em = emf.createEntityManager();
+	    EntityTransaction transaction = em.getTransaction();
 
-		try {
-			transaction.begin();
-			// Delete all data from tables
-			em.createQuery("DELETE FROM Player").executeUpdate();
-			em.createQuery("DELETE FROM GameMap").executeUpdate();
-			transaction.commit();
-		} catch (Exception e) {
-			if (transaction.isActive()) {
-				transaction.rollback();
-			}
-			throw new PersistenceException("Failed to reset database", e);
-		} finally {
-			em.close();
-		}
+	    try {
+	        transaction.begin();
+	        // Delete all data from tables
+	        em.createQuery("DELETE FROM Player").executeUpdate();
+	        em.createQuery("DELETE FROM GameMap").executeUpdate();
+	        transaction.commit();
+	    } catch (Exception e) {
+	        if (transaction.isActive()) {
+	            try {
+	                transaction.rollback();
+	            } catch (Exception rollbackEx) {
+	                // Log rollback failure
+	            }
+	        }
+	        throw new PersistenceException("Failed to reset database", e);
+	    } finally {
+	        if (em.isOpen()) {
+	            em.close();
+	        }
+	    }
 	}
 
 	@Test
@@ -958,18 +962,18 @@ public class GameMapDAOIT {
 		em.close();
 	}
 
-	  @Test
-	    public void testAddPlayerToMap_withNullMapId_throwsIllegalArgumentException() {
-	        Player player = new Player();
-	        player.setId(1L); // assuming this player already exists or has an ID
+	@Test
+	void testAddPlayerToMap_withNullMapId_throwsIllegalArgumentException() {
+		Player player = new Player();
+		player.setId(1L); // assuming this player already exists or has an ID
 
-	        // Act & Assert
-	        PersistenceException exception = assertThrows(PersistenceException.class, () -> {
-	            gameMapDAO.addPlayerToMap(null, player);
-	        });
+		// Act & Assert
+		PersistenceException exception = assertThrows(PersistenceException.class, () -> {
+			gameMapDAO.addPlayerToMap(null, player);
+		});
 
-	        // Check if the cause of the PersistenceException is IllegalArgumentException
-	        assertTrue(exception.getCause() instanceof IllegalArgumentException);
-	        assertTrue(exception.getCause().getMessage().contains("MapId can not be null"));
-	    }
+		// Check if the cause of the PersistenceException is IllegalArgumentException
+		assertTrue(exception.getCause() instanceof IllegalArgumentException);
+		assertTrue(exception.getCause().getMessage().contains("MapId can not be null"));
+	}
 }

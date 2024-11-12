@@ -1,6 +1,8 @@
 package com.boracompany.mygame.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
@@ -65,56 +67,63 @@ public class AddPlayersToMapsViewTest extends AssertJSwingJUnitTestCase {
 	@Test
 	@GUITest
 	public void testButtonDisabledWhenOnlyOneSelectionMade() {
-		// Set up models for lists
-		GuiActionRunner.execute(() -> {
-			DefaultListModel<GameMap> mapListModel = addPlayersToMaps.getMapListModel();
-			mapListModel.addElement(new GameMap("Map1"));
+	    // Set up models for lists
+	    GuiActionRunner.execute(() -> {
+	        DefaultListModel<GameMap> mapListModel = addPlayersToMaps.getMapListModel();
+	        mapListModel.addElement(new GameMap("Map1"));
+	        DefaultListModel<Player> playerListModel = addPlayersToMaps.getPlayerListModel();
+	        playerListModel.addElement(new PlayerBuilder().withName("Player1").withHealth(100).withDamage(50).build());
+	    });
 
-			DefaultListModel<Player> playerListModel = addPlayersToMaps.getPlayerListModel();
-			playerListModel.addElement(new PlayerBuilder().withName("Player1").withHealth(100).withDamage(50).build());
-		});
+	    // Select a map but no player, and assert that the button remains disabled
+	    window.list("mapList").selectItem(0); // Select a map
+	    window.button(JButtonMatcher.withText("Add Selected Player to Map")).requireDisabled(); // Assert button is disabled using FEST
+	    assertFalse(window.button(JButtonMatcher.withText("Add Selected Player to Map")).target().isEnabled(), 
+	                "Button should be disabled when only map is selected");
 
-		// Select a map but no player, and assert that the button remains disabled
-		window.list("mapList").selectItem(0); // Corrected the name to "mapList"
-		window.button(JButtonMatcher.withText("Add Selected Player to Map")).requireDisabled(); // Button should still
-																								// be disabled
-
-		// Deselect the map and select a player, button should remain disabled
-		window.list("mapList").clearSelection(); // Corrected the name to "mapList"
-		window.list("playerList").selectItem(0); // Corrected the name to "playerList"
-		window.button(JButtonMatcher.withText("Add Selected Player to Map")).requireDisabled(); // Button should still
-																								// be disabled
+	    // Deselect the map and select a player, button should remain disabled
+	    window.list("mapList").clearSelection(); // Deselect map
+	    window.list("playerList").selectItem(0); // Select a player
+	    window.button(JButtonMatcher.withText("Add Selected Player to Map")).requireDisabled(); // Assert button is disabled using FEST
+	    assertFalse(window.button(JButtonMatcher.withText("Add Selected Player to Map")).target().isEnabled(), 
+	                "Button should be disabled when only player is selected");
 	}
 
-	@Test
-	@GUITest
-	public void testButtonReDisabledAfterDeselecting() {
-		// Set up models for lists
-		GuiActionRunner.execute(() -> {
-			DefaultListModel<GameMap> mapListModel = addPlayersToMaps.getMapListModel();
-			mapListModel.addElement(new GameMap("Map1"));
 
-			DefaultListModel<Player> playerListModel = addPlayersToMaps.getPlayerListModel();
-			playerListModel.addElement(new PlayerBuilder().withName("Player1").withHealth(100).withDamage(50).build());
-		});
+@Test
+@GUITest
+public void testButtonReDisabledAfterDeselecting() {
+    // Set up models for lists
+    GuiActionRunner.execute(() -> {
+        DefaultListModel<GameMap> mapListModel = addPlayersToMaps.getMapListModel();
+        mapListModel.addElement(new GameMap("Map1"));
 
-		// Select a map and a player, and assert that the button is enabled
-		window.list("mapList").selectItem(0); // Corrected the name to "mapList"
-		window.list("playerList").selectItem(0); // Corrected the name to "playerList"
-		window.button(JButtonMatcher.withText("Add Selected Player to Map")).requireEnabled(); // Should now be enabled
+        DefaultListModel<Player> playerListModel = addPlayersToMaps.getPlayerListModel();
+        playerListModel.addElement(new PlayerBuilder().withName("Player1").withHealth(100).withDamage(50).build());
+    });
 
-		// Deselect player and assert that the button is disabled again
-		window.list("playerList").clearSelection(); // Corrected the name to "playerList"
-		window.list("mapList").clearSelection(); // Corrected the name to "mapList"
-		window.button(JButtonMatcher.withText("Add Selected Player to Map")).requireDisabled(); // Should be disabled
-	}
+    // Select a map and a player, and assert that the button is enabled
+    window.list("mapList").selectItem(0); // Select a map
+    window.list("playerList").selectItem(0); // Select a player
+    window.button(JButtonMatcher.withText("Add Selected Player to Map")).requireEnabled(); // Assert button is enabled
 
-	@Test
-	@GUITest
-	public void testErrorMessageLabelShouldBeInitiallyEmpty() {
-		// Assert that the error label is initially empty
-		window.label("errorLabel").requireText("");
-	}
+    // Deselect both map and player, and assert that the button is disabled again
+    window.list("playerList").clearSelection(); // Deselect player
+    window.list("mapList").clearSelection();    // Deselect map
+    window.button(JButtonMatcher.withText("Add Selected Player to Map")).requireDisabled(); // Assert button is disabled
+
+    // Additional assertion to satisfy SonarCloud
+    assertFalse(window.button(JButtonMatcher.withText("Add Selected Player to Map")).target().isEnabled(), 
+                "Button should be disabled after deselecting both map and player");
+}
+
+@Test
+@GUITest
+public void testErrorMessageLabelShouldBeInitiallyEmpty() {
+    // Retrieve the label's text and assert it is initially empty
+    String actualText = window.label("errorLabel").target().getText();
+    assertEquals("", actualText, "Error label should be initially empty");
+}
 
 	@Test
 	@GUITest
