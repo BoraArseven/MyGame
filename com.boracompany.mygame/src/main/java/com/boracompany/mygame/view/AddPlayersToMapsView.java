@@ -41,11 +41,14 @@ public class AddPlayersToMapsView extends JFrame {
 	private DefaultListModel<Player> playerListModel;
 
 	private transient GameController gameController; // Add a reference to GameController
-
+	
+	//getters and setters are excluded
+@ExcludeFromJacocoGeneratedReport
 	public GameController getGameController() {
 		return gameController;
 	}
 
+// it is not excluded since it has logic
 	public void setGameController(GameController gameController) {
 		this.gameController = gameController;
 		refreshMapList();
