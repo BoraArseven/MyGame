@@ -35,4 +35,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: xvfb-run mvn -B -e verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.exclusions=**/generated/**/*.java,**/CreateMapView.java,**/CreatePlayerView.java, **/MainMenuView.java, **/PlayerAttackView.java -Dsonar.projectKey=BoraArseven_MyGame -Dsonar.host.url=https://sonarcloud.io 
+        run: xvfb-run mvn -B -e verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.exclusions=**/generated/**/*.java,**/CreateMapView.java,**/CreatePlayerView.java,**/MainMenuView.java,**/PlayerAttackView.java -Dsonar.projectKey=BoraArseven_MyGame -Dsonar.host.url=https://sonarcloud.io 
+		
+		
+		
