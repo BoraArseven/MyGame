@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
 import javax.swing.DefaultListModel;
+import javax.swing.JButton;
 
 import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.matcher.JButtonMatcher;
@@ -46,23 +47,30 @@ public class AddPlayersToMapsViewTest extends AssertJSwingJUnitTestCase {
 		window.show(); // shows the frame to test
 	}
 
-	@Test
-	@GUITest
-	public void testButtonEnabledWhenMapAndPlayerSelected() {
-		// Set up models for lists
-		GuiActionRunner.execute(() -> {
-			DefaultListModel<GameMap> mapListModel = addPlayersToMaps.getMapListModel();
-			mapListModel.addElement(new GameMap("Map1"));
+    @Test
+    @GUITest
+    public void testButtonEnabledWhenMapAndPlayerSelected() {
+        // Set up models for lists
+        GuiActionRunner.execute(() -> {
+            DefaultListModel<GameMap> mapListModel = addPlayersToMaps.getMapListModel();
+            mapListModel.addElement(new GameMap("Map1"));
+            DefaultListModel<Player> playerListModel = addPlayersToMaps.getPlayerListModel();
+            playerListModel.addElement(new PlayerBuilder().withName("Player1").withHealth(100).withDamage(50).build());
+        });
 
-			DefaultListModel<Player> playerListModel = addPlayersToMaps.getPlayerListModel();
-			playerListModel.addElement(new PlayerBuilder().withName("Player1").withHealth(100).withDamage(50).build());
-		});
+        // Retrieve the button before selection to assert it's initially disabled
+        JButton addButton = window.button(JButtonMatcher.withText("Add Selected Player to Map")).target();
 
-		// Select a map and a player, and assert that the button is enabled
-		window.list("mapList").selectItem(0); // Corrected the name to "mapList"
-		window.list("playerList").selectItem(0); // Corrected the name to "playerList"
-		window.button(JButtonMatcher.withText("Add Selected Player to Map")).requireEnabled(); // Should now be enabled
-	}
+        // **Assertion 1: Assert that the button is initially disabled**
+        assertThat(addButton.isEnabled()).as("Button should be disabled before selections").isFalse();
+
+        // Select a map and a player
+        window.list("mapList").selectItem(0);
+        window.list("playerList").selectItem(0);
+
+        // **Assertion 2: Assert that the button is now enabled**
+        assertThat(addButton.isEnabled()).as("Button should be enabled after selections").isTrue();
+    }
 
 	@Test
 	@GUITest
