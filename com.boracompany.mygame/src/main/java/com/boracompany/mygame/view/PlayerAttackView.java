@@ -2,7 +2,6 @@ package com.boracompany.mygame.view;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -43,25 +42,6 @@ public class PlayerAttackView extends JFrame {
 	private DefaultListModel<Player> defenderListModel;
 
 	private transient GameController gameController;
-
-	/**
-	 * Launch the application.
-	 */
-	@ExcludeFromJacocoGeneratedReport
-	public static void main(String[] args) {
-
-		EventQueue.invokeLater(new Runnable() {
-			@ExcludeFromJacocoGeneratedReport
-			public void run() {
-				try {
-					PlayerAttackView frame = new PlayerAttackView();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					throw e;
-				}
-			}
-		});
-	}
 
 	public void setGameController(GameController gameController) {
 		this.gameController = gameController;
