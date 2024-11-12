@@ -28,7 +28,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.boracompany.mygame.controller.GameController;
-import com.boracompany.mygame.main.ExcludeFromJacocoGeneratedReport;
 import com.boracompany.mygame.model.GameMap;
 
 
@@ -53,24 +52,9 @@ public class CreateMapView extends JFrame {
 	DefaultListModel<GameMap> getListMapsModel() {
 		return listMapsModel;
 	}
-	Logger mapViewLogger = LogManager.getLogger(CreateMapView.class);
-	/**
-	 * Launch the application.
-	 */
-	@ExcludeFromJacocoGeneratedReport
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			@ExcludeFromJacocoGeneratedReport
-			public void run() {
-				try {
-					CreateMapView frame = new CreateMapView();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					throw e;
-				}
-			}
-		});
-	}
+
+	private static final transient Logger mapViewLogger = LogManager.getLogger(CreateMapView.class);
+
 
 	/**
 	 * Create the frame.

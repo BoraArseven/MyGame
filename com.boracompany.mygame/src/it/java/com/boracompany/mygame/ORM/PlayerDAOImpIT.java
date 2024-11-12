@@ -129,7 +129,6 @@ public class PlayerDAOImpIT {
 		Player player = new Player();
 		player.setName("Should Rollback");
 
-		// Act & Assert: Ensure that the exception is thrown and rollback happens
 		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
 			playerDAOTest.updatePlayer(player);
 		});
@@ -202,7 +201,7 @@ public class PlayerDAOImpIT {
 		Player player = new Player();
 		player.setName("Test Player");
 
-		// Act & Assert: Ensure that an IllegalStateException is thrown due to the null
+
 		// transaction
 		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
 			dao.updatePlayer(player);
@@ -289,7 +288,7 @@ public class PlayerDAOImpIT {
 		Mockito.doThrow(new RuntimeException("Failed to update player due to an unexpected error.")).when(emSpy)
 				.merge(Mockito.any(Player.class));
 
-		// Act & Assert: Ensure that the RuntimeException is thrown
+
 		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
 			dao.updatePlayer(player);
 		});
@@ -414,7 +413,7 @@ public class PlayerDAOImpIT {
 		// Simulate a RuntimeException during the remove operation
 		Mockito.doThrow(new RuntimeException("Simulated Exception")).when(emSpy).remove(Mockito.any(Player.class));
 
-		// Act & Assert: Ensure that the exception is thrown and rollback happens
+		// Ensure that the exception is thrown and rollback happens
 		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
 			playerDAOwithspiedEmf.deletePlayer(player);
 		});
@@ -543,7 +542,7 @@ public class PlayerDAOImpIT {
 		// Simulate a RuntimeException during the remove operation
 		Mockito.doThrow(new RuntimeException("Simulated Exception")).when(emSpy).remove(Mockito.any(Player.class));
 
-		// Act & Assert: Ensure that the exception is thrown and rollback happens
+		// Ensure that the exception is thrown and rollback happens
 		assertThrows(RuntimeException.class, () -> {
 			playerDAOTest.deletePlayer(player);
 		});
@@ -700,7 +699,7 @@ public class PlayerDAOImpIT {
 		Player player = new Player();
 		player.setId(1L); // Use an arbitrary ID
 
-		// Act & Assert: Expect an IllegalStateException because the player is not found
+		
 		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
 			dao.deletePlayer(player);
 		});
@@ -946,7 +945,7 @@ public class PlayerDAOImpIT {
 		// Simulate a RuntimeException during the persist operation
 		Mockito.doThrow(new RuntimeException("Simulated Exception")).when(emSpy).persist(Mockito.any(Player.class));
 
-		// Act & Assert: Ensure that the exception is thrown and rollback happens
+		
 		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
 			playerDAOTest.createPlayer(player);
 		});
@@ -997,7 +996,7 @@ public class PlayerDAOImpIT {
 
 	@Test
 	void testCreatePlayerThrowsExceptionForNullPlayer() {
-		// Act & Assert: Attempt to create a null player and expect an exception
+		//Attempt to create a null player and expect an exception
 		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
 			playerDAO.createPlayer(null);
 		});
@@ -1035,7 +1034,7 @@ public class PlayerDAOImpIT {
 		// Simulate a RuntimeException during the persist operation
 		Mockito.doThrow(new RuntimeException("Simulated Exception")).when(emSpy).persist(Mockito.any(Player.class));
 
-		// Act & Assert: Ensure that the exception is thrown and rollback happens
+		// Ensure that the exception is thrown and rollback happens
 		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
 			dao.createPlayer(player);
 		});
@@ -1071,7 +1070,7 @@ public class PlayerDAOImpIT {
 		// Create a Player instance
 		Player player = new PlayerBuilder().withName("Test Player").build();
 
-		// Act & Assert: Ensure that an IllegalStateException is thrown due to the null
+		// Ensure that an IllegalStateException is thrown due to the null
 		// transaction
 		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
 			dao.createPlayer(player);
@@ -1147,7 +1146,7 @@ public class PlayerDAOImpIT {
 		// Simulate a RuntimeException during the persist operation
 		Mockito.doThrow(new RuntimeException("Simulated Exception")).when(emMock).persist(Mockito.any(Player.class));
 
-		// Act & Assert: Ensure that the exception is thrown and rollback happens
+		// Ensure that the exception is thrown and rollback happens
 		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
 			dao.createPlayer(player);
 		});

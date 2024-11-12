@@ -170,7 +170,7 @@ class GameControllerIT {
 			em.close();
 		}
 
-		// Act & Assert: Try to remove the player from a non-existent GameMap (ID 999)
+		//Try to remove the player from a non-existent GameMap (ID 999)
 		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
 			gameMapDAO.removePlayerFromMap(999L, player); // Use a non-existent GameMap ID
 		});
@@ -189,7 +189,7 @@ class GameControllerIT {
 		gameMapDAO.save(gameMap);
 
 		Long gameMapId = gameMap.getId();
-		// Act & Assert: Try to remove a null player from the map
+		// Try to remove a null player from the map
 		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
 
 			gameMapDAO.removePlayerFromMap(gameMapId, null);
@@ -209,7 +209,7 @@ class GameControllerIT {
 		// Create a Player with null ID
 		Player playerWithNullId = new PlayerBuilder().withName("TestPlayerWithNullId").build();
 		Long gameId = gameMap.getId();
-		// Act & Assert: Try to remove the player with null ID from the map
+		// Try to remove the player with null ID from the map
 		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
 
 			gameMapDAO.removePlayerFromMap(gameId, playerWithNullId);
@@ -232,7 +232,7 @@ class GameControllerIT {
 		// Arrange
 		Long gameMapId = gameMap.getId();
 
-		// Act & Assert: Try to remove a null player from the map
+		// Try to remove a null player from the map
 		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
 			gameMapDAO.removePlayerFromMap(gameMapId, null);
 		});
@@ -352,7 +352,7 @@ class GameControllerIT {
 		// Arrange: Try to delete a non-existent player
 		Long nonExistentPlayerId = 999L;
 
-		// Act & Assert: Expect an IllegalArgumentException
+		// Expect an IllegalArgumentException
 		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
 			controller.deletePlayer(nonExistentPlayerId);
 		});
@@ -376,10 +376,11 @@ class GameControllerIT {
 		// Simulate a failure by closing the EntityManagerFactory
 		HibernateUtil.close();
 
+		Long playerId = player.getId();
 		// Act & Assert: Expect IllegalStateException with "EntityManagerFactory is
 		// closed" message
 		IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
-			controller.deletePlayer(player.getId());
+			controller.deletePlayer(playerId);
 		});
 
 		// Verify: The exception message matches the expected one
@@ -445,7 +446,7 @@ class GameControllerIT {
 		// Arrange: Simulate a failure by closing the EntityManagerFactory
 		HibernateUtil.close();
 
-		// Act & Assert: Expect an IllegalStateException
+		// Expect an IllegalStateException
 		IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
 			controller.getAllPlayers();
 		});
