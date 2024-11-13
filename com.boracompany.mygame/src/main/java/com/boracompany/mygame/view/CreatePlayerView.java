@@ -33,17 +33,17 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
-	private JTextField NameText;
+	private JTextField nameText;
 	private JLabel lblDamage;
 	private JLabel lblHealth;
-	private JTextField DamageText;
-	private JTextField HealthText;
+	private JTextField damageText;
+	private JTextField healthText;
 	private JButton createPlayerButton;
-	private JLabel ErrorMessageLabel;
+	private JLabel errorMessageLabel;
 	private JButton mainMenuButton;
 	private JLabel lblPlayerlist;
 	private JScrollPane scrollPane;
-	private JButton DeleteButton;
+	private JButton deleteButton;
 
 	private transient GameController gameController;
 
@@ -78,22 +78,22 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 		KeyAdapter btnAddEnabler = new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
-				createPlayerButton.setEnabled(!NameText.getText().trim().isEmpty()
-						&& !DamageText.getText().trim().isEmpty() && !HealthText.getText().trim().isEmpty());
+				createPlayerButton.setEnabled(!nameText.getText().trim().isEmpty()
+						&& !damageText.getText().trim().isEmpty() && !healthText.getText().trim().isEmpty());
 			}
 		};
 
-		NameText = new JTextField();
-		NameText.addKeyListener(btnAddEnabler);
+		nameText = new JTextField();
+		nameText.addKeyListener(btnAddEnabler);
 
-		NameText.setName("NameText");
+		nameText.setName("NameText");
 		GridBagConstraints gbc_nameText = new GridBagConstraints();
 		gbc_nameText.insets = new Insets(0, 0, 5, 5);
 		gbc_nameText.fill = GridBagConstraints.HORIZONTAL;
 		gbc_nameText.gridx = 1;
 		gbc_nameText.gridy = 0;
-		contentPane.add(NameText, gbc_nameText);
-		NameText.setColumns(10);
+		contentPane.add(nameText, gbc_nameText);
+		nameText.setColumns(10);
 
 		lblDamage = new JLabel("Damage:");
 		GridBagConstraints gbc_lblDamage = new GridBagConstraints();
@@ -103,17 +103,17 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 		gbc_lblDamage.gridy = 1;
 		contentPane.add(lblDamage, gbc_lblDamage);
 
-		DamageText = new JTextField();
-		DamageText.setName("DamageText");
+		damageText = new JTextField();
+		damageText.setName("DamageText");
 		GridBagConstraints gbc_damageText = new GridBagConstraints();
 		gbc_damageText.insets = new Insets(0, 0, 5, 5);
 		gbc_damageText.fill = GridBagConstraints.HORIZONTAL;
 		gbc_damageText.gridx = 1;
 		gbc_damageText.gridy = 1;
-		contentPane.add(DamageText, gbc_damageText);
-		DamageText.setColumns(10);
+		contentPane.add(damageText, gbc_damageText);
+		damageText.setColumns(10);
 
-		DamageText.addKeyListener(btnAddEnabler);
+		damageText.addKeyListener(btnAddEnabler);
 
 		lblHealth = new JLabel("Health:");
 		GridBagConstraints gbc_lblHealth = new GridBagConstraints();
@@ -123,16 +123,16 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 		gbc_lblHealth.gridy = 2;
 		contentPane.add(lblHealth, gbc_lblHealth);
 
-		HealthText = new JTextField();
-		HealthText.setName("HealthText");
+		healthText = new JTextField();
+		healthText.setName("HealthText");
 		GridBagConstraints gbc_healthText = new GridBagConstraints();
 		gbc_healthText.insets = new Insets(0, 0, 5, 5);
 		gbc_healthText.fill = GridBagConstraints.HORIZONTAL;
 		gbc_healthText.gridx = 1;
 		gbc_healthText.gridy = 2;
-		contentPane.add(HealthText, gbc_healthText);
-		HealthText.setColumns(10);
-		HealthText.addKeyListener(btnAddEnabler);
+		contentPane.add(healthText, gbc_healthText);
+		healthText.setColumns(10);
+		healthText.addKeyListener(btnAddEnabler);
 		createPlayerButton = new JButton("Create");
 		createPlayerButton.setName("CreatePlayerButton");
 		createPlayerButton.setEnabled(false);
@@ -140,17 +140,17 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 		createPlayerButton.addActionListener(e -> {
 			try {
 				// Build the player using the PlayerBuilder
-				Player player = new PlayerBuilder().withName(NameText.getText())
-						.withHealth(Float.parseFloat(HealthText.getText()))
-						.withDamage(Float.parseFloat(DamageText.getText())).build();
+				Player player = new PlayerBuilder().withName(nameText.getText())
+						.withHealth(Float.parseFloat(healthText.getText()))
+						.withDamage(Float.parseFloat(damageText.getText())).build();
 
 				// Add the player to the UI list
 				playerAdded(player);
 
 				// Clear the text fields after successful player creation
-				NameText.setText("");
-				DamageText.setText("");
-				HealthText.setText("");
+				nameText.setText("");
+				damageText.setText("");
+				healthText.setText("");
 
 				// Optionally disable the Create button until the fields are filled again
 				createPlayerButton.setEnabled(false);
@@ -188,7 +188,7 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 		list = new JList<>(listPlayersModel);
 		list.addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
-				DeleteButton.setEnabled(list.getSelectedIndex() != -1);
+				deleteButton.setEnabled(list.getSelectedIndex() != -1);
 			}
 		});
 		list.setName("ListPlayers");
@@ -206,10 +206,10 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 		gbc_mainMenuButton.gridy = 7;
 		contentPane.add(mainMenuButton, gbc_mainMenuButton);
 
-		DeleteButton = new JButton("Delete Selected");
-		DeleteButton.setName("DeleteButton");
-		DeleteButton.setEnabled(false);
-		DeleteButton.addActionListener(e -> {
+		deleteButton = new JButton("Delete Selected");
+		deleteButton.setName("DeleteButton");
+		deleteButton.setEnabled(false);
+		deleteButton.addActionListener(e -> {
 			Player selectedPlayer = list.getSelectedValue();
 			if (selectedPlayer != null) {
 				// Call playerRemoved() if a player is selected
@@ -224,15 +224,15 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 		gbc_deleteButton.insets = new Insets(0, 0, 5, 5);
 		gbc_deleteButton.gridx = 1;
 		gbc_deleteButton.gridy = 7;
-		contentPane.add(DeleteButton, gbc_deleteButton);
+		contentPane.add(deleteButton, gbc_deleteButton);
 
-		ErrorMessageLabel = new JLabel("");
-		ErrorMessageLabel.setName("ErrorMessageLabel");
+		errorMessageLabel = new JLabel("");
+		errorMessageLabel.setName("ErrorMessageLabel");
 		GridBagConstraints gbc_errorMessageLabel = new GridBagConstraints();
 		gbc_errorMessageLabel.gridwidth = 2;
 		gbc_errorMessageLabel.gridx = 1;
 		gbc_errorMessageLabel.gridy = 8;
-		contentPane.add(ErrorMessageLabel, gbc_errorMessageLabel);
+		contentPane.add(errorMessageLabel, gbc_errorMessageLabel);
 		mainMenuButton.addActionListener(e -> {
 			navigateToMainMenu();
 		});
@@ -270,13 +270,13 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 	@Override
 	public void showError(String errorMessage, Player player) {
 
-		ErrorMessageLabel.setForeground(Color.RED);
+		errorMessageLabel.setForeground(Color.RED);
 		if (player != null) {
 
-			ErrorMessageLabel.setText(errorMessage + ": " + player);
+			errorMessageLabel.setText(errorMessage + ": " + player);
 
 		} else {
-			ErrorMessageLabel.setText(errorMessage);
+			errorMessageLabel.setText(errorMessage);
 		}
 	}
 
@@ -303,7 +303,7 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 	}
 
 	private void resetErrorLabel() {
-		ErrorMessageLabel.setText("");
+		errorMessageLabel.setText("");
 	}
 
 	@Override
