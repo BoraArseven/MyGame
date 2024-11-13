@@ -80,7 +80,7 @@ public class MyGameAppE2E extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
-	public void testFullApplicationFlow() throws Exception {
+	public void testFullApplicationFlow() {
 		logger.info("Starting full application flow test");
 
 		// Step 1: Open Create Map window and create a map

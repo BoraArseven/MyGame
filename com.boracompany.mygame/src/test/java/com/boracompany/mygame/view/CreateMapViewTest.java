@@ -354,7 +354,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 
 	    // Verify that the map was not added to the list model due to the exception
 	    DefaultListModel<GameMap> listModel = createMapView.getListMapsModel();
-	    assertThat(listModel.getSize()).isEqualTo(0);  // No map should be present in the list
+	    assertThat(listModel.getSize()).isZero();  // No map should be present in the list
 	}
 	@Test
 	public void testCreateMap_EmptyNameText_ShouldShowError() {
@@ -372,7 +372,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 
 	    // Verify the map was NOT added to the list
 	    DefaultListModel<GameMap> listModel = createMapView.getListMapsModel();
-	    assertThat(listModel.getSize()).isEqualTo(0);  // No map should be present in the list
+	    assertThat(listModel.getSize()).isZero();  // No map should be present in the list
 	}
 
 
@@ -393,7 +393,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 
 	    // Verify the map was NOT added to the list
 	    DefaultListModel<GameMap> listModel = createMapView.getListMapsModel();
-	    assertThat(listModel.getSize()).isEqualTo(0);  // No map should be present in the list
+	    assertThat(listModel.getSize()).isZero();  // No map should be present in the list
 	}
 	@Test
 	public void testShowErrorOnUIUpdateFailure() {
@@ -420,7 +420,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 
 	    // Verify the map was NOT added to the list
 	    DefaultListModel<GameMap> listModel = createMapView.getListMapsModel();
-	    assertThat(listModel.getSize()).isEqualTo(0);  // No map should be present in the list
+	    assertThat(listModel.getSize()).isZero();  // No map should be present in the list
 	}
 	@Test
 	public void testDeleteMap_NoMapSelected_ShouldShowError() {
@@ -438,7 +438,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 
 	    // Verify that the map list remains empty
 	    DefaultListModel<GameMap> listModel = createMapView.getListMapsModel();
-	    assertThat(listModel.getSize()).isEqualTo(0);  // No map should be present in the list
+	    assertThat(listModel.getSize()).isZero();  // No map should be present in the list
 	}
 
 

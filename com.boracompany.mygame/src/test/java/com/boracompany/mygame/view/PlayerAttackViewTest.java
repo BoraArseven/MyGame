@@ -235,8 +235,8 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 
 		// Verify that getAllPlayers is NOT called and player lists are not populated
 		verify(mockGameController, times(0)).getAllPlayers();
-		assertThat(playerAttackView.getAttackerListModel().getSize()).isEqualTo(0);
-		assertThat(playerAttackView.getDefenderListModel().getSize()).isEqualTo(0);
+		assertThat(playerAttackView.getAttackerListModel().getSize()).isZero();
+		assertThat(playerAttackView.getDefenderListModel().getSize()).isZero();
 	}
 
 	@Test
@@ -261,8 +261,8 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 
 		// Verify that getAllPlayers was called, but no players are added to the lists
 		verify(mockGameController, times(1)).getPlayersFromMap(testMap.getId());
-		assertThat(playerAttackView.getAttackerListModel().getSize()).isEqualTo(0);
-		assertThat(playerAttackView.getDefenderListModel().getSize()).isEqualTo(0);
+		assertThat(playerAttackView.getAttackerListModel().getSize()).isZero();
+		assertThat(playerAttackView.getDefenderListModel().getSize()).isZero();
 	}
 
 	@Test
@@ -278,8 +278,8 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 		verify(mockGameController, times(0)).getAllPlayers();
 
 		// Ensure the player lists remain empty
-		assertThat(playerAttackView.getAttackerListModel().getSize()).isEqualTo(0);
-		assertThat(playerAttackView.getDefenderListModel().getSize()).isEqualTo(0);
+		assertThat(playerAttackView.getAttackerListModel().getSize()).isZero();
+		assertThat(playerAttackView.getDefenderListModel().getSize()).isZero();
 	}
 
 	@Test
@@ -303,8 +303,8 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 
 		// Verify that no players were added to the attacker or defender lists since
 		// playerWithoutMap has no map
-		assertThat(playerAttackView.getAttackerListModel().getSize()).isEqualTo(0);
-		assertThat(playerAttackView.getDefenderListModel().getSize()).isEqualTo(0);
+		assertThat(playerAttackView.getAttackerListModel().getSize()).isZero();
+		assertThat(playerAttackView.getDefenderListModel().getSize()).isZero();
 	}
 
 	@Test
@@ -329,8 +329,8 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 
 		// Verify that no players were added to the attacker or defender lists since the
 		// player's map doesn't match the selected map
-		assertThat(playerAttackView.getAttackerListModel().getSize()).isEqualTo(0);
-		assertThat(playerAttackView.getDefenderListModel().getSize()).isEqualTo(0);
+		assertThat(playerAttackView.getAttackerListModel().getSize()).isZero();
+		assertThat(playerAttackView.getDefenderListModel().getSize()).isZero();
 	}
 
 	@Test
@@ -354,8 +354,8 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 
 		// Verify that no players were added to the attacker or defender lists since the
 		// player is not alive
-		assertThat(playerAttackView.getAttackerListModel().getSize()).isEqualTo(0);
-		assertThat(playerAttackView.getDefenderListModel().getSize()).isEqualTo(0);
+		assertThat(playerAttackView.getAttackerListModel().getSize()).isZero();
+		assertThat(playerAttackView.getDefenderListModel().getSize()).isZero();
 	}
 
 	@Test
@@ -541,8 +541,8 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 		});
 
 		// Ensure the list has items before selecting
-		assertThat(window.list("attackerList").target().getModel().getSize()).isGreaterThan(0);
-		assertThat(window.list("defenderList").target().getModel().getSize()).isGreaterThan(0);
+		assertThat(window.list("attackerList").target().getModel().getSize()).isPositive();
+		assertThat(window.list("defenderList").target().getModel().getSize()).isPositive();
 
 		// Select items
 		window.list("attackerList").selectItem(0); // Select the first attacker

@@ -30,7 +30,6 @@ import org.apache.logging.log4j.Logger;
 import com.boracompany.mygame.controller.GameController;
 import com.boracompany.mygame.model.GameMap;
 
-
 public class CreateMapView extends JFrame {
 
 	private static final long serialVersionUID = 1L;
@@ -54,7 +53,6 @@ public class CreateMapView extends JFrame {
 	}
 
 	private static final transient Logger mapViewLogger = LogManager.getLogger(CreateMapView.class);
-
 
 	/**
 	 * Create the frame.
@@ -162,7 +160,7 @@ public class CreateMapView extends JFrame {
 		contentPane.add(mainMenuButton, gbc_mainMenuButton);
 		// Add action listener for mainMenuButton
 		mainMenuButton.addActionListener(e -> {
-		    navigateToMainMenu();
+			navigateToMainMenu();
 		});
 		setDeleteButton(new JButton("Delete Selected"));
 		getDeleteButton().setName("DeleteButton");
@@ -211,7 +209,7 @@ public class CreateMapView extends JFrame {
 	private void navigateToMainMenu() {
 		// Dispose of the current CreateMapView window
 		dispose();
-		
+
 		// Open the MainMenuView
 		MainMenuView mainMenu = new MainMenuView();
 		mainMenu.setGameController(gameController);
@@ -236,11 +234,10 @@ public class CreateMapView extends JFrame {
 		try {
 			// Ensure the correct map name is used
 			String mapName = map.getName();
-		mapViewLogger.info("Map Name: " + mapName); // Debugging step
+			mapViewLogger.info("Map Name: {}", mapName); // Debugging step
 
 			// Add the map to the database
 			gameController.createMap(mapName, map.getPlayers());
-
 			// If successful, add the map to the view's list
 			listMapsModel.addElement(map);
 		} catch (Exception ex) {
@@ -276,8 +273,9 @@ public class CreateMapView extends JFrame {
 
 	public void setGameController(GameController gameController) {
 		this.gameController = gameController;
-		   refreshMapList(); // Fetch and display the existing maps
+		refreshMapList(); // Fetch and display the existing maps
 	}
+
 	public void refreshMapList() {
 		try {
 			// Fetch the list of maps from the GameController

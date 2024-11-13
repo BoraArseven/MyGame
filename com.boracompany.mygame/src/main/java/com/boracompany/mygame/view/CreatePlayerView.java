@@ -59,7 +59,6 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 		return listPlayersModel;
 	}
 
-
 	/**
 	 * Create the frame.
 	 */
@@ -239,6 +238,7 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 		});
 
 	}
+
 	@Generated("Swing Designer")
 	private void extracted() {
 		setTitle("Create Player");
@@ -269,7 +269,7 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 
 	@Override
 	public void showError(String errorMessage, Player player) {
-		// TODO Auto-generated method stub
+
 		ErrorMessageLabel.setForeground(Color.RED);
 		if (player != null) {
 
@@ -278,7 +278,6 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 		} else {
 			ErrorMessageLabel.setText(errorMessage);
 		}
-
 	}
 
 	@Override
