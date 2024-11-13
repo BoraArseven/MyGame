@@ -41,9 +41,9 @@ public class AddPlayersToMapsView extends JFrame {
 	private DefaultListModel<Player> playerListModel;
 
 	private transient GameController gameController; // Add a reference to GameController
-	
-	//getters and setters are excluded
-@ExcludeFromJacocoGeneratedReport
+
+	// getters and setters are excluded
+	@ExcludeFromJacocoGeneratedReport
 	public GameController getGameController() {
 		return gameController;
 	}
@@ -184,10 +184,8 @@ public class AddPlayersToMapsView extends JFrame {
 				refreshPlayerList();
 			} catch (Exception e) {
 				// Show error message if something goes wrong
-				errorLabel.setText("Failed to add player to map: " + selectedMap.getName());
-
-				// Log error using format specifiers
-				LOGGER.error("Failed to add player to map: {}", selectedMap.getName(), e);
+				errorLabel.setText(String.format("Failed to add player to map: %s", selectedMap.getName()));
+				LOGGER.error("Failed to add player to map: {} with exception stack trace: ", selectedMap.getName(), e);
 			}
 		}
 	}
@@ -195,7 +193,7 @@ public class AddPlayersToMapsView extends JFrame {
 	// Method to refresh the map list using the GameController (clear and
 	// repopulate)
 	protected void refreshMapList() {
-		DefaultListModel<GameMap> mapListModel = getMapListModel();
+		mapListModel = getMapListModel();
 
 		try {
 			// Clear the list model before repopulating
@@ -214,7 +212,7 @@ public class AddPlayersToMapsView extends JFrame {
 	// Method to refresh the player list using the GameController (clear and
 	// repopulate)
 	protected void refreshPlayerList() {
-		DefaultListModel<Player> playerListModel = getPlayerListModel();
+		playerListModel = getPlayerListModel();
 
 		try {
 			// Clear the list model before repopulating
