@@ -213,8 +213,7 @@ public void testErrorMessageLabelShouldBeInitiallyEmpty() {
 	        String errorMessage = window.label("errorLabel").text();
 	        assertThat(errorMessage)
 	            .as("No error since button is already disabled")
-	            .isEqualTo("");
-
+	            .isEmpty();
 	        // Alternatively, if the error label should remain empty because the button is disabled and does not trigger an error
 	        // assertThat(errorMessage).isEmpty();
 	    }

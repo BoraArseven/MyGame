@@ -660,19 +660,18 @@ class TestGameController {
 
 	@Test
 	void testAddPlayerToMap_MapNotFound() {
-	    // Arrange
-	    Long invalidMapId = 999L; // Use a non-existent map ID
-	    Player player = new PlayerBuilder().withName("TestPlayer").withHealth(100).withDamage(10).build();
+		// Arrange
+		Long invalidMapId = 999L; // Use a non-existent map ID
+		Player player = new PlayerBuilder().withName("TestPlayer").withHealth(100).withDamage(10).build();
 
-	    // Act & Assert
-	    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-	        gameControllerwithMocks.addPlayerToMap(invalidMapId, player);
-	    });
+		// Act & Assert
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+			gameControllerwithMocks.addPlayerToMap(invalidMapId, player);
+		});
 
-	    assertEquals("Map with ID 999 not found", exception.getMessage());
-	    verify(logger).error("Map with ID {} not found", invalidMapId);
+		assertEquals("Map with ID 999 not found", exception.getMessage());
+		verify(logger).error("Map with ID {} not found", invalidMapId);
 	}
-
 
 	@Test
 	void testRemovePlayerFromMap() {
@@ -934,7 +933,7 @@ class TestGameController {
 	}
 
 	@Test
-	public void testDeletePlayerSuccessfully() {
+	void testDeletePlayerSuccessfully() {
 		// Arrange
 		Long playerId = 1L;
 		Player player = new PlayerBuilder().withName("testPlayer").withHealth(100).withDamage(50).build();
@@ -949,7 +948,7 @@ class TestGameController {
 	}
 
 	@Test
-	public void testDeletePlayerThrowsExceptionWhenPlayerNotFound() {
+	void testDeletePlayerThrowsExceptionWhenPlayerNotFound() {
 		// Arrange
 		Long playerId = 1L;
 		when(playerDAOMock.getPlayer(playerId)).thenReturn(null);
@@ -964,7 +963,7 @@ class TestGameController {
 	}
 
 	@Test
-	public void testDeletePlayerThrowsExceptionWhenDeleteFails() {
+	void testDeletePlayerThrowsExceptionWhenDeleteFails() {
 		// Arrange
 		Long playerId = 1L;
 		Player player = new PlayerBuilder().withName("testPlayer").withHealth(100).withDamage(50).build();
@@ -981,7 +980,7 @@ class TestGameController {
 	}
 
 	@Test
-	public void testDeletePlayerHandlesTransactionRollbackOnException() {
+	void testDeletePlayerHandlesTransactionRollbackOnException() {
 		// Arrange
 		Long playerId = 1L;
 		Player player = new PlayerBuilder().withName("testPlayer").withHealth(100).withDamage(50).build();
@@ -1195,67 +1194,71 @@ class TestGameController {
 		// Ensure that the DAO's delete method is never called
 		verify(gameMapDAOMock, never()).delete(anyLong());
 	}
-	  @Test
-	    void testGetPlayersFromMap_WhenMapIdIsNull_ShouldThrowIllegalArgumentException() {
-	        // Act & Assert
-	        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-	            gameControllerwithMocks.getPlayersFromMap(null);
-	        });
 
-	        // Assert
-	        assertEquals("Map ID must not be null.", exception.getMessage());
-	        verify(logger).error("Map ID is null, cannot retrieve players.");
-	    }
+	@Test
+	void testGetPlayersFromMap_WhenMapIdIsNull_ShouldThrowIllegalArgumentException() {
+		// Act & Assert
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+			gameControllerwithMocks.getPlayersFromMap(null);
+		});
 
-	    @Test
-	    void testGetPlayersFromMap_WhenMapNotFound_ShouldThrowIllegalArgumentException() {
-	        // Arrange
-	        Long mapId = 1L;
-	        when(gameMapDAOMock.findById(mapId)).thenReturn(null);
+		// Assert
+		assertEquals("Map ID must not be null.", exception.getMessage());
+		verify(logger).error("Map ID is null, cannot retrieve players.");
+	}
 
-	        // Act & Assert
-	        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-	            gameControllerwithMocks.getPlayersFromMap(mapId);
-	        });
+	@Test
+	void testGetPlayersFromMap_WhenMapNotFound_ShouldThrowIllegalArgumentException() {
+		// Arrange
+		Long mapId = 1L;
+		when(gameMapDAOMock.findById(mapId)).thenReturn(null);
 
-	        // Assert
-	        assertEquals("Map with ID " + mapId + " not found", exception.getMessage());
-	        verify(logger).error("Map with ID {} not found", mapId);
-	    }
+		// Act & Assert
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+			gameControllerwithMocks.getPlayersFromMap(mapId);
+		});
 
-	    @Test
-	    void testGetPlayersFromMap_WhenMapIsFound_ShouldReturnPlayers() {
-	        // Arrange
-	        Long mapId = 1L;
-	        List<Player> players = List.of(new PlayerBuilder().withName("Player1").build());
-	        GameMap mockGameMap = new GameMap("TestMap", players);
-	        when(gameMapDAOMock.findById(mapId)).thenReturn(mockGameMap);
-	        // Act
-	        List<Player> result = gameControllerwithMocks.getPlayersFromMap(mapId);
+		// Assert
+		assertEquals("Map with ID " + mapId + " not found", exception.getMessage());
+		verify(logger).error("Map with ID {} not found", mapId);
+	}
 
-	        // Assert
-	        assertEquals(players.size(), result.size());
-	        assertEquals(players.get(0).getName(), result.get(0).getName());
-	        verify(logger).info("Retrieved {} players from map {}", players.size(), mockGameMap.getName());
-	    }
-	    @Test
-	    void testUpdateDefenderHealthDatabaseFailure() {
-	        // Arrange
-	        Player defender = new PlayerBuilder().withName("Defender").withHealth(50).withDamage(10).build();
+	@Test
+	void testGetPlayersFromMap_WhenMapIsFound_ShouldReturnPlayers() {
+		// Arrange
+		Long mapId = 1L;
+		List<Player> players = List.of(new PlayerBuilder().withName("Player1").build());
+		GameMap mockGameMap = new GameMap("TestMap", players);
+		when(gameMapDAOMock.findById(mapId)).thenReturn(mockGameMap);
+		// Act
+		List<Player> result = gameControllerwithMocks.getPlayersFromMap(mapId);
 
-	        // Mock playerDAO to throw an exception when updatePlayer is called
-	        doThrow(new RuntimeException("Database error")).when(playerDAOMock).updatePlayer(Mockito.any(Player.class));
+		// Assert
+		assertEquals(players.size(), result.size());
+		assertEquals(players.get(0).getName(), result.get(0).getName());
+		verify(logger).info("Retrieved {} players from map {}", players.size(), mockGameMap.getName());
+	}
 
-	        // Act & Assert
-	        IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
-	            gameControllerwithMocks.attack(new PlayerBuilder().resetBuilder().withName("Attacker").withHealth(100).withDamage(20).build(), defender);
-	        });
+	@Test
+	void testUpdateDefenderHealthDatabaseFailure() {
+		// Arrange
+		Player defender = new PlayerBuilder().withName("Defender").withHealth(50).withDamage(10).build();
 
-	        // Assert exception message
-	        assertEquals("Could not update defender in the database", thrown.getMessage());
+		// Mock playerDAO to throw an exception when updatePlayer is called
+		doThrow(new RuntimeException("Database error")).when(playerDAOMock).updatePlayer(Mockito.any(Player.class));
 
-	        // Verify logging
-	        verify(logger).error("Failed to update defender {} in the database", defender.getName(), thrown.getCause());
-	    }
-	    
+		// Act & Assert
+		IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
+			gameControllerwithMocks.attack(
+					new PlayerBuilder().resetBuilder().withName("Attacker").withHealth(100).withDamage(20).build(),
+					defender);
+		});
+
+		// Assert exception message
+		assertEquals("Could not update defender in the database", thrown.getMessage());
+
+		// Verify logging
+		verify(logger).error("Failed to update defender {} in the database", defender.getName(), thrown.getCause());
+	}
+
 }
