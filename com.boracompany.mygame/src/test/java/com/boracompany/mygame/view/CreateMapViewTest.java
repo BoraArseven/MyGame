@@ -67,31 +67,48 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test
 	public void testTextFields() {
-		window.textBox("NameText").enterText("TestMap");
-		window.button(JButtonMatcher.withText("Create Map")).requireEnabled();
+	    // Enter text into the NameText field
+	    window.textBox("NameText").enterText("TestMap");
+
+	    // Verify that the text box contains the entered text
+	    assertThat(window.textBox("NameText").text())
+	        .as("Text box should contain the entered text")
+	        .isEqualTo("TestMap");
+
+	    // Verify that the "Create Map" button is enabled after entering text
+	    window.button(JButtonMatcher.withText("Create Map")).requireEnabled();
 	}
+
 
 	@Test
 	public void testWhenNameTextIsBlankThenCreateMapButtonShouldBeDisabled() {
-		window.textBox("NameText").enterText(" ");
-		window.button(JButtonMatcher.withText("Create Map")).requireDisabled();
+	    // Enter a blank space into the NameText field
+	    window.textBox("NameText").enterText(" ");
+
+	    // **Assertion 1: Verify that the text box contains the entered blank value**
+	    assertThat(window.textBox("NameText").text())
+	        .as("Text box should contain a blank value")
+	        .isEqualTo(" ");
+
+	    // **Assertion 2: Verify that the 'Create Map' button is disabled**
+	    window.button(JButtonMatcher.withText("Create Map")).requireDisabled();
 	}
 
+
+	
 	@Test
 	public void testDeleteButtonShouldBeEnabledOnlyWhenAMapIsSelected() {
+
 		// Add a map to the list inside the GUI thread
 		GuiActionRunner.execute(() -> {
 			GameMap addedMap = new GameMap("TestMap");
 			createMapView.getListMapsModel().addElement(addedMap);
 		});
-
 		// Ensure the list contains the added map
 		window.list("ListMaps").requireItemCount(1);
-
 		// Select the map and check if the delete button is enabled
 		window.list("ListMaps").selectItem(0);
 		window.button(JButtonMatcher.withText("Delete Selected")).requireEnabled();
-
 		// Clear selection and check if the delete button is disabled
 		window.list("ListMaps").clearSelection();
 		window.button(JButtonMatcher.withText("Delete Selected")).requireDisabled();
@@ -113,9 +130,18 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test
 	public void testShowErrorShouldShowTheMessageInTheErrorLabel() {
-		GameMap map = new GameMap("ErrorMap");
-		GuiActionRunner.execute(() -> createMapView.showError("Error message", map));
-		window.label("ErrorMessageLabel").requireText("Error message: " + map.getName());
+	    GameMap map = new GameMap("ErrorMap");
+
+	    // Simulate showing the error message
+	    GuiActionRunner.execute(() -> createMapView.showError("Error message", map));
+
+	    // **Assertion 1: Verify that the error label displays the correct message**
+	    window.label("ErrorMessageLabel").requireText("Error message: " + map.getName());
+
+	    // **Assertion 2: Verify that the error label is visible**
+	    assertThat(window.label("ErrorMessageLabel").target().isVisible())
+	        .as("Error label should be visible")
+	        .isTrue();
 	}
 
 	@Test
@@ -240,15 +266,26 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 	@Test
 	@GUITest
 	public void testRefreshMapList_ShouldShowErrorOnException() {
-		// Arrange: Mock the gameController to throw an exception
-		doThrow(new RuntimeException("Database error")).when(gameController).getAllMaps();
+	    // Arrange: Mock the gameController to throw an exception
+	    doThrow(new RuntimeException("Database error")).when(gameController).getAllMaps();
 
-		// Act: Call refreshMapList() and trigger the exception
-		GuiActionRunner.execute(() -> createMapView.refreshMapList());
+	    // Call refreshMapList() and trigger the exception
+	    GuiActionRunner.execute(() -> createMapView.refreshMapList());
 
-		// Assert: Verify that the error message is displayed
-		window.label("ErrorMessageLabel").requireText("Failed to refresh map list");
+	    // Verify that the error message is displayed**
+	    window.label("ErrorMessageLabel").requireText("Failed to refresh map list");
+
+	    // Verify that the error label is visible**
+	    assertThat(window.label("ErrorMessageLabel").target().isVisible())
+	        .as("Error label should be visible when an exception occurs")
+	        .isTrue();
+
+	    // Verify that the map list remains empty or unmodified**
+	    assertThat(window.label("ErrorMessageLabel").text())
+	        .as("Error message should be shown when there is exception when refreshing map list")
+	        .isEqualTo("Failed to refresh map list");
 	}
+
 
 	@Test
 	@GUITest
@@ -400,9 +437,20 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 	    // Simulate an error message without involving the create map process
 	    GuiActionRunner.execute(() -> createMapView.showError("Error updating UI", null));
 
-	    // Assert: Verify that the error message is displayed properly
+	    // **Assertion 1: Verify that the error message is displayed properly**
 	    window.label("ErrorMessageLabel").requireText("Error updating UI");
+
+	    // **Assertion 2: Verify that the error label is visible**
+	    assertThat(window.label("ErrorMessageLabel").target().isVisible())
+	        .as("Error label should be visible when an error occurs")
+	        .isTrue();
+
+	    // **Assertion 3: Ensure no unexpected changes in the map list**
+	    assertThat(window.label("ErrorMessageLabel").text())
+	        .as("Map list should remain unchanged after UI error")
+	        .isEqualTo("Error updating UI"); // Adjust based on your application's initial state
 	}
+
 	@Test
 	public void testCreateMap_ExceptionBeforeNameText_ShouldShowError() {
 	    // Arrange: Set a valid map name
