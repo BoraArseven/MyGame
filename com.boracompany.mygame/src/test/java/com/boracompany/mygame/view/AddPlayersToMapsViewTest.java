@@ -537,7 +537,7 @@ public void testErrorMessageLabelShouldBeInitiallyEmpty() {
 		// available.
 
 		// You can verify the list remains cleared after the exception
-		assertThat(addPlayersToMaps.getMapListModel().getSize()).isEqualTo(0); // The map list should be empty
+		assertThat(addPlayersToMaps.getMapListModel().getSize()).isZero(); // The map list should be empty
 	}
 
 	@Test
@@ -554,7 +554,7 @@ public void testErrorMessageLabelShouldBeInitiallyEmpty() {
 		// Again, we assume that the exception is caught and does not crash the program.
 
 		// You can verify the list remains cleared after the exception
-		assertThat(addPlayersToMaps.getPlayerListModel().getSize()).isEqualTo(0); // The player list should be empty
+		assertThat(addPlayersToMaps.getPlayerListModel().getSize()).isZero(); // The player list should be empty
 	}
 
 }
