@@ -155,8 +155,8 @@ public void testErrorMessageLabelShouldBeInitiallyEmpty() {
 		int selectedPlayerIndex = GuiActionRunner.execute(() -> window.list("playerList").target().getSelectedIndex());
 
 		// Verify the selected indices
-		assertThat(selectedMapIndex).isEqualTo(0);
-		assertThat(selectedPlayerIndex).isEqualTo(0);
+		assertThat(selectedMapIndex).isZero();
+		assertThat(selectedPlayerIndex).isZero();
 	}
 
 	@Test
@@ -214,8 +214,6 @@ public void testErrorMessageLabelShouldBeInitiallyEmpty() {
 	        assertThat(errorMessage)
 	            .as("No error since button is already disabled")
 	            .isEmpty();
-	        // Alternatively, if the error label should remain empty because the button is disabled and does not trigger an error
-	        // assertThat(errorMessage).isEmpty();
 	    }
 	  @Test
 	    @GUITest
