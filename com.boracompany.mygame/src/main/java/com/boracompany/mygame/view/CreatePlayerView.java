@@ -308,8 +308,6 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 
 	@Override
 	public void playerRemoved(Player player) {
-		resetErrorLabel();
-		listPlayersModel.removeElement(player); // This should remove the player from the list model
 
 		// Remove the player from the database
 		try {
@@ -318,7 +316,8 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 			showError("Failed to remove player from the database: " + player.getName(), player);
 			return;
 		}
-
+		resetErrorLabel();
+		listPlayersModel.removeElement(player); // This should remove the player from the list model
 		// Update the selection
 		if (!listPlayersModel.isEmpty()) {
 			list.setSelectedIndex(0); // Optionally select the first remaining player

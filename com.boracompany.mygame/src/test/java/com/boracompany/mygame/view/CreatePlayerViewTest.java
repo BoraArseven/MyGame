@@ -19,6 +19,7 @@ import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import com.boracompany.mygame.controller.GameController;
@@ -68,25 +69,43 @@ public class CreatePlayerViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test
 	public void testTextFields() {
+		// Enter values into the text fields
 		window.textBox("DamageText").enterText("1");
 		window.textBox("NameText").enterText("test");
 		window.textBox("HealthText").enterText("100");
-		window.button(JButtonMatcher.withText("Create")).requireEnabled();
+
+		// Verify the entered values are correctly reflected**
+		assertThat(window.textBox("DamageText").text()).as("Damage text should be '1'").isEqualTo("1");
+		assertThat(window.textBox("NameText").text()).as("Name text should be 'test'").isEqualTo("test");
+		assertThat(window.textBox("HealthText").text()).as("Health text should be '100'").isEqualTo("100");
+
+		// Verify the 'Create' button is enabled after entering valid input**
+		assertThat(window.button(JButtonMatcher.withText("Create")).target().isEnabled())
+				.as("Create button should be enabled when valid input is provided").isTrue();
 	}
 
 	// Can be good parameterized test, but I still am not comfortable at writing
 	// them
 	@Test
 	public void testWhenEitherNameDamageorHealthAreBlankThenAddButtonShouldBeDisabled() {
+		// Get references to the text boxes
 		JTextComponentFixture damageTextBox = window.textBox("DamageText");
 		JTextComponentFixture nameTextBox = window.textBox("NameText");
 		JTextComponentFixture healthTextBox = window.textBox("HealthText");
 
+		// Enter values into the text fields
 		damageTextBox.enterText("1");
 		nameTextBox.enterText(" ");
 		healthTextBox.enterText(" ");
-		window.button(JButtonMatcher.withText("Create")).requireDisabled();
 
+		// **Assertion 1: Verify the entered values in the text fields**
+		assertThat(damageTextBox.text()).as("Damage text should be '1'").isEqualTo("1");
+		assertThat(nameTextBox.text()).as("Name text should contain a blank space").isEqualTo(" ");
+		assertThat(healthTextBox.text()).as("Health text should contain a blank space").isEqualTo(" ");
+
+		// **Assertion 2: Verify the 'Create' button is disabled**
+		assertThat(window.button(JButtonMatcher.withText("Create")).target().isEnabled())
+				.as("Create button should be disabled when Name or Health fields are blank").isFalse();
 	}
 
 	@Test
@@ -95,23 +114,27 @@ public class CreatePlayerViewTest extends AssertJSwingJUnitTestCase {
 		GuiActionRunner.execute(() -> {
 			Player addedPlayer = new PlayerBuilder().withName("TestPlayer").withDamage(10).withHealth(100).build();
 			createPlayerView.getListPlayersModel().addElement(addedPlayer);
-			System.out.println("Player added: " + addedPlayer.getName()); // Debug statement
-			System.out.println("List player model size: " + createPlayerView.getListPlayersModel().getSize()); // Debug
 		});
 
-		// Now ensure that the list contains the added player before trying to select it
-		window.list("ListPlayers").requireItemCount(1); // Ensures there is one item in the list
+		// **Assertion 1: Ensure that the list contains the added player**
+		window.list("ListPlayers").requireItemCount(1);
 
 		// Select the first item in the list
 		window.list("ListPlayers").selectItem(0);
 
-		// Check if the delete button is enabled when a player is selected
-		JButtonFixture deleteButton = window.button(JButtonMatcher.withText("Delete Selected"));
-		deleteButton.requireEnabled();
+		// **Assertion 2: Verify the selected player starts with "TestPlayer"**
+		assertThat(window.list("ListPlayers").selection()).as("Selected player should start with 'TestPlayer'")
+				.anySatisfy(selected -> assertThat(selected).startsWith("TestPlayer"));
 
-		// Clear selection and check if the delete button is disabled again
+		// Get the delete button and assert it is enabled
+		JButtonFixture deleteButton = window.button(JButtonMatcher.withText("Delete Selected"));
+		assertThat(deleteButton.target().isEnabled()).as("Delete button should be enabled when a player is selected")
+				.isTrue();
+
+		// Clear selection and assert the delete button is disabled
 		window.list("ListPlayers").clearSelection();
-		deleteButton.requireDisabled();
+		assertThat(deleteButton.target().isEnabled()).as("Delete button should be disabled when no player is selected")
+				.isFalse();
 	}
 
 	@Test
@@ -130,9 +153,19 @@ public class CreatePlayerViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test
 	public void testShowErrorShouldShowTheMessageInTheErrorLabel() {
+		// Create a player instance to trigger the error
 		Player player1 = new PlayerBuilder().withName("testPlayer1forError").withDamage(30).withHealth(95).build();
+
+		// Simulate showing the error message
 		GuiActionRunner.execute(() -> createPlayerView.showError("error message", player1));
-		window.label("ErrorMessageLabel").requireText("error message: " + player1);
+
+		// **Assertion 1: Verify that the error label displays the correct message**
+		assertThat(window.label("ErrorMessageLabel").text()).as("Error label should display the correct error message")
+				.isEqualTo("error message: " + player1);
+
+		// **Assertion 2: Verify that the error label is visible**
+		assertThat(window.label("ErrorMessageLabel").target().isVisible())
+				.as("Error label should be visible when an error occurs").isTrue();
 	}
 
 	@Test
@@ -179,16 +212,34 @@ public class CreatePlayerViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test
 	public void testDeleteButtonShouldDelegateToSchoolControllerDeleteStudent() {
-		Player playerShouldBeDeleted = new PlayerBuilder().withName("testname").withDamage(20).withHealth(100).build();
-		Player playerShouldBeDeleted2 = new PlayerBuilder().withName("testname2").withDamage(40).withHealth(50).build();
+		// Create players to add to the list
+		Player playerShouldBeDeleted = new PlayerBuilder()
+
+				.withName("testname").withDamage(20).withHealth(100).build();
+		playerShouldBeDeleted.setId(1L);
+		Player playerShouldBeDeleted2 = new PlayerBuilder()
+
+				.withName("testname2").withDamage(40).withHealth(50).build();
+		playerShouldBeDeleted2.setId(2L);
+		// Add players to the list inside the GUI thread
 		GuiActionRunner.execute(() -> {
-			DefaultListModel<Player> listStudentsModel = createPlayerView.getListPlayersModel();
-			listStudentsModel.addElement(playerShouldBeDeleted);
-			listStudentsModel.addElement(playerShouldBeDeleted2);
+			DefaultListModel<Player> listPlayersModel = createPlayerView.getListPlayersModel();
+			listPlayersModel.addElement(playerShouldBeDeleted);
+			listPlayersModel.addElement(playerShouldBeDeleted2);
 		});
+
+		// Select the second player (index 1) and click delete
 		window.list("ListPlayers").selectItem(1);
 		window.button(JButtonMatcher.withText("Delete Selected")).click();
 
+		// Assertion 1: Verify that the controller's deletePlayer method is called
+		Mockito.verify(gameController).deletePlayer(playerShouldBeDeleted2.getId());
+
+		// Assertion 2: Verify that the player list updates correctly
+		assertThat(window.list("ListPlayers").contents())
+				.as("Player list should contain only the first player after deletion").anySatisfy(playerString -> {
+					assertThat(playerString).contains("testname").doesNotContain("testname2");
+				});
 	}
 
 	@Test
