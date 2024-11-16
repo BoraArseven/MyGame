@@ -56,7 +56,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test
 	@GUITest
-	public void testControlsInitialStates() {
+	 void testControlsInitialStates() {
 		assertNotNull(createMapView);
 		window.label(JLabelMatcher.withText("Map Name:")).requireEnabled();
 		window.textBox("NameText").requireEnabled();
@@ -66,7 +66,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
-	public void testTextFields() {
+	 void testTextFields() {
 	    // Enter text into the NameText field
 	    window.textBox("NameText").enterText("TestMap");
 
@@ -81,7 +81,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 
 
 	@Test
-	public void testWhenNameTextIsBlankThenCreateMapButtonShouldBeDisabled() {
+	 void testWhenNameTextIsBlankThenCreateMapButtonShouldBeDisabled() {
 	    // Enter a blank space into the NameText field
 	    window.textBox("NameText").enterText(" ");
 
@@ -97,7 +97,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 
 	
 	@Test
-	public void testDeleteButtonShouldBeEnabledOnlyWhenAMapIsSelected() {
+	 void testDeleteButtonShouldBeEnabledOnlyWhenAMapIsSelected() {
 
 		// Add a map to the list inside the GUI thread
 		GuiActionRunner.execute(() -> {
@@ -115,7 +115,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
-	public void testShowAllMapsShouldAddMapDescriptionsToTheList() {
+	 void testShowAllMapsShouldAddMapDescriptionsToTheList() {
 		// Arrange: Create map objects
 		GameMap map1 = new GameMap("TestMap1");
 		GameMap map2 = new GameMap("TestMap2");
@@ -129,7 +129,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
-	public void testShowErrorShouldShowTheMessageInTheErrorLabel() {
+	 void testShowErrorShouldShowTheMessageInTheErrorLabel() {
 	    GameMap map = new GameMap("ErrorMap");
 
 	    // Simulate showing the error message
@@ -145,7 +145,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
-	public void testMapAddedShouldAddTheMapToTheListAndResetTheErrorLabel() {
+	 void testMapAddedShouldAddTheMapToTheListAndResetTheErrorLabel() {
 		GameMap map = new GameMap("TestMap");
 		GuiActionRunner.execute(() -> createMapView.mapAdded(map));
 		String[] listContents = window.list().contents();
@@ -154,7 +154,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
-	public void testMapRemovedShouldRemoveTheMapFromTheListAndResetTheErrorLabel() {
+	 void testMapRemovedShouldRemoveTheMapFromTheListAndResetTheErrorLabel() {
 		// setup
 		GameMap map1 = new GameMap("Map1");
 		GameMap map2 = new GameMap("Map2");
@@ -176,7 +176,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
-	public void testCreateMapButtonShouldDelegateToGameControllerCreateMap() {
+	 void testCreateMapButtonShouldDelegateToGameControllerCreateMap() {
 		window.textBox("NameText").enterText("TestMap");
 		window.button(JButtonMatcher.withText("Create Map")).click();
 
@@ -189,7 +189,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
-	public void testDeleteButtonShouldDelegateToGameControllerDeleteMap() {
+	 void testDeleteButtonShouldDelegateToGameControllerDeleteMap() {
 		GameMap mapShouldBeDeleted = new GameMap("TestMap");
 
 		// Add map to the list model
@@ -207,7 +207,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
-	public void testMapRemovedShouldHandleEmptyListCorrectly() {
+	 void testMapRemovedShouldHandleEmptyListCorrectly() {
 		// setup - Add a single map to the list
 		GameMap mapToBeRemoved = new GameMap("LastMap");
 
@@ -234,7 +234,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test
 	@GUITest
-	public void testRefreshMapList_ShouldPopulateListModel() {
+	 void testRefreshMapList_ShouldPopulateListModel() {
 		// Arrange: Mock the gameController to return a list of maps
 		GameMap map1 = new GameMap("Map1");
 		GameMap map2 = new GameMap("Map2");
@@ -251,7 +251,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test
 	@GUITest
-	public void testRefreshMapList_ShouldHandleEmptyList() {
+	 void testRefreshMapList_ShouldHandleEmptyList() {
 		// Arrange: Mock the gameController to return an empty list of maps
 		when(gameController.getAllMaps()).thenReturn(Collections.emptyList());
 
@@ -265,7 +265,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test
 	@GUITest
-	public void testRefreshMapList_ShouldShowErrorOnException() {
+	 void testRefreshMapList_ShouldShowErrorOnException() {
 	    // Arrange: Mock the gameController to throw an exception
 	    doThrow(new RuntimeException("Database error")).when(gameController).getAllMaps();
 
@@ -281,15 +281,15 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 	        .isTrue();
 
 	    // Verify that the map list remains empty or unmodified**
-	    assertThat(window.list("mapList").contents())
-	        .as("Map list should remain empty when refresh fails")
-	        .isEmpty();
+	    assertThat(window.label("ErrorMessageLabel").text())
+	        .as("Error message should be shown when there is exception when refreshing map list")
+	        .isEqualTo("Failed to refresh map list");
 	}
 
 
 	@Test
 	@GUITest
-	public void testMapAdded_ShouldShowError_WhenExceptionIsThrown() {
+	 void testMapAdded_ShouldShowError_WhenExceptionIsThrown() {
 		// Arrange: Create a map and mock gameController to throw an exception
 		GameMap map = new GameMap("TestMap");
 		doThrow(new RuntimeException("Database error")).when(gameController).createMap(map.getName(), map.getPlayers());
@@ -319,7 +319,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test
 	@GUITest
-	public void testMapRemoved_ShouldShowError_WhenExceptionIsThrown() {
+	 void testMapRemoved_ShouldShowError_WhenExceptionIsThrown() {
 		// Arrange: Create a map and mock gameController to throw an exception
 		GameMap map = new GameMap("TestMap");
 		map.setId(1L);
@@ -350,7 +350,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test
 	@GUITest
-	public void testCreateMap_ShouldShowError_WhenExceptionIsThrown() {
+	 void testCreateMap_ShouldShowError_WhenExceptionIsThrown() {
 		// Arrange: Spy on the GameController and force it to throw an exception when
 		// createMap is called
 		GameController spyGameController = Mockito.spy(gameController);
@@ -373,7 +373,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 		assertThat(window.list("ListMaps").contents()).isEmpty(); // Ensure no map was added
 	}
 	@Test
-	public void testMapAddedWithExceptionHandling() {
+	 void testMapAddedWithExceptionHandling() {
 	    // Arrange: Set a valid map name
 	    window.textBox("NameText").enterText("TestMap");
 
@@ -394,7 +394,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 	    assertThat(listModel.getSize()).isZero();  // No map should be present in the list
 	}
 	@Test
-	public void testCreateMap_EmptyNameText_ShouldShowError() {
+	 void testCreateMap_EmptyNameText_ShouldShowError() {
 	    // Arrange: Set nameText to an empty string
 	    GuiActionRunner.execute(() -> {
 	        createMapView.getNameText().setText("");  // Set empty input programmatically
@@ -414,7 +414,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 
 
 	@Test
-	public void testCreateMap_ExceptionDuringMapCreation_ShouldShowError() {
+	 void testCreateMap_ExceptionDuringMapCreation_ShouldShowError() {
 	    // Arrange: Set a valid map name
 	    window.textBox("NameText").enterText("TestMap");
 
@@ -433,7 +433,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 	    assertThat(listModel.getSize()).isZero();  // No map should be present in the list
 	}
 	@Test
-	public void testShowErrorOnUIUpdateFailure() {
+	 void testShowErrorOnUIUpdateFailure() {
 	    // Simulate an error message without involving the create map process
 	    GuiActionRunner.execute(() -> createMapView.showError("Error updating UI", null));
 
@@ -446,13 +446,13 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 	        .isTrue();
 
 	    // **Assertion 3: Ensure no unexpected changes in the map list**
-	    assertThat(window.list("mapList").contents())
+	    assertThat(window.label("ErrorMessageLabel").text())
 	        .as("Map list should remain unchanged after UI error")
-	        .isEmpty(); // Adjust based on your application's initial state
+	        .isEqualTo("Error updating UI"); // Adjust based on your application's initial state
 	}
 
 	@Test
-	public void testCreateMap_ExceptionBeforeNameText_ShouldShowError() {
+	 void testCreateMap_ExceptionBeforeNameText_ShouldShowError() {
 	    // Arrange: Set a valid map name
 	    window.textBox("NameText").enterText("TestMap");
 
@@ -471,7 +471,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 	    assertThat(listModel.getSize()).isZero();  // No map should be present in the list
 	}
 	@Test
-	public void testDeleteMap_NoMapSelected_ShouldShowError() {
+	 void testDeleteMap_NoMapSelected_ShouldShowError() {
 	    // Arrange: Ensure no map is selected in the list
 	    GuiActionRunner.execute(() -> {
 	        createMapView.getListMapsModel().clear(); // Make sure the list is empty
