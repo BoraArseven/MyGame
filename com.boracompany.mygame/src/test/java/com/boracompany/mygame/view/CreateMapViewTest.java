@@ -98,20 +98,29 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 	
 	@Test
 	public void testDeleteButtonShouldBeEnabledOnlyWhenAMapIsSelected() {
+	    // Add a map to the list inside the GUI thread
+	    GuiActionRunner.execute(() -> {
+	        GameMap addedMap = new GameMap("TestMap");
+	        createMapView.getListMapsModel().addElement(addedMap);
+	    });
 
-		// Add a map to the list inside the GUI thread
-		GuiActionRunner.execute(() -> {
-			GameMap addedMap = new GameMap("TestMap");
-			createMapView.getListMapsModel().addElement(addedMap);
-		});
-		// Ensure the list contains the added map
-		window.list("ListMaps").requireItemCount(1);
-		// Select the map and check if the delete button is enabled
-		window.list("ListMaps").selectItem(0);
-		window.button(JButtonMatcher.withText("Delete Selected")).requireEnabled();
-		// Clear selection and check if the delete button is disabled
-		window.list("ListMaps").clearSelection();
-		window.button(JButtonMatcher.withText("Delete Selected")).requireDisabled();
+	    // **Assertion 1: Ensure the list contains the added map**
+	    window.list("ListMaps").requireItemCount(1);
+
+	    // Select the map and check if the delete button is enabled
+	    window.list("ListMaps").selectItem(0);
+
+	    // **Assertion 2: Verify the selected map is "TestMap"**
+	    assertThat(window.list("ListMaps").selection())
+	        .as("Selected map should be 'TestMap'")
+	        .containsExactly("TestMap");
+
+	    // Check that the delete button is enabled
+	    window.button(JButtonMatcher.withText("Delete Selected")).requireEnabled();
+
+	    // Clear selection and check if the delete button is disabled
+	    window.list("ListMaps").clearSelection();
+	    window.button(JButtonMatcher.withText("Delete Selected")).requireDisabled();
 	}
 
 	@Test
