@@ -40,6 +40,9 @@ jobs:
               -Dsonar.cpd.exclusions=**/generated/**/*.java,**/CreateMapView.java,**/CreatePlayerView.java,**/MainMenuView.java,**/PlayerAttackView.java \
               -Dsonar.issue.ignore.multicriteria=e2e_rule,ignore_cycles \
               -Dsonar.issue.ignore.multicriteria.e2e_rule.ruleKey=java:S3577 \
+              -Dsonar.issue.ignore.multicriteria.e2e_rule.resourceKey=**/MyGameAppE2E.java \
               -Dsonar.issue.ignore.multicriteria.ignore_cycles.ruleKey=javaarchitecture:S7027 \
+              -Dsonar.issue.ignore.multicriteria.ignore_cycles.resourceKey=**/*.java \
               -Dsonar.projectKey=BoraArseven_MyGame \
               -Dsonar.host.url=https://sonarcloud.io
+
