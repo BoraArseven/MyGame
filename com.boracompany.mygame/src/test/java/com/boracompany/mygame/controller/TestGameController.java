@@ -1247,10 +1247,11 @@ class TestGameController {
 		// Mock playerDAO to throw an exception when updatePlayer is called
 		doThrow(new RuntimeException("Database error")).when(playerDAOMock).updatePlayer(Mockito.any(Player.class));
 
+		Player attacker = new PlayerBuilder().resetBuilder().withName("Attacker").withHealth(100).withDamage(20).build();
 		// Act & Assert
 		IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
 			gameControllerwithMocks.attack(
-					new PlayerBuilder().resetBuilder().withName("Attacker").withHealth(100).withDamage(20).build(),
+					attacker,
 					defender);
 		});
 
