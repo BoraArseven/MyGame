@@ -600,7 +600,7 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
-	public void testAttackThrowsExceptionShouldShowErrorMessage(){
+	public void testAttackThrowsExceptionShouldShowErrorMessage() {
 		// Setup players and map
 		Player player1 = new PlayerBuilder().withName("Player1").withHealth(100f).withDamage(20f).withIsAlive(true)
 				.build();
@@ -656,7 +656,7 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
-	public void testAttackShouldBePerformedSuccessfully(){
+	public void testAttackShouldBePerformedSuccessfully() {
 		// Setup players and map
 		Player player1 = new PlayerBuilder().withName("Player1").withHealth(100f).withDamage(20f).build();
 		player1.setId(1L);
@@ -735,23 +735,111 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test
 	@GUITest
-	public void testRefreshMapListChangesLabelWhenThereIsException() {
-	    // Mock the behavior of GameController to throw an exception
-	    when(mockGameController.getAllMaps()).thenThrow(new IllegalStateException("Failed to refresh map list."));
+	public void testAttackFailsWhenDefenderIsNullButAttackerExists() {
+	    // Set up the map and attacker
+	    GameMap testMap = new GameMap(1L, "TestMap");
+	    Player testAttacker = new Player("Attacker", 100, 20, true);
+	    testAttacker.setMap(testMap);
 
-	    // Ensure refreshMapList() is called on the EDT
+	    // Mock the GameController behavior
+	    when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+	    when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Collections.singletonList(testAttacker));
+
+	    // Inject mock controller and set up the view
 	    GuiActionRunner.execute(() -> {
-	        playerAttackView.refreshMapList();
+	        playerAttackView.setGameController(mockGameController);
+	        playerAttackView.getMapListModel().addElement(testMap);
 	    });
 
-	    // Check label text after calling refreshMapList
-	    window.label("errorLabel").requireText("Failed to refresh map list.");
+	    // Select the map
+	    window.list("mapList").selectItem(0);
 
-	    // Additional assertion: Verify programmatically that the label contains the expected text
-	    JLabel errorLabel = window.label("errorLabel").target();
-	    assertNotNull( errorLabel,"Error label should exist");
-	    assertEquals("Failed to refresh map list.", errorLabel.getText());
+	    // Ensure that the attacker list is populated
+	    assertThat(playerAttackView.getAttackerListModel().getSize()).isEqualTo(1);
+
+	    // Ensure that no attacker is selected yet
+	    assertThat(window.list("attackerList").selection()).isEmpty();
+
+	    // Select the attacker
+	    window.list("attackerList").selectItem(0);
+
+	    // After selecting attacker, defender list should exclude the attacker
+	    assertThat(playerAttackView.getDefenderListModel().getSize()).isZero();
+
+	    // Attempt to perform the attack without selecting a defender
+	    window.button(JButtonMatcher.withText("Attack")).click();
+
+	    // Verify that the attack method was not called
+	    verify(mockGameController, times(0)).attack(any(), any());
+
+	    // Verify that the correct error message is displayed
+	    window.label("errorLabel").requireText("Attacker and defender must be selected.");
 	}
 
+	@Test
+	@GUITest
+	public void testRefreshMapListChangesLabelWhenThereIsException() {
+		// Mock the behavior of GameController to throw an exception
+		when(mockGameController.getAllMaps()).thenThrow(new IllegalStateException("Failed to refresh map list."));
+
+		// Ensure refreshMapList() is called on the EDT
+		GuiActionRunner.execute(() -> {
+			playerAttackView.refreshMapList();
+		});
+
+		// Check label text after calling refreshMapList
+		window.label("errorLabel").requireText("Failed to refresh map list.");
+
+		// Additional assertion: Verify programmatically that the label contains the
+		// expected text
+		JLabel errorLabel = window.label("errorLabel").target();
+		assertNotNull(errorLabel, "Error label should exist");
+		assertEquals("Failed to refresh map list.", errorLabel.getText());
+	}
+
+	@Test
+	@GUITest
+	public void testAttackFailsWhenAttackerIsNullButDefenderExists() {
+		// Set up the map and defender
+		GameMap testMap = new GameMap(1L, "TestMap");
+		Player testDefender = new Player("Defender", 80, 15, true);
+		testDefender.setMap(testMap);
+
+		// Mock the GameController behavior
+		when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+		when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Collections.singletonList(testDefender));
+
+		// Inject mock controller and set up the view
+		GuiActionRunner.execute(() -> {
+			playerAttackView.setGameController(mockGameController);
+			playerAttackView.getMapListModel().addElement(testMap);
+		});
+
+		// Select the map
+		window.list("mapList").selectItem(0);
+
+		// Ensure that the attacker list is populated
+		assertThat(playerAttackView.getAttackerListModel().getSize()).isEqualTo(1);
+
+		// Ensure that no attacker is selected
+		assertThat(window.list("attackerList").selection()).isEmpty();
+
+		// Select the defender
+		window.list("defenderList").selectItem(0);
+
+		// Manually enable the attack button for testing (if necessary)
+		GuiActionRunner.execute(() -> {
+			playerAttackView.getBtnAttack().setEnabled(true);
+		});
+
+		// Attempt to perform the attack
+		window.button(JButtonMatcher.withText("Attack")).click();
+
+		// Verify that the attack method was not called
+		verify(mockGameController, times(0)).attack(any(), any());
+
+		// Verify that the correct error message is displayed
+		window.label("errorLabel").requireText("Attacker and defender must be selected.");
+	}
 
 }

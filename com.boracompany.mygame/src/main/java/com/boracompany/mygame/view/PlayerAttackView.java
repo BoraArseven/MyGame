@@ -246,10 +246,14 @@ public class PlayerAttackView extends JFrame {
 					errorLabel.setText("Failed to perform attack.");
 					LOGGER.error("Attack failed", e);
 				}
+			} else {
+				errorLabel.setText("Attacker and defender must be selected.");
+				LOGGER.warn("Defender not selected while attacker {} is selected.", attacker.getName());
 			}
 		} else {
 			// Optionally, handle cases where no attacker or defender is selected
 			errorLabel.setText("Attacker and defender must be selected.");
+			LOGGER.warn("Attacker not selected.");
 		}
 	}
 
