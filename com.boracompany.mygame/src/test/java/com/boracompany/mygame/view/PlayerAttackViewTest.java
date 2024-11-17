@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -839,6 +840,50 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 
 		// Verify that the correct error message is displayed
 		window.label("errorLabel").requireText("Attacker and defender must be selected.");
+	}
+
+	@Test
+	@GUITest
+	public void testAttackFailsWhenDefenderNotSelected() {
+		// Set up the map and attacker
+		GameMap testMap = new GameMap(1L, "TestMap");
+		Player testAttacker = new Player("Attacker", 100, 20, true);
+		testAttacker.setMap(testMap);
+
+		// Mock the GameController behavior
+		when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+		when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Collections.singletonList(testAttacker));
+
+		// Inject mock controller and set up the view
+		GuiActionRunner.execute(() -> {
+			playerAttackView.setGameController(mockGameController);
+			playerAttackView.getMapListModel().addElement(testMap);
+		});
+
+		// Select the map
+		window.list("mapList").selectItem(0);
+
+		// Ensure that the attacker list is populated
+		assertThat(playerAttackView.getAttackerListModel().getSize()).isEqualTo(1);
+
+		// Simulate selecting an attacker programmatically
+		GuiActionRunner.execute(() -> {
+			playerAttackView.getAttackerList().setSelectedIndex(0); // Select the attacker
+		});
+
+		// Do not select any defender (defenderList remains unselected)
+
+		// Directly invoke the method to bypass the disabled button
+		GuiActionRunner.execute(() -> {
+			playerAttackView.attackSelectedPlayers();
+		});
+
+		// Verify the error message
+		JLabel errorLabel = window.label("errorLabel").target();
+		assertThat(errorLabel.getText()).isEqualTo("Attacker and defender must be selected.");
+
+		// Verify the warning log is generated (optionally, use LogCaptor or verify
+		// logger)
 	}
 
 }
