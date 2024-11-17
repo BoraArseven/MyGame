@@ -38,5 +38,6 @@ jobs:
         run: |
             xvfb-run mvn -B -e verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
               -Dsonar.cpd.exclusions=**/generated/**/*.java,**/CreateMapView.java,**/CreatePlayerView.java,**/MainMenuView.java,**/PlayerAttackView.java \
+              -Dsonar.issue.ignore.multicriteria.e2e_rule.ruleKey=java:S3577 \
               -Dsonar.projectKey=BoraArseven_MyGame \
               -Dsonar.host.url=https://sonarcloud.io
