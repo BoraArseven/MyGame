@@ -736,44 +736,43 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 	@Test
 	@GUITest
 	public void testAttackFailsWhenDefenderIsNullButAttackerExists() {
-	    // Set up the map and attacker
-	    GameMap testMap = new GameMap(1L, "TestMap");
-	    Player testAttacker = new Player("Attacker", 100, 20, true);
-	    testAttacker.setMap(testMap);
+		// Set up the map and attacker
+		GameMap testMap = new GameMap(1L, "TestMap");
+		Player testAttacker = new Player("Attacker", 100, 20, true);
+		testAttacker.setMap(testMap);
 
-	    // Mock the GameController behavior
-	    when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
-	    when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Collections.singletonList(testAttacker));
+		// Mock the GameController behavior
+		when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+		when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Collections.singletonList(testAttacker));
 
-	    // Inject mock controller and set up the view
-	    GuiActionRunner.execute(() -> {
-	        playerAttackView.setGameController(mockGameController);
-	        playerAttackView.getMapListModel().addElement(testMap);
-	    });
+		// Inject mock controller and set up the view
+		GuiActionRunner.execute(() -> {
+			playerAttackView.setGameController(mockGameController);
+			playerAttackView.getMapListModel().addElement(testMap);
+		});
 
-	    // Select the map
-	    window.list("mapList").selectItem(0);
+		// Select the map
+		window.list("mapList").selectItem(0);
 
-	    // Ensure that the attacker list is populated
-	    assertThat(playerAttackView.getAttackerListModel().getSize()).isEqualTo(1);
+		// Ensure that the attacker list is populated
+		assertThat(playerAttackView.getAttackerListModel().getSize()).isEqualTo(1);
 
-	    // Ensure that no attacker is selected yet
-	    assertThat(window.list("attackerList").selection()).isEmpty();
+		// Ensure that no attacker is selected yet
+		assertThat(window.list("attackerList").selection()).isEmpty();
 
-	    // Select the attacker
-	    window.list("attackerList").selectItem(0);
+		// Select the attacker
+		window.list("attackerList").selectItem(0);
 
-	    // After selecting attacker, defender list should exclude the attacker
-	    assertThat(playerAttackView.getDefenderListModel().getSize()).isZero();
+		// Attempt to perform the attack without selecting a defender
+		window.button(JButtonMatcher.withText("Attack")).click();
 
-	    // Attempt to perform the attack without selecting a defender
-	    window.button(JButtonMatcher.withText("Attack")).click();
+		// Verify that the "Attack" button is disabled
+		window.button("btnAttack").requireDisabled();
 
-	    // Verify that the attack method was not called
-	    verify(mockGameController, times(0)).attack(any(), any());
+		// Verify that the attack method was not called
+		verify(mockGameController, times(0)).attack(any(), any());
+		assertThat(window.label("errorLabel").text()).isEmpty();
 
-	    // Verify that the correct error message is displayed
-	    window.label("errorLabel").requireText("Attacker and defender must be selected.");
 	}
 
 	@Test
