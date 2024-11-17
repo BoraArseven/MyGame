@@ -189,12 +189,10 @@
 			<artifactId>pitest-junit5-plugin</artifactId>
 			<version>1.2.1</version>
 		</dependency>
-	
 	</dependencies>
+	
 	<build>
-
 		<plugins>
-
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
