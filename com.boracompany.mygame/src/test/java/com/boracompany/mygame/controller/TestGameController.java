@@ -1441,5 +1441,74 @@ class TestGameController {
 	    // Verify logger call
 	    verify(logger).error("Player creation failed: Damage must be greater than 0.");
 	}
+	@Test
+	void testPlayerBuilderWithIsAlive() {
+	    Player player = new PlayerBuilder()
+	        .withName("TestPlayer")
+	        .withHealth(100)
+	        .withDamage(50)
+	        .withIsAlive(false) // Set explicitly to false
+	        .build();
+
+	    assertNotNull(player);
+	    assertEquals(false, player.isAlive()); // Validate explicitly
+	}
+	@Test
+	void testCreatePlayerBoundaryConditions() {
+	    String playerName = "BoundaryPlayer";
+
+	    // Valid boundary: health = 1, damage = 1
+	    Player player = gameControllerwithMocks.createPlayer(playerName, 1, 1);
+	    assertNotNull(player);
+	    assertEquals(1, player.getHealth(), 0.01);
+	    assertEquals(1, player.getDamage(), 0.01);
+	    assertTrue(player.isAlive());
+
+	    // Invalid boundary: health = 0
+	    assertThrows(IllegalArgumentException.class, () -> {
+	    	gameControllerwithMocks.createPlayer(playerName, 0, 50); // Health = 0
+	    });
+
+	    // Invalid boundary: damage = 0
+	    assertThrows(IllegalArgumentException.class, () -> {
+	    	gameControllerwithMocks.createPlayer(playerName, 100, 0); // Damage = 0
+	    });
+	}
+	@Test
+	void testCreatePlayerThrowsExceptionForInvalidAttributes() {
+	    String playerName = "InvalidPlayer";
+
+	    // Test invalid health
+	    assertThrows(IllegalArgumentException.class, () -> {
+	    	gameControllerwithMocks.createPlayer(playerName, 0, 50); // Health <= 0
+	    });
+
+	    // Test invalid damage
+	    assertThrows(IllegalArgumentException.class, () -> {
+	    	gameControllerwithMocks.createPlayer(playerName, 100, 0); // Damage <= 0
+	    });
+	}
+	@Test
+	void testPlayerGetHealth() {
+	    Player player = new PlayerBuilder()
+	        .withName("TestPlayer")
+	        .withHealth(100)
+	        .withDamage(50)
+	        .withIsAlive(true)
+	        .build();
+
+	    assertNotNull(player);
+	    assertEquals(100, player.getHealth(), 0.01); // Validate health directly
+	}
+	@Test
+	void testLoggerOnPlayerCreation() {
+	    String playerName = "LoggerPlayer";
+	    float health = 100;
+	    float damage = 50;
+
+	    Player player = gameControllerwithMocks.createPlayer(playerName, health, damage);
+	    
+	    verify(logger).info("Player created: {}", playerName); // Validate logger call
+	}
 
 }

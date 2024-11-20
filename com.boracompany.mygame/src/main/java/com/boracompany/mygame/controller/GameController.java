@@ -247,5 +247,6 @@ public class GameController {
 			throw new IllegalArgumentException(MAP_WITH_ID + mapId + NOT_FOUND_MESSAGE);
 		}
 	}
+	
 
 }
