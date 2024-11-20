@@ -66,7 +66,9 @@ public class GameController {
 	// Existing attack method
 	public void attack(Player attacker, Player defender) {
 		validatePlayers(attacker, defender); // This checks if attacker and defender are not null
-
+		
+	    validateAlive(attacker);
+	    
 		float damage = calculateDamage(attacker); // This should trigger error if damage is invalid
 
 		float defenderHealth = defender.getHealth();
@@ -75,6 +77,13 @@ public class GameController {
 		float newHealth = calculateNewHealth(defenderHealth, damage);
 
 		updateDefenderHealth(defender, newHealth);
+	}
+
+	private void validateAlive(Player attacker) {
+		if (attacker.getHealth() <= 0 || !attacker.isAlive()) {
+	        logger.error("Attack failed: Attacker {} is not eligible to attack.", attacker.getName());
+	        throw new IllegalArgumentException("Attacker is not eligible to attack.");
+	    }
 	}
 
 	// Helper methods for attack

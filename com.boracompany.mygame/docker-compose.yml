@@ -1,36 +1,50 @@
-version: '3'
-
 services:
-  postgresdb:
+  mygamepostgres:
     image: postgres:14
+    container_name: mypostgrescontainer
     environment:
-      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
-      - POSTGRES_USER_FILE=/run/secrets/postgres_user
-      - POSTGRES_DB_FILE=/run/secrets/postgres_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: Game
     volumes:
-      - ./db:/var/lib/postgresql/data
-    networks:
-      - my-network
-    secrets:
-      - postgres_password
-      - postgres_user
-      - postgres_db
+      - ./.db:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d/
     ports:
-      - "5432:5432"  # Port forwarding for PostgreSQL
+      - "5433:5432"
+    networks:
+      - mygamenetwork
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U UNIFI2024 -d bora"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
-
+  mygameapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command:
+      [
+        "java",
+        "-Dawt.useSystemAAFontSettings=on",
+        "-Dswing.aatext=true",
+        "-Dawt.useSystemAAFontSettings=on",
+        "-Dsun.java2d.uiScale=1",
+        "-jar",
+        "mygame.jar",
+        "--dburl=${DB_URL}",
+        "--dbuser=postgres",
+        "--dbpassword=${POSTGRES_PASSWORD}"
+      ]
+    environment:
+      DISPLAY: "${DISPLAY}"
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /run/user/$(id -u)/wayland-0:/run/user/1000/wayland-0:rw
+    depends_on:
+      mygamepostgres:
+        condition: service_healthy
+    networks:
+      - mygamenetwork
 networks:
-  my-network:
+  mygamenetwork:
     driver: bridge
-
-secrets:
-  postgres_password:
-    file: ./postgres_password.txt
-  postgres_user:
-    file: ./postgres_user.txt
-  postgres_db:
-    file: ./postgres_db.txt
