@@ -16,9 +16,9 @@ public class GameController {
 	private static final String MAP_WITH_ID = "Map with ID ";
 	private PlayerDAOIMPL playerDAO;
 	private GameMapDAO gameMapDAO;
-	
+
 	private static final String ERROR_MAPNOTFOUND = "Map with ID {} not found";
-	
+
 	private Logger logger; // Injected logger for better testability
 
 	// Constructor with dependency injection
@@ -28,12 +28,30 @@ public class GameController {
 		this.logger = logger;
 	}
 
-	// Method to create a new player and add it to the database
 	public Player createPlayer(String playerName, float health, float damage) {
-		Player player = new PlayerBuilder().withName(playerName).withHealth(health).withDamage(damage).build();
+		validatePlayerAttributes(health, damage);
+		Player player = new PlayerBuilder()
+				.withName(playerName)
+				.withHealth(health)
+				.withDamage(damage)
+				.withIsAlive(true)
+				.build();
+
 		playerDAO.updatePlayer(player);
 		logger.info("Player created: {}", player.getName());
 		return player;
+	}
+
+	private void validatePlayerAttributes(float health, float damage) {
+		if (health <= 0) {
+			logger.error("Player creation failed: Health must be greater than 0.");
+			throw new IllegalArgumentException("Health must be greater than 0.");
+		}
+
+		if (damage <= 0) {
+			logger.error("Player creation failed: Damage must be greater than 0.");
+			throw new IllegalArgumentException("Damage must be greater than 0.");
+		}
 	}
 
 	// Method to add a player to a map
@@ -66,9 +84,9 @@ public class GameController {
 	// Existing attack method
 	public void attack(Player attacker, Player defender) {
 		validatePlayers(attacker, defender); // This checks if attacker and defender are not null
-		
-	    validateAlive(attacker);
-	    
+
+		validateAlive(attacker);
+
 		float damage = calculateDamage(attacker); // This should trigger error if damage is invalid
 
 		float defenderHealth = defender.getHealth();
@@ -81,9 +99,9 @@ public class GameController {
 
 	private void validateAlive(Player attacker) {
 		if (attacker.getHealth() <= 0 || !attacker.isAlive()) {
-	        logger.error("Attack failed: Attacker {} is not eligible to attack.", attacker.getName());
-	        throw new IllegalArgumentException("Attacker is not eligible to attack.");
-	    }
+			logger.error("Attack failed: Attacker {} is not eligible to attack.", attacker.getName());
+			throw new IllegalArgumentException("Attacker is not eligible to attack.");
+		}
 	}
 
 	// Helper methods for attack
@@ -113,25 +131,25 @@ public class GameController {
 	}
 
 	private void updateDefenderHealth(Player defender, float newHealth) {
-	    if (newHealth > 0) {
-	        defender.setHealth(newHealth);
-	        logger.info("Attack successful: Defender: {}'s new health: {}", defender.getName(), newHealth);
-	    } else {
-	        defender.setHealth(0);
-	        defender.setAlive(false);
-	        logger.info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
-	                defender.getName(), defender.isAlive());
-	    }
+		if (newHealth > 0) {
+			defender.setHealth(newHealth);
+			logger.info("Attack successful: Defender: {}'s new health: {}", defender.getName(), newHealth);
+		} else {
+			defender.setHealth(0);
+			defender.setAlive(false);
+			logger.info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
+					defender.getName(), defender.isAlive());
+		}
 
-	    // Save the updated defender to the database
-	    try {
-	        playerDAO.updatePlayer(defender);
-	    } catch (Exception e) {
-	        logger.error("Failed to update defender {} in the database", defender.getName(), e);
-	        throw new IllegalStateException("Could not update defender in the database", e);
-	    }
+		// Save the updated defender to the database
+		try {
+			playerDAO.updatePlayer(defender);
+		} catch (Exception e) {
+			logger.error("Failed to update defender {} in the database", defender.getName(), e);
+			throw new IllegalStateException("Could not update defender in the database", e);
+		}
 	}
-	
+
 	public void deletePlayer(Long playerId) {
 		if (playerId == null) {
 			logger.error("Player ID is null, cannot delete player.");
@@ -155,9 +173,12 @@ public class GameController {
 
 	public List<Player> getAllPlayers() {
 		try {
+			// Retrieve all players from the database
 			List<Player> players = playerDAO.getAllPlayers();
-			logger.info("Retrieved {} players from the database.", players.size());
-			return players;
+			// Filter out players where isAlive is false
+			List<Player> alivePlayers = players.stream().filter(Player::isAlive).toList();
+			logger.info("Retrieved {} alive players from the database.", alivePlayers.size());
+			return alivePlayers;
 		} catch (RuntimeException e) {
 			logger.error("Failed to retrieve all players from the database", e);
 			throw new IllegalStateException("Could not retrieve players from the database", e);
@@ -209,22 +230,21 @@ public class GameController {
 		}
 	}
 
-	// Method to retrieve players from a specific map by map ID
 	public List<Player> getPlayersFromMap(Long mapId) {
 		if (mapId == null) {
 			logger.error("Map ID is null, cannot retrieve players.");
 			throw new IllegalArgumentException("Map ID must not be null.");
-		} else {
+		}
 
-			GameMap gameMap = gameMapDAO.findById(mapId);
-			if (gameMap != null) {
-				List<Player> players = gameMap.getPlayers();
-				logger.info("Retrieved {} players from map {}", players.size(), gameMap.getName());
-				return players;
-			} else {
-				logger.error(ERROR_MAPNOTFOUND, mapId);
-				throw new IllegalArgumentException(MAP_WITH_ID + mapId + NOT_FOUND_MESSAGE);
-			}
+		GameMap gameMap = gameMapDAO.findById(mapId);
+		if (gameMap != null) {
+			// Retrieve players and filter out those who are not alive
+			List<Player> alivePlayers = gameMap.getPlayers().stream().filter(Player::isAlive).toList();
+			logger.info("Retrieved {} alive players from map {}", alivePlayers.size(), gameMap.getName());
+			return alivePlayers;
+		} else {
+			logger.error(ERROR_MAPNOTFOUND, mapId);
+			throw new IllegalArgumentException(MAP_WITH_ID + mapId + NOT_FOUND_MESSAGE);
 		}
 	}
 
