@@ -294,8 +294,7 @@ class TestGameController {
 
 	@Test
 	void testCalculateDamageWithZeroValue() {
-		Player attacker = mock(Player.class);
-		when(attacker.getDamage()).thenReturn(0.0f);
+		Player attacker = new PlayerBuilder().resetBuilder().withName("Attacker").withDamage(0).withIsAlive(true).build();
 		// This should throw an IllegalArgumentException
 		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
 			gameControllerwithMocks.attack(attacker, mock(Player.class));
@@ -305,8 +304,7 @@ class TestGameController {
 
 	@Test
 	void testCalculateDamageWithNegativeValue() {
-		Player attacker = mock(Player.class);
-		when(attacker.getDamage()).thenReturn(-5.0f);
+		Player attacker = new PlayerBuilder().resetBuilder().withName("Attacker").withDamage(-5f).withIsAlive(true).build();
 		// This should throw an IllegalArgumentException
 		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
 			gameControllerwithMocks.attack(attacker, mock(Player.class));
@@ -763,6 +761,8 @@ class TestGameController {
 	void testCalculateDamage_NegativeDamage() {
 		Player attacker = mock(Player.class);
 		when(attacker.getDamage()).thenReturn(-10f);
+		when(attacker.getHealth()).thenReturn(20f);
+		when(attacker.isAlive()).thenReturn(true);
 
 		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
 			gameControllerwithMocks.attack(attacker, mock(Player.class));
@@ -1260,6 +1260,38 @@ class TestGameController {
 
 		// Verify logging
 		verify(logger).error("Failed to update defender {} in the database", defender.getName(), thrown.getCause());
+	}
+	@Test
+	void testPlayerWithZeroHealthCannotAttack() {
+	    // Arrange
+	    Player attacker = builder.resetBuilder()
+	            .withName("DeadAttacker")
+	            .withHealth(0) // Attacker has no health
+	            .withIsAlive(false) // Attacker is not alive
+	            .withDamage(10)
+	            .build();
+
+	    Player defender = builder.resetBuilder()
+	            .withName("Defender")
+	            .withHealth(100)
+	            .withIsAlive(true)
+	            .withDamage(10)
+	            .build();
+
+	    // Act & Assert
+	    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+	        gameControllerwithMocks.attack(attacker, defender);
+	    });
+
+	    // Verify the exception message
+	    assertEquals("Attacker is not eligible to attack.", exception.getMessage());
+
+	    // Verify that no interaction occurred with the defender
+	    assertEquals(100, defender.getHealth());
+	    assertTrue(defender.isAlive());
+
+	    // Verify logging
+	    verify(logger).error("Attack failed: Attacker {} is not eligible to attack.", attacker.getName());
 	}
 
 }
