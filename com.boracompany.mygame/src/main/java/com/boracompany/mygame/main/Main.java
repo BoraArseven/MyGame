@@ -27,7 +27,7 @@ public class Main implements Runnable {
     private String dbUrl;
 
     @Option(names = { "--dbuser" }, description = "PostgreSQL database user", required = true)
-    private String dbUser;
+    private String dbUser = "postgres";
 
     @Option(names = { "--dbpassword" }, description = "PostgreSQL database password", required = true)
     private String dbPassword;
