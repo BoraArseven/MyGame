@@ -34,7 +34,6 @@ public class GameController {
 				.withName(playerName)
 				.withHealth(health)
 				.withDamage(damage)
-				.withIsAlive(true)
 				.build();
 
 		playerDAO.updatePlayer(player);
