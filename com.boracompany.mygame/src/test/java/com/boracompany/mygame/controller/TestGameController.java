@@ -1383,6 +1383,8 @@ class TestGameController {
 	    // Verify logger call
 	    verify(logger).error("Player creation failed: Health must be greater than 0.");
 	}
+	
+	
 	@Test
 	void testCreatePlayer_ValidAttributes() {
 	    // Arrange: Setup valid parameters
@@ -1509,6 +1511,31 @@ class TestGameController {
 	    Player player = gameControllerwithMocks.createPlayer(playerName, health, damage);
 	    
 	    verify(logger).info("Player created: {}", playerName); // Validate logger call
+	}
+
+	@Test
+	void testLoggerWhenDefenderDefeated() {
+	    // Arrange: Create attacker and defender
+	    Player attacker = new PlayerBuilder()
+	        .withName("Attacker")
+	        .withHealth(100)
+	        .withDamage(20) // Enough damage to defeat the defender
+	        .withIsAlive(true)
+	        .build();
+
+	    Player defender = new PlayerBuilder()
+	        .withName("Defender")
+	        .withHealth(10) // Defender's initial health
+	        .withDamage(30)
+	        .withIsAlive(true)
+	        .build();
+
+	    // Act: Perform an attack
+	    gameControllerwithMocks.attack(attacker, defender);
+
+	    // Assert: Verify logger was called when defender is defeated
+	    verify(logger).info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
+	            defender.getName(), false);
 	}
 
 }
