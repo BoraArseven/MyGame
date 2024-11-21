@@ -1508,7 +1508,7 @@ class TestGameController {
 	    float health = 100;
 	    float damage = 50;
 
-	    Player player = gameControllerwithMocks.createPlayer(playerName, health, damage);
+	    gameControllerwithMocks.createPlayer(playerName, health, damage);
 	    
 	    verify(logger).info("Player created: {}", playerName); // Validate logger call
 	}
@@ -1536,6 +1536,78 @@ class TestGameController {
 	    // Assert: Verify logger was called when defender is defeated
 	    verify(logger).info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
 	            defender.getName(), false);
+	}
+	@Test
+	void testValidateAlive_AttackerWithZeroHealthThrowsException() {
+	    Player attacker = new PlayerBuilder()
+	        .withName("ZeroHealthAttacker")
+	        .withHealth(0) // Zero health
+	        .withDamage(20)
+	        .withIsAlive(true) // Alive, but health is zero
+	        .build();
+
+	    Player defender = new PlayerBuilder()
+	        .withName("Defender")
+	        .withHealth(100)
+	        .withDamage(30)
+	        .withIsAlive(true)
+	        .build();
+
+	    IllegalArgumentException exception = assertThrows(
+	        IllegalArgumentException.class,
+	        () -> gameControllerwithMocks.attack(attacker, defender)
+	    );
+
+	    assertEquals("Attacker is not eligible to attack.", exception.getMessage());
+	    verify(logger).error("Attack failed: Attacker {} is not eligible to attack.", attacker.getName());
+	}
+	@Test
+	void testValidateAlive_AttackerWithNegativeHealthThrowsException() {
+	    Player attacker = new PlayerBuilder()
+	        .withName("NegativeHealthAttacker")
+	        .withHealth(-10) // Negative health
+	        .withDamage(20)
+	        .withIsAlive(true) // Alive, but health is negative
+	        .build();
+
+	    Player defender = new PlayerBuilder()
+	        .withName("Defender")
+	        .withHealth(100)
+	        .withDamage(30)
+	        .withIsAlive(true)
+	        .build();
+
+	    IllegalArgumentException exception = assertThrows(
+	        IllegalArgumentException.class,
+	        () -> gameControllerwithMocks.attack(attacker, defender)
+	    );
+
+	    assertEquals("Attacker is not eligible to attack.", exception.getMessage());
+	    verify(logger).error("Attack failed: Attacker {} is not eligible to attack.", attacker.getName());
+	}
+	@Test
+	void testValidateAlive_DeadAttackerThrowsException() {
+	    Player attacker = new PlayerBuilder()
+	        .withName("DeadAttacker")
+	        .withHealth(10) // Positive health
+	        .withDamage(20)
+	        .withIsAlive(false) // Not alive
+	        .build();
+
+	    Player defender = new PlayerBuilder()
+	        .withName("Defender")
+	        .withHealth(100)
+	        .withDamage(30)
+	        .withIsAlive(true)
+	        .build();
+
+	    IllegalArgumentException exception = assertThrows(
+	        IllegalArgumentException.class,
+	        () -> gameControllerwithMocks.attack(attacker, defender)
+	    );
+
+	    assertEquals("Attacker is not eligible to attack.", exception.getMessage());
+	    verify(logger).error("Attack failed: Attacker {} is not eligible to attack.", attacker.getName());
 	}
 
 }
