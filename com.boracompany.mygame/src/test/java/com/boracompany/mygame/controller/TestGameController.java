@@ -2,11 +2,11 @@ package com.boracompany.mygame.controller;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -1674,6 +1674,24 @@ class TestGameController {
 	        () -> gameControllerwithMocks.attack(negativeHealthAttacker, defender)
 	    );
 	    assertEquals("Attacker is not eligible to attack.", negativeHealthException.getMessage());
+	}
+	
+	@Test
+	void testCreatePlayer_SetsIsAliveCorrectly() {
+	    // Arrange
+	    String playerName = "AlivePlayer";
+	    float health = 100;
+	    float damage = 50;
+
+	    // Act
+	    Player player = gameControllerwithMocks.createPlayer(playerName, health, damage);
+
+	    // Assert
+	    assertNotNull(player, "Player should not be null.");
+	    assertEquals(playerName, player.getName(), "Player's name should match the input.");
+	    assertEquals(health, player.getHealth(), 0.01, "Player's health should match the input.");
+	    assertEquals(damage, player.getDamage(), 0.01, "Player's damage should match the input.");
+	    assertTrue(player.isAlive(), "Player's isAlive should be explicitly set to true by withIsAlive(true).");
 	}
 
 
