@@ -3,6 +3,7 @@ package com.boracompany.mygame.controller;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -1609,5 +1610,72 @@ class TestGameController {
 	    assertEquals("Attacker is not eligible to attack.", exception.getMessage());
 	    verify(logger).error("Attack failed: Attacker {} is not eligible to attack.", attacker.getName());
 	}
+	@Test
+	void testValidateAlive_ValidAttackerDoesNotThrowException() {
+	    Player attacker = new PlayerBuilder()
+	        .withName("ValidAttacker")
+	        .withHealth(50) // Positive health
+	        .withDamage(20)
+	        .withIsAlive(true) // Alive
+	        .build();
 
+	    Player defender = new PlayerBuilder()
+	        .withName("Defender")
+	        .withHealth(100)
+	        .withDamage(30)
+	        .withIsAlive(true)
+	        .build();
+
+	    assertDoesNotThrow(() -> gameControllerwithMocks.attack(attacker, defender));
+	}
+	@Test
+	void testValidateAlive_BoundaryConditions() {
+	    Player validAttacker = new PlayerBuilder()
+	        .withName("ValidAttacker")
+	        .withHealth(1) // Just above zero
+	        .withDamage(20)
+	        .withIsAlive(true)
+	        .build();
+
+	    Player zeroHealthAttacker = new PlayerBuilder()
+	        .withName("ZeroHealthAttacker")
+	        .withHealth(0) // Exactly zero
+	        .withDamage(20)
+	        .withIsAlive(true)
+	        .build();
+
+	    Player negativeHealthAttacker = new PlayerBuilder()
+	        .withName("NegativeHealthAttacker")
+	        .withHealth(-1) // Below zero
+	        .withDamage(20)
+	        .withIsAlive(true)
+	        .build();
+
+	    Player defender = new PlayerBuilder()
+	        .withName("Defender")
+	        .withHealth(100)
+	        .withDamage(30)
+	        .withIsAlive(true)
+	        .build();
+
+	    // Valid attacker
+	    assertDoesNotThrow(() -> gameControllerwithMocks.attack(validAttacker, defender));
+
+	    // Zero health attacker
+	    IllegalArgumentException zeroHealthException = assertThrows(
+	        IllegalArgumentException.class,
+	        () -> gameControllerwithMocks.attack(zeroHealthAttacker, defender)
+	    );
+	    assertEquals("Attacker is not eligible to attack.", zeroHealthException.getMessage());
+
+	    // Negative health attacker
+	    IllegalArgumentException negativeHealthException = assertThrows(
+	        IllegalArgumentException.class,
+	        () -> gameControllerwithMocks.attack(negativeHealthAttacker, defender)
+	    );
+	    assertEquals("Attacker is not eligible to attack.", negativeHealthException.getMessage());
+	}
+
+
+	
 }
