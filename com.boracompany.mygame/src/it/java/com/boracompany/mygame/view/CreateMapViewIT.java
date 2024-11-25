@@ -122,20 +122,19 @@ public class CreateMapViewIT extends AssertJSwingJUnitTestCase {
 	@Test
 	@GUITest
 	public void testCreateMapAndDelete() {
-	    window.textBox("NameText").enterText("TestMap");
-	    window.button(JButtonMatcher.withText("Create Map")).click();
-	    
-	    logger.debug("List contents after creation: {}", (Object) window.list("ListMaps").contents());
+		window.textBox("NameText").enterText("TestMap");
+		window.button(JButtonMatcher.withText("Create Map")).click();
 
-	    assertThat(window.list("ListMaps").contents()).contains("TestMap");
-	    window.list("ListMaps").selectItem(0);
-	    window.button(JButtonMatcher.withText("Delete Selected")).click();
-	    
-	    logger.debug("List contents after deletion: {}", (Object) window.list("ListMaps").contents());
-	    
-	    assertThat(window.list("ListMaps").contents()).doesNotContain("TestMap");
+		logger.debug("List contents after creation: {}", (Object) window.list("ListMaps").contents());
+
+		assertThat(window.list("ListMaps").contents()).contains("TestMap");
+		window.list("ListMaps").selectItem(0);
+		window.button(JButtonMatcher.withText("Delete Selected")).click();
+
+		logger.debug("List contents after deletion: {}", (Object) window.list("ListMaps").contents());
+
+		assertThat(window.list("ListMaps").contents()).doesNotContain("TestMap");
 	}
-
 
 	@Test
 	@GUITest

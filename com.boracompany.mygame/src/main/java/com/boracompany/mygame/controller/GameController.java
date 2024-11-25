@@ -30,15 +30,9 @@ public class GameController {
 
 	public Player createPlayer(String playerName, float health, float damage) {
 		validatePlayerAttributes(health, damage);
-		Player player = new PlayerBuilder()
-				.withName(playerName)
-				.withHealth(health)
-				.withDamage(damage)
-				.build();
-
-		playerDAO.updatePlayer(player);
-		logger.info("Player created: {}", player.getName());
-		return player;
+		Player player = new PlayerBuilder().withName(playerName).withHealth(health).withDamage(damage).build();
+		logger.info("Player created: {}", playerName);
+		return playerDAO.createPlayer(player); // Ensure this returns the persisted Player with 'id'
 	}
 
 	private void validatePlayerAttributes(float health, float damage) {
@@ -246,6 +240,5 @@ public class GameController {
 			throw new IllegalArgumentException(MAP_WITH_ID + mapId + NOT_FOUND_MESSAGE);
 		}
 	}
-	
 
 }

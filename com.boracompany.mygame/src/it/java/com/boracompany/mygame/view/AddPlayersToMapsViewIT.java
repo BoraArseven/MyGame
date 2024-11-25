@@ -1,6 +1,5 @@
 package com.boracompany.mygame.view;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -176,24 +175,23 @@ public class AddPlayersToMapsViewIT extends AssertJSwingJUnitTestCase {
 	@GUITest
 	public void testAddPlayerToMapSuccessfully() {
 		// Add a map and a player to the database
-		
-			EntityManager em = emf.createEntityManager();
-			EntityTransaction transaction = em.getTransaction();
-			try {
-				transaction.begin();
-				GameMap testMap = new GameMap("TestMap");
-				em.persist(testMap);
-				Player testPlayer = new PlayerBuilder().withName("TestPlayer").build();
-				em.persist(testPlayer);
-				transaction.commit();
-			} catch (Exception e) {
-				if (transaction.isActive())
-					transaction.rollback();
-				throw e;
-			} finally {
-				em.close();
-			}
-		
+
+		EntityManager em = emf.createEntityManager();
+		EntityTransaction transaction = em.getTransaction();
+		try {
+			transaction.begin();
+			GameMap testMap = new GameMap("TestMap");
+			em.persist(testMap);
+			Player testPlayer = new PlayerBuilder().withName("TestPlayer").build();
+			em.persist(testPlayer);
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction.isActive())
+				transaction.rollback();
+			throw e;
+		} finally {
+			em.close();
+		}
 
 		// Refresh the view's map and player lists to reflect the state of the database
 		GuiActionRunner.execute(() -> {

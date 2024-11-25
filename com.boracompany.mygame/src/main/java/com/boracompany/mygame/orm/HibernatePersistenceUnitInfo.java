@@ -19,8 +19,8 @@ public class HibernatePersistenceUnitInfo implements PersistenceUnitInfo {
 
     public HibernatePersistenceUnitInfo(String persistenceUnitName, Class<?>... managedClasses) {
         this.persistenceUnitName = persistenceUnitName;
-        this.managedClassNames = new ArrayList<>();
-        for (Class<?> managedClass : managedClasses) {
+		this.managedClassNames = new ArrayList<>();
+		for (Class<?> managedClass : managedClasses) {
             this.managedClassNames.add(managedClass.getName());
         }
     }

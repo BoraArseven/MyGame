@@ -140,38 +140,37 @@ public class GameMapDAO implements IGameMapDAO {
 
 			// Find the GameMap by ID
 			if (mapId != null) {
-				
-			
-			GameMap gameMap = em.find(GameMap.class, mapId);
-			if (gameMap == null) {
-				throw new PersistenceException("GameMap with id " + mapId + " not found.");
-			}
 
-			// Ensure the player is not null
-			if (player == null) {
-				throw new PersistenceException("Player cannot be null.");
-			}
+				GameMap gameMap = em.find(GameMap.class, mapId);
+				if (gameMap == null) {
+					throw new PersistenceException("GameMap with id " + mapId + " not found.");
+				}
 
-			// Check if the player has an ID (detached or new state)
-			if (player.getId() == null) {
-				// New player, persist it
-				em.persist(player);
-				em.flush(); // Make sure the player gets an ID after persisting
-			} else {
-				em.merge(player);
-				em.flush();
-			}
+				// Ensure the player is not null
+				if (player == null) {
+					throw new PersistenceException("Player cannot be null.");
+				}
 
-			// Add the player to the map's player list
-			gameMap.getPlayers().add(player);
+				// Check if the player has an ID (detached or new state)
+				if (player.getId() == null) {
+					// New player, persist it
+					em.persist(player);
+					em.flush(); // Make sure the player gets an ID after persisting
+				} else {
+					em.merge(player);
+					em.flush();
+				}
 
-			// Merge the GameMap to save the changes
-			em.merge(gameMap);
+				// Add the player to the map's player list
+				gameMap.getPlayers().add(player);
 
-			// Commit the transaction
-			transaction.commit();
-			}
-			else throw new IllegalArgumentException("MapId can not be null");
+				// Merge the GameMap to save the changes
+				em.merge(gameMap);
+
+				// Commit the transaction
+				transaction.commit();
+			} else
+				throw new IllegalArgumentException("MapId can not be null");
 		} catch (Exception e) {
 			if (transaction.isActive()) {
 				transaction.rollback();

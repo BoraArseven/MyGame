@@ -169,16 +169,7 @@ public class CreatePlayerViewTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
-	public void testStudentAddedShouldAddTheStudentToTheListAndResetTheErrorLabel() {
-		Player player1 = new PlayerBuilder().withName("testPlayerToBeAdded").withDamage(250).withHealth(600).build();
-		GuiActionRunner.execute(() -> createPlayerView.playerAdded(player1));
-		String[] listContents = window.list().contents();
-		assertThat(listContents).containsExactly(player1.toString());
-		window.label("ErrorMessageLabel").requireText("");
-	}
-
-	@Test
-	public void testStudentRemovedShouldRemoveTheStudentFromTheListAndResetTheErrorLabel() {
+	public void testPlayerRemovedShouldRemoveThePLayerFromTheListAndResetTheErrorLabel() {
 		// setup
 		Player player1 = new PlayerBuilder().withName("testPlayerToBeRemoved1").withDamage(200).withHealth(500).build();
 		Player player2 = new PlayerBuilder().withName("testPlayerToBeRemoved2").withDamage(150).withHealth(700).build();

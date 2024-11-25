@@ -201,7 +201,6 @@ public class PlayerDAOImpIT {
 		Player player = new Player();
 		player.setName("Test Player");
 
-
 		// transaction
 		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
 			dao.updatePlayer(player);
@@ -287,7 +286,6 @@ public class PlayerDAOImpIT {
 		// Simulate a RuntimeException during the merge operation
 		Mockito.doThrow(new RuntimeException("Failed to update player due to an unexpected error.")).when(emSpy)
 				.merge(Mockito.any(Player.class));
-
 
 		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
 			dao.updatePlayer(player);
@@ -699,7 +697,6 @@ public class PlayerDAOImpIT {
 		Player player = new Player();
 		player.setId(1L); // Use an arbitrary ID
 
-		
 		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
 			dao.deletePlayer(player);
 		});
@@ -945,7 +942,6 @@ public class PlayerDAOImpIT {
 		// Simulate a RuntimeException during the persist operation
 		Mockito.doThrow(new RuntimeException("Simulated Exception")).when(emSpy).persist(Mockito.any(Player.class));
 
-		
 		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
 			playerDAOTest.createPlayer(player);
 		});
@@ -996,7 +992,7 @@ public class PlayerDAOImpIT {
 
 	@Test
 	void testCreatePlayerThrowsExceptionForNullPlayer() {
-		//Attempt to create a null player and expect an exception
+		// Attempt to create a null player and expect an exception
 		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
 			playerDAO.createPlayer(null);
 		});

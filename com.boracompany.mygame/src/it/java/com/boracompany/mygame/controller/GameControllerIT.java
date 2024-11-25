@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 import java.util.List;
 
@@ -36,7 +37,7 @@ import com.boracompany.mygame.orm.PlayerDAOIMPL;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GameControllerIT {
 
-	private static final Logger LOGGER = LogManager.getLogger(GameControllerIT.class);
+	private static Logger LOGGER = LogManager.getLogger(GameControllerIT.class);
 
 	@Container
 	public static PostgreSQLContainer<?> postgreSQLContainer = extracted().withDatabaseName("test").withUsername("test")
@@ -71,12 +72,13 @@ class GameControllerIT {
 	void setUp() {
 
 		// Initialize DAOs with the EntityManagerFactory
-		gameMapDAO = new GameMapDAO(emf);
-		playerDAO = new PlayerDAOIMPL(emf);
+		gameMapDAO = spy(new GameMapDAO(emf));
+		playerDAO = spy(new PlayerDAOIMPL(emf));
 
 		// Initialize the PlayerBuilder
 		playerBuilder = new PlayerBuilder();
-
+		// Initialize the mocked Logger
+		LOGGER = spy(LOGGER);
 		// Spy on the GameController
 		controller = spy(new GameController(playerDAO, gameMapDAO, LOGGER));
 
@@ -170,7 +172,7 @@ class GameControllerIT {
 			em.close();
 		}
 
-		//Try to remove the player from a non-existent GameMap (ID 999)
+		// Try to remove the player from a non-existent GameMap (ID 999)
 		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
 			gameMapDAO.removePlayerFromMap(999L, player); // Use a non-existent GameMap ID
 		});
@@ -348,6 +350,108 @@ class GameControllerIT {
 	}
 
 	@Test
+	void testCreatePlayer() {
+		// Arrange
+		String playerName = "TestPlayer";
+		float health = 100f;
+		float damage = 50f;
+		Player expectedPlayer = new PlayerBuilder().withName(playerName).withHealth(health).withDamage(damage).build();
+
+		// Act
+		Player createdPlayer = controller.createPlayer(playerName, health, damage);
+
+		// Assert
+		assertEquals(expectedPlayer.getName(), createdPlayer.getName());
+		assertEquals(expectedPlayer.getHealth(), createdPlayer.getHealth());
+		assertEquals(expectedPlayer.getDamage(), createdPlayer.getDamage());
+
+		// Verify that updatePlayer was called on playerDAO
+		verify(playerDAO).createPlayer(createdPlayer);
+	}
+
+	@Test
+	void testCreatePlayer_ValidAttributes() {
+		// Arrange: Setup valid parameters
+		String playerName = "ValidPlayer";
+		float health = 100;
+		float damage = 50;
+
+		// Act: Create a valid player
+		Player result = controller.createPlayer(playerName, health, damage);
+
+		// Assert: Verify the player was created successfully
+		assertNotNull(result);
+		assertEquals(playerName, result.getName());
+		assertEquals(health, result.getHealth(), 0.01);
+		assertEquals(damage, result.getDamage(), 0.01);
+		assertTrue(result.isAlive());
+
+		// Verify logger call
+		verify(LOGGER).info("Player created: {}", playerName);
+	}
+
+	@Test
+	void testCreatePlayerBoundaryConditions() {
+		String playerName = "BoundaryPlayer";
+
+		// Valid boundary: health = 1, damage = 1
+		Player player = controller.createPlayer(playerName, 1, 1);
+		assertNotNull(player);
+		assertEquals(1, player.getHealth(), 0.01);
+		assertEquals(1, player.getDamage(), 0.01);
+		assertTrue(player.isAlive());
+
+		// Invalid boundary: health = 0
+		assertThrows(IllegalArgumentException.class, () -> {
+			controller.createPlayer(playerName, 0, 50); // Health = 0
+		});
+
+		// Invalid boundary: damage = 0
+		assertThrows(IllegalArgumentException.class, () -> {
+			controller.createPlayer(playerName, 100, 0); // Damage = 0
+		});
+	}
+
+	@Test
+	void testCreatePlayer_ValidPlayer() {
+		// Arrange: Setup valid parameters
+		String playerName = "ValidPlayer";
+		float health = 100;
+		float damage = 50;
+
+		// Act: Create a valid player
+		Player result = controller.createPlayer(playerName, health, damage);
+
+		// Assert: Verify the player was created successfully
+		assertNotNull(result);
+		assertEquals(playerName, result.getName());
+		assertEquals(health, result.getHealth(), 0.01);
+		assertEquals(damage, result.getDamage(), 0.01);
+		assertTrue(result.isAlive());
+
+		// Verify logger call
+		verify(LOGGER).info("Player created: {}", playerName);
+	}
+
+	@Test
+	void testCreatePlayer_SetsIsAliveCorrectly() {
+		// Arrange
+		String playerName = "AlivePlayer";
+		float health = 100;
+		float damage = 50;
+
+		// Act
+		Player player = controller.createPlayer(playerName, health, damage);
+
+		// Assert
+		assertNotNull(player, "Player should not be null.");
+		assertEquals(playerName, player.getName(), "Player's name should match the input.");
+		assertEquals(health, player.getHealth(), 0.01, "Player's health should match the input.");
+		assertEquals(damage, player.getDamage(), 0.01, "Player's damage should match the input.");
+		assertTrue(player.isAlive(), "Player's isAlive should be explicitly set to true by withIsAlive(true).");
+	}
+
+	@Test
 	void testDeletePlayer_PlayerNotFound() {
 		// Arrange: Try to delete a non-existent player
 		Long nonExistentPlayerId = 999L;
@@ -459,42 +563,46 @@ class GameControllerIT {
 		setUpAll();
 		setUp();
 	}
+
 	@Test
 	void testAttackDefeatsDefenderAndUpdatesDatabase() {
-	    // Arrange: Create and persist two players and a game map
-	    Player attacker = playerBuilder.resetBuilder().withName("StrongAttacker").withHealth(100).withDamage(70).build();
-	    Player defender = playerBuilder.resetBuilder().withName("WeakDefender").withHealth(50).withDamage(20).build();
+		// Arrange: Create and persist two players and a game map
+		Player attacker = playerBuilder.resetBuilder().withName("StrongAttacker").withHealth(100).withDamage(70)
+				.build();
+		Player defender = playerBuilder.resetBuilder().withName("WeakDefender").withHealth(50).withDamage(20).build();
 
-	    // Do not set the id field manually
-	    playerDAO.createPlayer(attacker);
-	    playerDAO.createPlayer(defender);
+		// Do not set the id field manually
+		playerDAO.createPlayer(attacker);
+		playerDAO.createPlayer(defender);
 
-	    GameMap gameMap = new GameMap();
-	    gameMap.setName("FinalBattle");
-	    gameMapDAO.save(gameMap);
+		GameMap gameMap = new GameMap();
+		gameMap.setName("FinalBattle");
+		gameMapDAO.save(gameMap);
 
-	    // Add both players to the map
-	    gameMapDAO.addPlayerToMap(gameMap.getId(), attacker);
-	    gameMapDAO.addPlayerToMap(gameMap.getId(), defender);
+		// Add both players to the map
+		gameMapDAO.addPlayerToMap(gameMap.getId(), attacker);
+		gameMapDAO.addPlayerToMap(gameMap.getId(), defender);
 
-	    // Act: Perform an attack
-	    controller.attack(attacker, defender);
+		// Act: Perform an attack
+		controller.attack(attacker, defender);
 
-	    // Assert: Check that the defender's health and alive status are updated in the database
-	    EntityManager em = emf.createEntityManager();
-	    try {
-	        Player updatedDefender = em.find(Player.class, defender.getId());
-	        assertNotNull(updatedDefender, "Defender should exist in the database.");
+		// Assert: Check that the defender's health and alive status are updated in the
+		// database
+		EntityManager em = emf.createEntityManager();
+		try {
+			Player updatedDefender = em.find(Player.class, defender.getId());
+			assertNotNull(updatedDefender, "Defender should exist in the database.");
 
-	        float expectedHealth = 0.0f; // Defender's health cannot be negative
-	        assertEquals(expectedHealth, updatedDefender.getHealth(), 0.01, "Defender's health should be 0.");
+			float expectedHealth = 0.0f; // Defender's health cannot be negative
+			assertEquals(expectedHealth, updatedDefender.getHealth(), 0.01, "Defender's health should be 0.");
 
-	        // Defender should be marked as not alive
-	        assertFalse(updatedDefender.isAlive(), "Defender should be marked as not alive.");
+			// Defender should be marked as not alive
+			assertFalse(updatedDefender.isAlive(), "Defender should be marked as not alive.");
 
-	        LOGGER.info("Defender's health after attack: {}, isAlive: {}", updatedDefender.getHealth(), updatedDefender.isAlive());
-	    } finally {
-	        em.close();
-	    }
+			LOGGER.info("Defender's health after attack: {}, isAlive: {}", updatedDefender.getHealth(),
+					updatedDefender.isAlive());
+		} finally {
+			em.close();
+		}
 	}
 }

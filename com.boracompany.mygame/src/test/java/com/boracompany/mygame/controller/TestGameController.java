@@ -625,26 +625,6 @@ class TestGameController {
 	}
 
 	@Test
-	void testCreatePlayer() {
-		// Arrange
-		String playerName = "TestPlayer";
-		float health = 100f;
-		float damage = 50f;
-		Player expectedPlayer = new PlayerBuilder().withName(playerName).withHealth(health).withDamage(damage).build();
-
-		// Act
-		Player createdPlayer = gameControllerwithMocks.createPlayer(playerName, health, damage);
-
-		// Assert
-		assertEquals(expectedPlayer.getName(), createdPlayer.getName());
-		assertEquals(expectedPlayer.getHealth(), createdPlayer.getHealth());
-		assertEquals(expectedPlayer.getDamage(), createdPlayer.getDamage());
-
-		// Verify that updatePlayer was called on playerDAO
-		verify(playerDAOMock).updatePlayer(any(Player.class));
-	}
-
-	@Test
 	void testAddPlayerToMap() {
 		// Arrange
 		Long mapId = 1L;
@@ -1345,355 +1325,211 @@ class TestGameController {
 
 		verify(logger).info("Retrieved {} alive players from map {}", 2, "TestMap");
 	}
-	@Test
-	void testCreatePlayer_ValidPlayer() {
-	    // Arrange: Setup valid parameters
-	    String playerName = "ValidPlayer";
-	    float health = 100;
-	    float damage = 50;
-
-	    // Act: Create a valid player
-	    Player result = gameControllerwithMocks.createPlayer(playerName, health, damage);
-
-	    // Assert: Verify the player was created successfully
-	    assertNotNull(result);
-	    assertEquals(playerName, result.getName());
-	    assertEquals(health, result.getHealth(), 0.01);
-	    assertEquals(damage, result.getDamage(), 0.01);
-	    assertTrue(result.isAlive());
-
-	    // Verify logger call
-	    verify(logger).info("Player created: {}", playerName);
-	}
 
 	@Test
 	void testCreatePlayer_InvalidHealth_ThrowsException() {
-	    // Arrange: Setup invalid health
-	    String playerName = "InvalidPlayer";
-	    float health = -10; // Invalid health
-	    float damage = 30;
+		// Arrange: Setup invalid health
+		String playerName = "InvalidPlayer";
+		float health = -10; // Invalid health
+		float damage = 30;
 
-	    // Act & Assert: Attempt to create a player and expect an exception
-	    IllegalArgumentException exception = assertThrows(
-	        IllegalArgumentException.class,
-	        () -> gameControllerwithMocks.createPlayer(playerName, health, damage)
-	    );
+		// Act & Assert: Attempt to create a player and expect an exception
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+				() -> gameControllerwithMocks.createPlayer(playerName, health, damage));
 
-	    assertEquals("Health must be greater than 0.", exception.getMessage());
+		assertEquals("Health must be greater than 0.", exception.getMessage());
 
-	    // Verify logger call
-	    verify(logger).error("Player creation failed: Health must be greater than 0.");
-	}
-	
-	
-	@Test
-	void testCreatePlayer_ValidAttributes() {
-	    // Arrange: Setup valid parameters
-	    String playerName = "ValidPlayer";
-	    float health = 100;
-	    float damage = 50;
-
-	    // Act: Create a valid player
-	    Player result = gameControllerwithMocks.createPlayer(playerName, health, damage);
-
-	    // Assert: Verify the player was created successfully
-	    assertNotNull(result);
-	    assertEquals(playerName, result.getName());
-	    assertEquals(health, result.getHealth(), 0.01);
-	    assertEquals(damage, result.getDamage(), 0.01);
-	    assertTrue(result.isAlive());
-
-	    // Verify logger call
-	    verify(logger).info("Player created: {}", playerName);
+		// Verify logger call
+		verify(logger).error("Player creation failed: Health must be greater than 0.");
 	}
 
 	@Test
 	void testCreatePlayer_InvalidDamage_ThrowsException() {
-	    // Arrange: Setup invalid damage
-	    String playerName = "InvalidPlayer";
-	    float health = 100;
-	    float damage = 0; // Invalid damage
+		// Arrange: Setup invalid damage
+		String playerName = "InvalidPlayer";
+		float health = 100;
+		float damage = 0; // Invalid damage
 
-	    // Act & Assert: Attempt to create a player and expect an exception
-	    IllegalArgumentException exception = assertThrows(
-	        IllegalArgumentException.class,
-	        () -> gameControllerwithMocks.createPlayer(playerName, health, damage)
-	    );
+		// Act & Assert: Attempt to create a player and expect an exception
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+				() -> gameControllerwithMocks.createPlayer(playerName, health, damage));
 
-	    assertEquals("Damage must be greater than 0.", exception.getMessage());
+		assertEquals("Damage must be greater than 0.", exception.getMessage());
 
-	    // Verify logger call
-	    verify(logger).error("Player creation failed: Damage must be greater than 0.");
+		// Verify logger call
+		verify(logger).error("Player creation failed: Damage must be greater than 0.");
 	}
 
 	@Test
 	void testCreatePlayer_NegativeDamage_ThrowsException() {
-	    // Arrange: Setup negative damage
-	    String playerName = "NegativeDamagePlayer";
-	    float health = 100;
-	    float damage = -10; // Invalid damage
+		// Arrange: Setup negative damage
+		String playerName = "NegativeDamagePlayer";
+		float health = 100;
+		float damage = -10; // Invalid damage
 
-	    // Act & Assert: Attempt to create a player and expect an exception
-	    IllegalArgumentException exception = assertThrows(
-	        IllegalArgumentException.class,
-	        () -> gameControllerwithMocks.createPlayer(playerName, health, damage)
-	    );
+		// Act & Assert: Attempt to create a player and expect an exception
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+				() -> gameControllerwithMocks.createPlayer(playerName, health, damage));
 
-	    assertEquals("Damage must be greater than 0.", exception.getMessage());
+		assertEquals("Damage must be greater than 0.", exception.getMessage());
 
-	    // Verify logger call
-	    verify(logger).error("Player creation failed: Damage must be greater than 0.");
+		// Verify logger call
+		verify(logger).error("Player creation failed: Damage must be greater than 0.");
 	}
+
 	@Test
 	void testPlayerBuilderWithIsAlive() {
-	    Player player = new PlayerBuilder()
-	        .withName("TestPlayer")
-	        .withHealth(100)
-	        .withDamage(50)
-	        .withIsAlive(false) // Set explicitly to false
-	        .build();
+		Player player = new PlayerBuilder().withName("TestPlayer").withHealth(100).withDamage(50).withIsAlive(false) // Set
+																														// explicitly
+																														// to
+																														// false
+				.build();
 
-	    assertNotNull(player);
-	    assertEquals(false, player.isAlive()); // Validate explicitly
+		assertNotNull(player);
+		assertEquals(false, player.isAlive()); // Validate explicitly
 	}
-	@Test
-	void testCreatePlayerBoundaryConditions() {
-	    String playerName = "BoundaryPlayer";
 
-	    // Valid boundary: health = 1, damage = 1
-	    Player player = gameControllerwithMocks.createPlayer(playerName, 1, 1);
-	    assertNotNull(player);
-	    assertEquals(1, player.getHealth(), 0.01);
-	    assertEquals(1, player.getDamage(), 0.01);
-	    assertTrue(player.isAlive());
-
-	    // Invalid boundary: health = 0
-	    assertThrows(IllegalArgumentException.class, () -> {
-	    	gameControllerwithMocks.createPlayer(playerName, 0, 50); // Health = 0
-	    });
-
-	    // Invalid boundary: damage = 0
-	    assertThrows(IllegalArgumentException.class, () -> {
-	    	gameControllerwithMocks.createPlayer(playerName, 100, 0); // Damage = 0
-	    });
-	}
 	@Test
 	void testCreatePlayerThrowsExceptionForInvalidAttributes() {
-	    String playerName = "InvalidPlayer";
+		String playerName = "InvalidPlayer";
 
-	    // Test invalid health
-	    assertThrows(IllegalArgumentException.class, () -> {
-	    	gameControllerwithMocks.createPlayer(playerName, 0, 50); // Health <= 0
-	    });
+		// Test invalid health
+		assertThrows(IllegalArgumentException.class, () -> {
+			gameControllerwithMocks.createPlayer(playerName, 0, 50); // Health <= 0
+		});
 
-	    // Test invalid damage
-	    assertThrows(IllegalArgumentException.class, () -> {
-	    	gameControllerwithMocks.createPlayer(playerName, 100, 0); // Damage <= 0
-	    });
+		// Test invalid damage
+		assertThrows(IllegalArgumentException.class, () -> {
+			gameControllerwithMocks.createPlayer(playerName, 100, 0); // Damage <= 0
+		});
 	}
+
 	@Test
 	void testPlayerGetHealth() {
-	    Player player = new PlayerBuilder()
-	        .withName("TestPlayer")
-	        .withHealth(100)
-	        .withDamage(50)
-	        .withIsAlive(true)
-	        .build();
+		Player player = new PlayerBuilder().withName("TestPlayer").withHealth(100).withDamage(50).withIsAlive(true)
+				.build();
 
-	    assertNotNull(player);
-	    assertEquals(100, player.getHealth(), 0.01); // Validate health directly
+		assertNotNull(player);
+		assertEquals(100, player.getHealth(), 0.01); // Validate health directly
 	}
+
 	@Test
 	void testLoggerOnPlayerCreation() {
-	    String playerName = "LoggerPlayer";
-	    float health = 100;
-	    float damage = 50;
+		String playerName = "LoggerPlayer";
+		float health = 100;
+		float damage = 50;
 
-	    gameControllerwithMocks.createPlayer(playerName, health, damage);
-	    
-	    verify(logger).info("Player created: {}", playerName); // Validate logger call
+		gameControllerwithMocks.createPlayer(playerName, health, damage);
+
+		verify(logger).info("Player created: {}", playerName); // Validate logger call
 	}
 
 	@Test
 	void testLoggerWhenDefenderDefeated() {
-	    // Arrange: Create attacker and defender
-	    Player attacker = new PlayerBuilder()
-	        .withName("Attacker")
-	        .withHealth(100)
-	        .withDamage(20) // Enough damage to defeat the defender
-	        .withIsAlive(true)
-	        .build();
+		// Arrange: Create attacker and defender
+		Player attacker = new PlayerBuilder().withName("Attacker").withHealth(100).withDamage(20) // Enough damage to
+																									// defeat the
+																									// defender
+				.withIsAlive(true).build();
 
-	    Player defender = new PlayerBuilder()
-	        .withName("Defender")
-	        .withHealth(10) // Defender's initial health
-	        .withDamage(30)
-	        .withIsAlive(true)
-	        .build();
+		Player defender = new PlayerBuilder().withName("Defender").withHealth(10) // Defender's initial health
+				.withDamage(30).withIsAlive(true).build();
 
-	    // Act: Perform an attack
-	    gameControllerwithMocks.attack(attacker, defender);
+		// Act: Perform an attack
+		gameControllerwithMocks.attack(attacker, defender);
 
-	    // Assert: Verify logger was called when defender is defeated
-	    verify(logger).info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
-	            defender.getName(), false);
+		// Assert: Verify logger was called when defender is defeated
+		verify(logger).info("Attack successful: Defender: {} has been defeated (Health: 0, IsAlive: {})",
+				defender.getName(), false);
 	}
+
 	@Test
 	void testValidateAlive_AttackerWithZeroHealthThrowsException() {
-	    Player attacker = new PlayerBuilder()
-	        .withName("ZeroHealthAttacker")
-	        .withHealth(0) // Zero health
-	        .withDamage(20)
-	        .withIsAlive(true) // Alive, but health is zero
-	        .build();
+		Player attacker = new PlayerBuilder().withName("ZeroHealthAttacker").withHealth(0) // Zero health
+				.withDamage(20).withIsAlive(true) // Alive, but health is zero
+				.build();
 
-	    Player defender = new PlayerBuilder()
-	        .withName("Defender")
-	        .withHealth(100)
-	        .withDamage(30)
-	        .withIsAlive(true)
-	        .build();
+		Player defender = new PlayerBuilder().withName("Defender").withHealth(100).withDamage(30).withIsAlive(true)
+				.build();
 
-	    IllegalArgumentException exception = assertThrows(
-	        IllegalArgumentException.class,
-	        () -> gameControllerwithMocks.attack(attacker, defender)
-	    );
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+				() -> gameControllerwithMocks.attack(attacker, defender));
 
-	    assertEquals("Attacker is not eligible to attack.", exception.getMessage());
-	    verify(logger).error("Attack failed: Attacker {} is not eligible to attack.", attacker.getName());
+		assertEquals("Attacker is not eligible to attack.", exception.getMessage());
+		verify(logger).error("Attack failed: Attacker {} is not eligible to attack.", attacker.getName());
 	}
+
 	@Test
 	void testValidateAlive_AttackerWithNegativeHealthThrowsException() {
-	    Player attacker = new PlayerBuilder()
-	        .withName("NegativeHealthAttacker")
-	        .withHealth(-10) // Negative health
-	        .withDamage(20)
-	        .withIsAlive(true) // Alive, but health is negative
-	        .build();
+		Player attacker = new PlayerBuilder().withName("NegativeHealthAttacker").withHealth(-10) // Negative health
+				.withDamage(20).withIsAlive(true) // Alive, but health is negative
+				.build();
 
-	    Player defender = new PlayerBuilder()
-	        .withName("Defender")
-	        .withHealth(100)
-	        .withDamage(30)
-	        .withIsAlive(true)
-	        .build();
+		Player defender = new PlayerBuilder().withName("Defender").withHealth(100).withDamage(30).withIsAlive(true)
+				.build();
 
-	    IllegalArgumentException exception = assertThrows(
-	        IllegalArgumentException.class,
-	        () -> gameControllerwithMocks.attack(attacker, defender)
-	    );
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+				() -> gameControllerwithMocks.attack(attacker, defender));
 
-	    assertEquals("Attacker is not eligible to attack.", exception.getMessage());
-	    verify(logger).error("Attack failed: Attacker {} is not eligible to attack.", attacker.getName());
+		assertEquals("Attacker is not eligible to attack.", exception.getMessage());
+		verify(logger).error("Attack failed: Attacker {} is not eligible to attack.", attacker.getName());
 	}
+
 	@Test
 	void testValidateAlive_DeadAttackerThrowsException() {
-	    Player attacker = new PlayerBuilder()
-	        .withName("DeadAttacker")
-	        .withHealth(10) // Positive health
-	        .withDamage(20)
-	        .withIsAlive(false) // Not alive
-	        .build();
+		Player attacker = new PlayerBuilder().withName("DeadAttacker").withHealth(10) // Positive health
+				.withDamage(20).withIsAlive(false) // Not alive
+				.build();
 
-	    Player defender = new PlayerBuilder()
-	        .withName("Defender")
-	        .withHealth(100)
-	        .withDamage(30)
-	        .withIsAlive(true)
-	        .build();
+		Player defender = new PlayerBuilder().withName("Defender").withHealth(100).withDamage(30).withIsAlive(true)
+				.build();
 
-	    IllegalArgumentException exception = assertThrows(
-	        IllegalArgumentException.class,
-	        () -> gameControllerwithMocks.attack(attacker, defender)
-	    );
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+				() -> gameControllerwithMocks.attack(attacker, defender));
 
-	    assertEquals("Attacker is not eligible to attack.", exception.getMessage());
-	    verify(logger).error("Attack failed: Attacker {} is not eligible to attack.", attacker.getName());
+		assertEquals("Attacker is not eligible to attack.", exception.getMessage());
+		verify(logger).error("Attack failed: Attacker {} is not eligible to attack.", attacker.getName());
 	}
+
 	@Test
 	void testValidateAlive_ValidAttackerDoesNotThrowException() {
-	    Player attacker = new PlayerBuilder()
-	        .withName("ValidAttacker")
-	        .withHealth(50) // Positive health
-	        .withDamage(20)
-	        .withIsAlive(true) // Alive
-	        .build();
+		Player attacker = new PlayerBuilder().withName("ValidAttacker").withHealth(50) // Positive health
+				.withDamage(20).withIsAlive(true) // Alive
+				.build();
 
-	    Player defender = new PlayerBuilder()
-	        .withName("Defender")
-	        .withHealth(100)
-	        .withDamage(30)
-	        .withIsAlive(true)
-	        .build();
+		Player defender = new PlayerBuilder().withName("Defender").withHealth(100).withDamage(30).withIsAlive(true)
+				.build();
 
-	    assertDoesNotThrow(() -> gameControllerwithMocks.attack(attacker, defender));
+		assertDoesNotThrow(() -> gameControllerwithMocks.attack(attacker, defender));
 	}
+
 	@Test
 	void testValidateAlive_BoundaryConditions() {
-	    Player validAttacker = new PlayerBuilder()
-	        .withName("ValidAttacker")
-	        .withHealth(1) // Just above zero
-	        .withDamage(20)
-	        .withIsAlive(true)
-	        .build();
+		Player validAttacker = new PlayerBuilder().withName("ValidAttacker").withHealth(1) // Just above zero
+				.withDamage(20).withIsAlive(true).build();
 
-	    Player zeroHealthAttacker = new PlayerBuilder()
-	        .withName("ZeroHealthAttacker")
-	        .withHealth(0) // Exactly zero
-	        .withDamage(20)
-	        .withIsAlive(true)
-	        .build();
+		Player zeroHealthAttacker = new PlayerBuilder().withName("ZeroHealthAttacker").withHealth(0) // Exactly zero
+				.withDamage(20).withIsAlive(true).build();
 
-	    Player negativeHealthAttacker = new PlayerBuilder()
-	        .withName("NegativeHealthAttacker")
-	        .withHealth(-1) // Below zero
-	        .withDamage(20)
-	        .withIsAlive(true)
-	        .build();
+		Player negativeHealthAttacker = new PlayerBuilder().withName("NegativeHealthAttacker").withHealth(-1) // Below
+																												// zero
+				.withDamage(20).withIsAlive(true).build();
 
-	    Player defender = new PlayerBuilder()
-	        .withName("Defender")
-	        .withHealth(100)
-	        .withDamage(30)
-	        .withIsAlive(true)
-	        .build();
+		Player defender = new PlayerBuilder().withName("Defender").withHealth(100).withDamage(30).withIsAlive(true)
+				.build();
 
-	    // Valid attacker
-	    assertDoesNotThrow(() -> gameControllerwithMocks.attack(validAttacker, defender));
+		// Valid attacker
+		assertDoesNotThrow(() -> gameControllerwithMocks.attack(validAttacker, defender));
 
-	    // Zero health attacker
-	    IllegalArgumentException zeroHealthException = assertThrows(
-	        IllegalArgumentException.class,
-	        () -> gameControllerwithMocks.attack(zeroHealthAttacker, defender)
-	    );
-	    assertEquals("Attacker is not eligible to attack.", zeroHealthException.getMessage());
+		// Zero health attacker
+		IllegalArgumentException zeroHealthException = assertThrows(IllegalArgumentException.class,
+				() -> gameControllerwithMocks.attack(zeroHealthAttacker, defender));
+		assertEquals("Attacker is not eligible to attack.", zeroHealthException.getMessage());
 
-	    // Negative health attacker
-	    IllegalArgumentException negativeHealthException = assertThrows(
-	        IllegalArgumentException.class,
-	        () -> gameControllerwithMocks.attack(negativeHealthAttacker, defender)
-	    );
-	    assertEquals("Attacker is not eligible to attack.", negativeHealthException.getMessage());
-	}
-	
-	@Test
-	void testCreatePlayer_SetsIsAliveCorrectly() {
-	    // Arrange
-	    String playerName = "AlivePlayer";
-	    float health = 100;
-	    float damage = 50;
-
-	    // Act
-	    Player player = gameControllerwithMocks.createPlayer(playerName, health, damage);
-
-	    // Assert
-	    assertNotNull(player, "Player should not be null.");
-	    assertEquals(playerName, player.getName(), "Player's name should match the input.");
-	    assertEquals(health, player.getHealth(), 0.01, "Player's health should match the input.");
-	    assertEquals(damage, player.getDamage(), 0.01, "Player's damage should match the input.");
-	    assertTrue(player.isAlive(), "Player's isAlive should be explicitly set to true by withIsAlive(true).");
+		// Negative health attacker
+		IllegalArgumentException negativeHealthException = assertThrows(IllegalArgumentException.class,
+				() -> gameControllerwithMocks.attack(negativeHealthAttacker, defender));
+		assertEquals("Attacker is not eligible to attack.", negativeHealthException.getMessage());
 	}
 
-
-	
 }

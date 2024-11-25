@@ -10,10 +10,7 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "app_map") // Table name for the Map entity
-@NamedEntityGraph(
-	    name = "GameMap.players",
-	    attributeNodes = @NamedAttributeNode("players")
-	)
+@NamedEntityGraph(name = "GameMap.players", attributeNodes = @NamedAttributeNode("players"))
 public class GameMap {
 
 	@Id
@@ -75,7 +72,6 @@ public class GameMap {
 		return this.name; // Assuming the name field holds the map's name.
 	}
 
-	
 	// Override equals method
 	@ExcludeFromJacocoGeneratedReport
 	@Override

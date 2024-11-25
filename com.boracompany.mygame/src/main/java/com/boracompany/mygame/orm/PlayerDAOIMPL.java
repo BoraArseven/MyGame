@@ -16,7 +16,7 @@ import com.boracompany.mygame.model.Player;
 public class PlayerDAOIMPL implements PlayerDAO {
 
 	private static final String TRANSACTION_NULL_MESSAGE = "Transaction is null";
-	
+
 	private static final Logger LOGGER = LogManager.getLogger(PlayerDAOIMPL.class);
 	private EntityManagerFactory emf;
 
@@ -117,7 +117,7 @@ public class PlayerDAOIMPL implements PlayerDAO {
 	}
 
 	@Override
-	public void createPlayer(Player player) throws IllegalStateException {
+	public Player createPlayer(Player player) throws IllegalStateException {
 		if (player == null) {
 			throw new IllegalArgumentException("Player cannot be null");
 		}
@@ -130,6 +130,7 @@ public class PlayerDAOIMPL implements PlayerDAO {
 				transaction.begin();
 				em.persist(player); // Use persist for creation
 				transaction.commit();
+				return player;
 			} else {
 				throw new IllegalStateException(TRANSACTION_NULL_MESSAGE);
 			}
