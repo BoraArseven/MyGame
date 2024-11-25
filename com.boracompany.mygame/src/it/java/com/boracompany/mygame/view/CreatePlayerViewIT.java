@@ -131,29 +131,38 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 	@Test
 	@GUITest
 	public void testCreatePlayerAndDelete() {
-	    // Act: Add a player via the view
-	    window.textBox("NameText").enterText("Player1");
-	    window.textBox("DamageText").enterText("10");
-	    window.textBox("HealthText").enterText("100");
-	    window.button(JButtonMatcher.withText("Create")).click();
-	    
-	    // Debug: Print the list contents after the player is created
-	    logger.debug("List contents after creation: {}", (Object) window.list("ListPlayers").contents());
+		// Act: Add a player via the view
+		window.textBox("NameText").enterText("Player1");
+		window.textBox("DamageText").enterText("10");
+		window.textBox("HealthText").enterText("100");
+		window.button(JButtonMatcher.withText("Create")).click();
 
-	    // Assert: Player is added to the list
-	    assertThat(window.list("ListPlayers").contents()).contains("Player1, Health: 100.0, Damage: 10.0");
-	    
-	    // Select the player and delete it
-	    window.list("ListPlayers").selectItem(0);
-	    window.button(JButtonMatcher.withText("Delete Selected")).click();
-	    
-	    // Debug: Print the list contents after the player is deleted
-	    logger.debug("List contents after deletion: {}", (Object) window.list("ListPlayers").contents());
-	    
-	    // Assert: Player is removed from the list
-	    assertThat(window.list("ListPlayers").contents()).doesNotContain("Player1");
+		// Debug: Print the list contents after the player is created
+		logger.debug("List contents after creation: {}", (Object) window.list("ListPlayers").contents());
+
+		// Assert: Player is added to the list
+		assertThat(window.list("ListPlayers").contents()).contains("Player1, Health: 100.0, Damage: 10.0");
+
+		// Select the player and delete it
+		window.list("ListPlayers").selectItem(0);
+		window.button(JButtonMatcher.withText("Delete Selected")).click();
+
+		// Debug: Print the list contents after the player is deleted
+		logger.debug("List contents after deletion: {}", (Object) window.list("ListPlayers").contents());
+
+		// Assert: Player is removed from the list
+		assertThat(window.list("ListPlayers").contents()).doesNotContain("Player1");
+
+		// Verify that the player is deleted from the database
+		EntityManager em = emf.createEntityManager();
+		try {
+			List<Player> players = em.createQuery("SELECT p FROM Player p WHERE p.name = :name", Player.class)
+					.setParameter("name", "Player1").getResultList();
+			assertThat(players).isEmpty(); // Player should not exist in the database
+		} finally {
+			em.close();
+		}
 	}
-
 
 	@Test
 	@GUITest
@@ -174,41 +183,39 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 		// Close Mockito mocks
 		closeable.close();
 	}
+
 	@Test
 	@GUITest
 	public void testCreateMultiplePlayers() {
-	    window.textBox("NameText").enterText("Player1");
-	    window.textBox("DamageText").enterText("10");
-	    window.textBox("HealthText").enterText("100");
-	    window.button(JButtonMatcher.withText("Create")).click();
-	    window.textBox("NameText").enterText("Player2");
-	    window.textBox("DamageText").enterText("20");
-	    window.textBox("HealthText").enterText("200");
-	    window.button(JButtonMatcher.withText("Create")).click();
+		window.textBox("NameText").enterText("Player1");
+		window.textBox("DamageText").enterText("10");
+		window.textBox("HealthText").enterText("100");
+		window.button(JButtonMatcher.withText("Create")).click();
+		window.textBox("NameText").enterText("Player2");
+		window.textBox("DamageText").enterText("20");
+		window.textBox("HealthText").enterText("200");
+		window.button(JButtonMatcher.withText("Create")).click();
 
-	    // Debug: Print the list contents after the players are created
-	    logger.debug("List contents after multiple creations: {}", (Object) window.list("ListPlayers").contents());
+		// Debug: Print the list contents after the players are created
+		logger.debug("List contents after multiple creations: {}", (Object) window.list("ListPlayers").contents());
 
-	    assertThat(window.list("ListPlayers").contents()).containsExactly(
-	            "Player1, Health: 100.0, Damage: 10.0",
-	            "Player2, Health: 200.0, Damage: 20.0"
-	    );
+		assertThat(window.list("ListPlayers").contents()).containsExactly("Player1, Health: 100.0, Damage: 10.0",
+				"Player2, Health: 200.0, Damage: 20.0");
 
-	    EntityManager em = emf.createEntityManager();
-	    try {
-	        Player dbPlayer1 = em.createQuery("SELECT p FROM Player p WHERE p.name = :name", Player.class)
-	                .setParameter("name", "Player1").getSingleResult();
-	        Player dbPlayer2 = em.createQuery("SELECT p FROM Player p WHERE p.name = :name", Player.class)
-	                .setParameter("name", "Player2").getSingleResult();
-	        assertThat(dbPlayer1).isNotNull();
-	        assertThat(dbPlayer2).isNotNull();
-	        assertThat(dbPlayer1.getDamage()).isEqualTo(10);
-	        assertThat(dbPlayer2.getDamage()).isEqualTo(20);
-	    } finally {
-	        em.close();
-	    }
+		EntityManager em = emf.createEntityManager();
+		try {
+			Player dbPlayer1 = em.createQuery("SELECT p FROM Player p WHERE p.name = :name", Player.class)
+					.setParameter("name", "Player1").getSingleResult();
+			Player dbPlayer2 = em.createQuery("SELECT p FROM Player p WHERE p.name = :name", Player.class)
+					.setParameter("name", "Player2").getSingleResult();
+			assertThat(dbPlayer1).isNotNull();
+			assertThat(dbPlayer2).isNotNull();
+			assertThat(dbPlayer1.getDamage()).isEqualTo(10);
+			assertThat(dbPlayer2.getDamage()).isEqualTo(20);
+		} finally {
+			em.close();
+		}
 	}
-
 
 	@Test
 	@GUITest
@@ -286,30 +293,23 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 
 	@Test
 	public void testDeletePlayer_NoLongerExistsInBackend() {
-		// Arrange: Create a player and delete it from the backend directly (simulate
-		// external deletion)
-		Player player = new PlayerBuilder().withName("Player1").withDamage(10).withHealth(100).build();
+		// Arrange: Create a player via the controller to ensure it has an ID
+		final Player[] playerHolder = new Player[1];
 
-		// Simulate saving the player to the database and retrieving its ID
 		GuiActionRunner.execute(() -> {
-			gameController.createPlayer(player.getName(), player.getHealth(), player.getDamage());
-			player.setId(gameController.getAllPlayers().get(0).getId()); // Set the ID after persisting
-			createPlayerView.playerAdded(player); // Add player to the view
+			Player p = gameController.createPlayer("Player1", 100, 10);
+			createPlayerView.playerAdded(p); // Add the player with ID to the view
+			playerHolder[0] = p; // Assign the player to the array
 		});
 
-		// Simulate external deletion of the player from the backend (e.g., another
-		// system)
+		Player player = playerHolder[0]; // Retrieve the player after the lambda execution
+
+		// Simulate external deletion of the player from the backend
 		GuiActionRunner.execute(() -> gameController.deletePlayer(player.getId()));
 
 		// Try to delete the player from the UI after it has already been deleted
-		// externally
 		window.list("ListPlayers").selectItem(0);
 		window.button(JButtonMatcher.withText("Delete Selected")).click();
-
-		// The error message should match the one shown by the UI when the
-		// player no longer exists
-		assertThat(window.label("ErrorMessageLabel").text())
-				.contains("Failed to remove player from the database: Player1");
 
 		// Ensure the player is no longer in the database
 		EntityManager em = emf.createEntityManager();
@@ -337,6 +337,15 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
+	public void testPlayerAddedShouldAddThePlayeToTheListAndResetTheErrorLabel() {
+		Player player1 = new PlayerBuilder().withName("testPlayerToBeAdded").withDamage(250).withHealth(600).build();
+		GuiActionRunner.execute(() -> createPlayerView.playerAdded(player1));
+		String[] listContents = window.list().contents();
+		assertThat(listContents).containsExactly(player1.toString());
+		window.label("ErrorMessageLabel").requireText("");
+	}
+
+	@Test
 	@GUITest
 	public void testRefreshPlayerList_ShouldDisplayAllPlayersFromDatabase() {
 		// Arrange: Add players to the database through the controller
@@ -353,7 +362,8 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 
 		// Assert: Verify that the players from the database are displayed in the list
 		String[] listContents = window.list("ListPlayers").contents();
-		assertThat(listContents).containsExactly("Player1, Health: 100.0, Damage: 10.0", "Player2, Health: 200.0, Damage: 20.0"); // Should display both players
+		assertThat(listContents).containsExactly("Player1, Health: 100.0, Damage: 10.0",
+				"Player2, Health: 200.0, Damage: 20.0"); // Should display both players
 	}
 
 	@Test

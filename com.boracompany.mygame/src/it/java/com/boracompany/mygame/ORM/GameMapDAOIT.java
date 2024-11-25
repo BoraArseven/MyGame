@@ -55,7 +55,8 @@ public class GameMapDAOIT {
 		HibernateUtil.initialize(dbUrl, dbUser, dbPassword);
 		emf = HibernateUtil.getEntityManagerFactory();
 		gameMapDAO = new GameMapDAO(emf);
-	} 
+	}
+
 	@AfterAll
 	void tearDown() {
 		HibernateUtil.close();
@@ -63,31 +64,32 @@ public class GameMapDAOIT {
 			postgreSQLContainer.stop();
 		}
 	}
+
 	@BeforeEach
 	void resetDatabase() {
-	    EntityManager em = emf.createEntityManager();
-	    EntityTransaction transaction = em.getTransaction();
+		EntityManager em = emf.createEntityManager();
+		EntityTransaction transaction = em.getTransaction();
 
-	    try {
-	        transaction.begin();
-	        // Delete all data from tables
-	        em.createQuery("DELETE FROM Player").executeUpdate();
-	        em.createQuery("DELETE FROM GameMap").executeUpdate();
-	        transaction.commit();
-	    } catch (Exception e) {
-	        if (transaction.isActive()) {
-	            try {
-	                transaction.rollback();
-	            } catch (Exception rollbackEx) {
-	                // Log rollback failure
-	            }
-	        }
-	        throw new PersistenceException("Failed to reset database", e);
-	    } finally {
-	        if (em.isOpen()) {
-	            em.close();
-	        }
-	    }
+		try {
+			transaction.begin();
+			// Delete all data from tables
+			em.createQuery("DELETE FROM Player").executeUpdate();
+			em.createQuery("DELETE FROM GameMap").executeUpdate();
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction.isActive()) {
+				try {
+					transaction.rollback();
+				} catch (Exception rollbackEx) {
+					// Log rollback failure
+				}
+			}
+			throw new PersistenceException("Failed to reset database", e);
+		} finally {
+			if (em.isOpen()) {
+				em.close();
+			}
+		}
 	}
 
 	@Test

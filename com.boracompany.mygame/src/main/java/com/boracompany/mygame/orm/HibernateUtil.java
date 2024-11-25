@@ -27,9 +27,10 @@ public class HibernateUtil {
 
 	// Static inner class for lazy initialization and thread safety
 
-	//Double-checked locker pattern
+	// Double-checked locker pattern
 	// Static method to initialize the EntityManagerFactory
-	// We call whenever we want an emf, if there is no emf, it will create, otherwise does nothing, we simply call emf after the call of this method.
+	// We call whenever we want an emf, if there is no emf, it will create,
+	// otherwise does nothing, we simply call emf after the call of this method.
 	public static void initialize(String dbUrl, String dbUser, String dbPassword) {
 		if (entityManagerFactory == null) {
 			// synchronized ensures that only one thread can access that at the same time.
@@ -42,38 +43,37 @@ public class HibernateUtil {
 	}
 
 	private static void initializeInternal(String dbUrl, String dbUser, String dbPassword) {
-	    Map<String, Object> properties = new HashMap<>();
-	    if (dbUrl == null || dbUser == null || dbPassword == null) {
-	        throw new IllegalArgumentException("Database connection properties must not be null");
-	    }
+		Map<String, Object> properties = new HashMap<>();
+		if (dbUrl == null || dbUser == null || dbPassword == null) {
+			throw new IllegalArgumentException("Database connection properties must not be null");
+		}
 
-	    // Extract the database name from the URL
-	    String cleanDbUrl = dbUrl.split("\\?")[0]; // Remove query parameters
-	    String databaseName = cleanDbUrl.substring(cleanDbUrl.lastIndexOf('/') + 1);
-	    String baseDbUrl = cleanDbUrl.substring(0, cleanDbUrl.lastIndexOf('/')) + "/postgres";
-	    
-	    // Check and create database if it doesn't exist
-	    createDatabaseIfNotExists(baseDbUrl, dbUser, dbPassword, databaseName);
+		// Extract the database name from the URL
+		String cleanDbUrl = dbUrl.split("\\?")[0]; // Remove query parameters
+		String databaseName = cleanDbUrl.substring(cleanDbUrl.lastIndexOf('/') + 1);
+		String baseDbUrl = cleanDbUrl.substring(0, cleanDbUrl.lastIndexOf('/')) + "/postgres";
 
-	    properties.put(AvailableSettings.URL, dbUrl);
-	    properties.put(AvailableSettings.USER, dbUser);
-	    properties.put(AvailableSettings.PASS, dbPassword);
-	    properties.put(AvailableSettings.DIALECT, "org.hibernate.dialect.PostgreSQLDialect");
-	    properties.put(AvailableSettings.HBM2DDL_AUTO, "update");
-	    properties.put(AvailableSettings.SHOW_SQL, "true");
+		// Check and create database if it doesn't exist
+		createDatabaseIfNotExists(baseDbUrl, dbUser, dbPassword, databaseName);
 
-	    // HikariCP settings
-	    properties.put("hibernate.hikari.connectionTimeout", "20000");
-	    properties.put("hibernate.hikari.minimumIdle", "10");
-	    properties.put("hibernate.hikari.maximumPoolSize", "20");
-	    properties.put("hibernate.hikari.idleTimeout", "300000");
-	    properties.put("hibernate.hikari.maxLifetime", "1800000");
-	    properties.put("hibernate.hikari.poolName", "MyHikariCP");
+		properties.put(AvailableSettings.URL, dbUrl);
+		properties.put(AvailableSettings.USER, dbUser);
+		properties.put(AvailableSettings.PASS, dbPassword);
+		properties.put(AvailableSettings.DIALECT, "org.hibernate.dialect.PostgreSQLDialect");
+		properties.put(AvailableSettings.HBM2DDL_AUTO, "update");
+		properties.put(AvailableSettings.SHOW_SQL, "true");
 
-	    entityManagerFactory = new HibernatePersistenceProvider()
-	            .createContainerEntityManagerFactory(createPersistenceUnitInfo(), properties);
+		// HikariCP settings
+		properties.put("hibernate.hikari.connectionTimeout", "20000");
+		properties.put("hibernate.hikari.minimumIdle", "10");
+		properties.put("hibernate.hikari.maximumPoolSize", "20");
+		properties.put("hibernate.hikari.idleTimeout", "300000");
+		properties.put("hibernate.hikari.maxLifetime", "1800000");
+		properties.put("hibernate.hikari.poolName", "MyHikariCP");
+
+		entityManagerFactory = new HibernatePersistenceProvider()
+				.createContainerEntityManagerFactory(createPersistenceUnitInfo(), properties);
 	}
-
 
 	public static EntityManagerFactory getEntityManagerFactory() {
 		if (entityManagerFactory == null) {
@@ -129,6 +129,7 @@ public class HibernateUtil {
 			}
 		}
 	}
+
 // \\w means [a-zA-Z0-9_]
 	private static boolean isValidDatabaseName(String databaseName) {
 		return databaseName != null && databaseName.matches("^\\w{1,64}$");

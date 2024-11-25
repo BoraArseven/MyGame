@@ -212,12 +212,12 @@ public class MyGameAppE2E extends AssertJSwingJUnitTestCase {
 		playerAttackWindow.list("mapList").selectItem("TestMap");
 		robot().waitForIdle();
 
-        // Select attacker "Player1" using pattern matching
-        playerAttackWindow.list("attackerList").selectItem(Pattern.compile("^Player1.*"));
+		// Select attacker "Player1" using pattern matching
+		playerAttackWindow.list("attackerList").selectItem(Pattern.compile("^Player1.*"));
 		robot().waitForIdle();
 
-        // Select defender "Player2"
-        playerAttackWindow.list("defenderList").selectItem(Pattern.compile("^Player2.*"));
+		// Select defender "Player2"
+		playerAttackWindow.list("defenderList").selectItem(Pattern.compile("^Player2.*"));
 		robot().waitForIdle();
 
 		// Perform the attack

@@ -290,11 +290,13 @@ public class CreatePlayerView extends JFrame implements IPlayerView {
 	public void playerAdded(Player player) {
 		resetErrorLabel();
 		try {
-			// Try to add the player to the database
-			gameController.createPlayer(player.getName(), player.getHealth(), player.getDamage());
+			// Try to add the player to the database and get the persisted player with id
+			Player persistedPlayer = gameController.createPlayer(player.getName(), player.getHealth(),
+					player.getDamage());
 
-			// If the database operation is successful, add the player to the view's list
-			listPlayersModel.addElement(player);
+			// If the database operation is successful, add the persisted player to the
+			// view's list
+			listPlayersModel.addElement(persistedPlayer);
 		} catch (Exception ex) {
 			// If there is an error, show an error message and don't add the player to the
 			// list

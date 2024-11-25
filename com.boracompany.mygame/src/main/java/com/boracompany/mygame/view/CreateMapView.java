@@ -1,7 +1,6 @@
 package com.boracompany.mygame.view;
 
 import java.awt.Color;
-import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -26,7 +25,6 @@ import javax.swing.event.ListSelectionListener;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import com.boracompany.mygame.controller.GameController;
 import com.boracompany.mygame.model.GameMap;
 
@@ -99,13 +97,11 @@ public class CreateMapView extends JFrame {
 				}
 
 				// Build the map using the GameMap constructor
-				GameMap map = new GameMap(nameText.getText());
+				String mapName = nameText.getText().trim();
 
-				// Add the map to the UI list
-				mapAdded(map);
-
-				// Clear the text field after successful map creation
-				nameText.setText("");
+				GameMap mapToCreate = new GameMap(mapName);
+				// Call the GameController to create the map (persist it)
+				mapAdded(mapToCreate);
 
 				// Optionally disable the Create button until the fields are filled again
 				createMapButton.setEnabled(false);
@@ -113,6 +109,7 @@ public class CreateMapView extends JFrame {
 			} catch (Exception ex) {
 				// Handle any exceptions (e.g., validation errors)
 				showError("Failed to create map: " + nameText.getText(), null);
+				mapViewLogger.error("Failed to create map", ex);
 			}
 		});
 
@@ -238,10 +235,13 @@ public class CreateMapView extends JFrame {
 
 			// Add the map to the database
 			gameController.createMap(mapName, map.getPlayers());
-			// If successful, add the map to the view's list
-			listMapsModel.addElement(map);
+			// Refresh the map list to include the newly created map with a valid ID
+			refreshMapList();
+			// Reset the text field nametext
+			nameText.setText("");
 		} catch (Exception ex) {
 			showError("Failed to create map", map);
+			mapViewLogger.error("Failed to create map", ex);
 		}
 	}
 
@@ -256,13 +256,12 @@ public class CreateMapView extends JFrame {
 			// Fixed: map.getName() is already included in the error message, no need to
 			// append it again
 			showError("Failed to remove map from the database: " + map.getName(), null);
+			mapViewLogger.error("Failed to remove map from the database", ex);
 			return;
 		}
 
 		// Optionally select the first remaining map
-		if (!listMapsModel.isEmpty())
-
-		{
+		if (!listMapsModel.isEmpty()) {
 			list.setSelectedIndex(0);
 		}
 	}
@@ -281,15 +280,14 @@ public class CreateMapView extends JFrame {
 			// Fetch the list of maps from the GameController
 			List<GameMap> maps = gameController.getAllMaps();
 
-			EventQueue.invokeLater(() -> {
-				// Clear the current list model
-				listMapsModel.clear();
+			// Clear the current list model
+			listMapsModel.clear();
 
-				// Add the maps to the list model
-				maps.forEach(listMapsModel::addElement);
-			});
+			// Add the maps to the list model
+			maps.forEach(listMapsModel::addElement);
 		} catch (Exception e) {
 			showError("Failed to refresh map list", null);
+			mapViewLogger.error("Failed to refresh map list", e);
 		}
 	}
 

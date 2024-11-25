@@ -7,21 +7,21 @@ import com.boracompany.mygame.model.Player;
 
 public interface IGameMapDAO {
 
-    void save(GameMap gameMap);
+	void save(GameMap gameMap);
 
-    GameMap findById(Long id);
+	GameMap findById(Long id);
 
-    List<GameMap> findAll();
+	List<GameMap> findAll();
 
-    void update(GameMap gameMap);
+	void update(GameMap gameMap);
 
-    void delete(Long id);
+	void delete(Long id);
 
-    List<Player> findPlayersByMapId(Long mapId);
+	List<Player> findPlayersByMapId(Long mapId);
 
-    void addPlayerToMap(Long mapId, Player player);
+	void addPlayerToMap(Long mapId, Player player);
 
-    void removePlayerFromMap(Long mapId, Player player);
+	void removePlayerFromMap(Long mapId, Player player);
 
 	List<Player> findAlivePlayers();
 }
