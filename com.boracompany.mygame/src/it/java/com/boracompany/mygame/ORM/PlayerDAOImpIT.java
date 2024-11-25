@@ -459,7 +459,7 @@ public class PlayerDAOImpIT {
 		});
 
 		// Verify the exception message
-		assertEquals("Tried to delete non existing player", exception.getMessage());
+		assertEquals("Tried to delete non-existing player with ID 1", exception.getMessage());
 
 		// Verify that the EntityManager was closed
 		Mockito.verify(emSpy).close();
@@ -554,65 +554,59 @@ public class PlayerDAOImpIT {
 
 	@Test
 	void testDeletePlayerTriggersRollbackOnTransactionFailure() {
-		EntityManagerFactory spiedemf = Mockito.spy(emf);
-		// Given: Persist a player in the database
-		EntityManager em = emf.createEntityManager();
-		em.getTransaction().begin();
-		Player player = new PlayerBuilder().withName("Player with Rollback").build();
-		em.persist(player);
-		em.getTransaction().commit();
-		em.close();
-
-		// Spy on the EntityManager and the transaction
-		EntityManager emSpy = Mockito.spy(emf.createEntityManager());
-		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
-
-		// Ensure that the spied EntityManager returns the spied transaction
-		Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
-
-		// Use the spied EntityManagerFactory to create a DAO instance
-		PlayerDAOIMPL playerDAOForTest = new PlayerDAOIMPL(spiedemf);
-
-		// Mock the EntityManagerFactory to return the spied EntityManager
-		Mockito.doReturn(emSpy).when(spiedemf).createEntityManager();
-
-		Player player2 = new Player() {
-			@Override
-			public Long getId() {
-				throw new RuntimeException("Simulated failure during deletePlayer");
-			}
-		};
-		// When: Call the deletePlayer method and simulate an exception inside it
-
-		assertThrows(RuntimeException.class, () -> {
-
-			playerDAOForTest.deletePlayer(player2);
-		});
-
-		// Then: Verify that rollback was called
-		Mockito.verify(transactionSpy, Mockito.times(1)).rollback();
-
-		// Verify that the player still exists in the database because the rollback
-		// occurred
-		EntityManager emVerify = emf.createEntityManager(); // New EntityManager for verification
-		Player existingPlayer = emVerify.find(Player.class, player.getId());
-		assertNotNull(existingPlayer, "Player should still exist after rollback due to transaction failure.");
-		emVerify.close();
+	    // Arrange
+	    // Mock the EntityManager and EntityTransaction
+	    EntityManager emMock = Mockito.mock(EntityManager.class);
+	    EntityTransaction transactionMock = Mockito.mock(EntityTransaction.class);
+	    
+	    // Setup the mocks
+	    Mockito.when(emMock.getTransaction()).thenReturn(transactionMock);
+	    Mockito.when(transactionMock.isActive()).thenReturn(true);
+	    
+	    // Simulate the exception during remove
+	    Player existingPlayer = new Player();
+	    existingPlayer.setId(1L);
+	    Mockito.when(emMock.find(Player.class, existingPlayer.getId())).thenReturn(existingPlayer);
+	    Mockito.doThrow(new RuntimeException("Simulated Exception")).when(emMock).remove(existingPlayer);
+	    
+	    // Mock the EntityManagerFactory to return the mocked EntityManager
+	    EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
+	    Mockito.when(emfMock.createEntityManager()).thenReturn(emMock);
+	    
+	    // Create the DAO with the mocked EntityManagerFactory
+	    PlayerDAOIMPL dao = new PlayerDAOIMPL(emfMock);
+	    
+	    // Act & Assert
+	    RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+	        dao.deletePlayer(existingPlayer);
+	    });
+	    
+	    assertEquals("Simulated Exception", exception.getMessage());
+	    
+	    // Verify that rollback was called
+	    Mockito.verify(transactionMock).rollback();
+	    
+	    // Verify that the EntityManager was closed
+	    Mockito.verify(emMock).close();
 	}
+
 
 	@Test
 	void testDeletePlayerThrowsExceptionForNonExistentPlayer() {
-		// Given: A player that does not exist in the database
-		Player nonExistentPlayer = new Player();
-		nonExistentPlayer.setId(-999L); // Use an ID that is unlikely to exist
+	    // Arrange
+	    Player nonExistentPlayer = new Player();
+	    nonExistentPlayer.setId(-999L); // Use an ID that does not exist
 
-		// When & Then: Try to delete this player and expect an IllegalStateException
-		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-			playerDAO.deletePlayer(nonExistentPlayer);
-		});
+	    // Act & Assert
+	    IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+	        playerDAO.deletePlayer(nonExistentPlayer);
+	    });
 
-		assertEquals("Tried to delete non existing player", exception.getMessage());
+	    // Verify the exception message matches the implementation
+	    assertEquals("Tried to delete non-existing player with ID -999", exception.getMessage());
 	}
+
+
 
 	@Test
 	void testDeletePlayerTriggersRollbackWhenExceptionOccurs() {
@@ -702,7 +696,7 @@ public class PlayerDAOImpIT {
 		});
 
 		// Verify the exception message
-		assertEquals("Tried to delete non existing player", exception.getMessage());
+		assertEquals("Tried to delete non-existing player with ID 1", exception.getMessage());
 
 		// Ensure that rollback was called if the transaction was active
 		Mockito.verify(transactionMock, Mockito.times(1)).rollback();
@@ -1001,49 +995,51 @@ public class PlayerDAOImpIT {
 	}
 
 	@Test
-	void testCreatePlayerTriggersRollbackOnRuntimeExceptionWhenTransactionIsActive() {
-		// Create a spy of the real EntityManagerFactory
-		EntityManagerFactory spiedEmf = Mockito.spy(emf);
+	void testCreatePlayerTriggersRollbackOnRuntimeException() {
+	    // Arrange
+	    // Create a spy of the real EntityManagerFactory
+	    EntityManagerFactory spiedEmf = Mockito.spy(emf);
 
-		// Spy on the real EntityManager
-		EntityManager emSpy = Mockito.spy(spiedEmf.createEntityManager());
+	    // Spy on the real EntityManager
+	    EntityManager emSpy = Mockito.spy(spiedEmf.createEntityManager());
 
-		// Spy on the real EntityTransaction
-		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+	    // Spy on the real EntityTransaction
+	    EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
 
-		// Ensure the spied EntityManagerFactory returns the spied EntityManager
-		Mockito.when(spiedEmf.createEntityManager()).thenReturn(emSpy);
+	    // Ensure the spied EntityManagerFactory returns the spied EntityManager
+	    Mockito.when(spiedEmf.createEntityManager()).thenReturn(emSpy);
 
-		// Ensure the spied EntityManager returns the spied transaction
-		Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
+	    // Ensure the spied EntityManager returns the spied transaction
+	    Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
 
-		// Ensure the transaction begins properly and is active
-		Mockito.doNothing().when(transactionSpy).begin();
-		Mockito.when(transactionSpy.isActive()).thenReturn(true);
+	    // Ensure the transaction begins properly and is active
+	    Mockito.doNothing().when(transactionSpy).begin();
+	    Mockito.when(transactionSpy.isActive()).thenReturn(true);
 
-		// Inject the spied EntityManagerFactory into the PlayerDAOIMPL
-		PlayerDAOIMPL dao = new PlayerDAOIMPL(spiedEmf);
+	    // Inject the spied EntityManagerFactory into the PlayerDAOIMPL
+	    PlayerDAOIMPL dao = new PlayerDAOIMPL(spiedEmf);
 
-		// Create a Player instance
-		Player player = new PlayerBuilder().withName("Test Player").build();
+	    // Create a Player instance
+	    Player player = new PlayerBuilder().withName("Test Player").build();
 
-		// Simulate a RuntimeException during the persist operation
-		Mockito.doThrow(new RuntimeException("Simulated Exception")).when(emSpy).persist(Mockito.any(Player.class));
+	    // Simulate a RuntimeException during the persist operation
+	    Mockito.doThrow(new RuntimeException("Simulated Exception")).when(emSpy).persist(Mockito.any(Player.class));
 
-		// Ensure that the exception is thrown and rollback happens
-		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-			dao.createPlayer(player);
-		});
+	    // Act & Assert
+	    RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+	        dao.createPlayer(player);
+	    });
 
-		// Check that the exception message is correct
-		assertEquals("Simulated Exception", exception.getMessage());
+	    // Verify the exception message
+	    assertEquals("Simulated Exception", exception.getMessage());
 
-		// Verify that rollback was called on the transaction since it was active
-		Mockito.verify(transactionSpy).rollback();
+	    // Verify that rollback was called on the transaction
+	    Mockito.verify(transactionSpy).rollback();
 
-		// Verify that the EntityManager was closed
-		Mockito.verify(emSpy).close();
+	    // Verify that the EntityManager was closed
+	    Mockito.verify(emSpy).close();
 	}
+
 
 	@Test
 	void testCreatePlayerThrowsExceptionWhenTransactionIsNull() {

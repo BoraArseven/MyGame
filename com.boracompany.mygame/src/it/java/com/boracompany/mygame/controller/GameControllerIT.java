@@ -37,7 +37,7 @@ import com.boracompany.mygame.orm.PlayerDAOIMPL;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GameControllerIT {
 
-	private static Logger LOGGER = LogManager.getLogger(GameControllerIT.class);
+	private static Logger logger = LogManager.getLogger(GameControllerIT.class);
 
 	@Container
 	public static PostgreSQLContainer<?> postgreSQLContainer = extracted().withDatabaseName("test").withUsername("test")
@@ -78,9 +78,9 @@ class GameControllerIT {
 		// Initialize the PlayerBuilder
 		playerBuilder = new PlayerBuilder();
 		// Initialize the mocked Logger
-		LOGGER = spy(LOGGER);
+		logger = spy(logger);
 		// Spy on the GameController
-		controller = spy(new GameController(playerDAO, gameMapDAO, LOGGER));
+		controller = spy(new GameController(playerDAO, gameMapDAO, logger));
 
 		// Reset database before each test
 		resetDatabase();
@@ -148,7 +148,7 @@ class GameControllerIT {
 			em.close();
 		}
 
-		LOGGER.info("Player {} successfully added to map {}", addedPlayer.getName(), map.getName());
+		logger.info("Player {} successfully added to map {}", addedPlayer.getName(), map.getName());
 	}
 
 	@Test
@@ -180,7 +180,7 @@ class GameControllerIT {
 		// Assert: Verify that the exception message is as expected
 		assertEquals("Expected GameMap not found or Player not in this GameMap.", thrown.getMessage());
 
-		LOGGER.info("Test completed: testRemovePlayerFromMap_GameMapIsNull");
+		logger.info("Test completed: testRemovePlayerFromMap_GameMapIsNull");
 	}
 
 	@Test
@@ -387,7 +387,7 @@ class GameControllerIT {
 		assertTrue(result.isAlive());
 
 		// Verify logger call
-		verify(LOGGER).info("Player created: {}", playerName);
+		verify(logger).info("Player created: {}", playerName);
 	}
 
 	@Test
@@ -412,26 +412,7 @@ class GameControllerIT {
 		});
 	}
 
-	@Test
-	void testCreatePlayer_ValidPlayer() {
-		// Arrange: Setup valid parameters
-		String playerName = "ValidPlayer";
-		float health = 100;
-		float damage = 50;
 
-		// Act: Create a valid player
-		Player result = controller.createPlayer(playerName, health, damage);
-
-		// Assert: Verify the player was created successfully
-		assertNotNull(result);
-		assertEquals(playerName, result.getName());
-		assertEquals(health, result.getHealth(), 0.01);
-		assertEquals(damage, result.getDamage(), 0.01);
-		assertTrue(result.isAlive());
-
-		// Verify logger call
-		verify(LOGGER).info("Player created: {}", playerName);
-	}
 
 	@Test
 	void testCreatePlayer_SetsIsAliveCorrectly() {
@@ -517,7 +498,7 @@ class GameControllerIT {
 		assertTrue(players.isEmpty(), "The list of players should be empty");
 
 		// Verify that the correct log message was generated
-		LOGGER.info("Retrieved {} players from the database.", players.size());
+		logger.info("Retrieved {} players from the database.", players.size());
 	}
 
 	@Test
@@ -542,7 +523,7 @@ class GameControllerIT {
 		assertTrue(players.stream().anyMatch(p -> p.getName().equals("Player3")), "Player3 should be in the list");
 
 		// Verify that the correct log message was generated
-		LOGGER.info("Retrieved {} players from the database.", players.size());
+		logger.info("Retrieved {} players from the database.", players.size());
 	}
 
 	@Test
@@ -599,7 +580,7 @@ class GameControllerIT {
 			// Defender should be marked as not alive
 			assertFalse(updatedDefender.isAlive(), "Defender should be marked as not alive.");
 
-			LOGGER.info("Defender's health after attack: {}, isAlive: {}", updatedDefender.getHealth(),
+			logger.info("Defender's health after attack: {}, isAlive: {}", updatedDefender.getHealth(),
 					updatedDefender.isAlive());
 		} finally {
 			em.close();
