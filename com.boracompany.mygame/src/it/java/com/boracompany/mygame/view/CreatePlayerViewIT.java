@@ -128,6 +128,27 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 		}
 	}
 
+	
+
+	@Test
+	@GUITest
+	public void testShowAllPlayers() {
+		// Arrange: Create players
+		Player player1 = new PlayerBuilder().withName("Player1").withDamage(10).withHealth(100).build();
+		Player player2 = new PlayerBuilder().withName("Player2").withDamage(20).withHealth(200).build();
+
+		// Act: Show all players
+		GuiActionRunner.execute(() -> createPlayerView.showAllPlayers(Arrays.asList(player1, player2)));
+
+		// Assert: Players are displayed in the list
+		assertThat(window.list("ListPlayers").contents()).containsExactly(player1.toString(), player2.toString());
+	}
+
+	@Override
+	protected void onTearDown() throws Exception {
+		// Close Mockito mocks
+		closeable.close();
+	}
 	@Test
 	@GUITest
 	public void testCreatePlayerAndDelete() {
@@ -163,27 +184,6 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 			em.close();
 		}
 	}
-
-	@Test
-	@GUITest
-	public void testShowAllPlayers() {
-		// Arrange: Create players
-		Player player1 = new PlayerBuilder().withName("Player1").withDamage(10).withHealth(100).build();
-		Player player2 = new PlayerBuilder().withName("Player2").withDamage(20).withHealth(200).build();
-
-		// Act: Show all players
-		GuiActionRunner.execute(() -> createPlayerView.showAllPlayers(Arrays.asList(player1, player2)));
-
-		// Assert: Players are displayed in the list
-		assertThat(window.list("ListPlayers").contents()).containsExactly(player1.toString(), player2.toString());
-	}
-
-	@Override
-	protected void onTearDown() throws Exception {
-		// Close Mockito mocks
-		closeable.close();
-	}
-
 	@Test
 	@GUITest
 	public void testCreateMultiplePlayers() {
