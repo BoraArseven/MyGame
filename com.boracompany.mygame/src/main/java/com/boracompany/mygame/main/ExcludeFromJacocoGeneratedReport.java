@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 // This annotation is there to exclude methods or constructors from coverage.
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.METHOD, ElementType.CONSTRUCTOR})
+@Target({ ElementType.METHOD, ElementType.CONSTRUCTOR })
 public @interface ExcludeFromJacocoGeneratedReport {
 
 }
