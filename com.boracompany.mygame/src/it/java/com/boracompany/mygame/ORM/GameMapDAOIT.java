@@ -26,6 +26,7 @@ import com.boracompany.mygame.model.Player;
 import com.boracompany.mygame.model.PlayerBuilder;
 import com.boracompany.mygame.orm.GameMapDAO;
 import com.boracompany.mygame.orm.HibernateUtil;
+import com.boracompany.mygame.orm.PlayerDAOIMPL;
 
 @Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -496,6 +497,77 @@ public class GameMapDAOIT {
 
 		// Verify that the EntityManager is closed after the operation
 		Mockito.verify(spyEm).close();
+	}
+	@Test
+	void testCreatePlayerTriggersRollbackOnException() {
+	    // Arrange
+	    Player player = new PlayerBuilder().withName("Test Player").build();
+	    
+	    // Spy on EntityManagerFactory
+	    EntityManagerFactory emfSpy = Mockito.spy(emf);
+	    EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
+	    EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+	    Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
+	    Mockito.doThrow(new RuntimeException("Simulated Exception"))
+	           .when(emSpy).persist(Mockito.any(Player.class));
+	    Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
+
+	    PlayerDAOIMPL dao = new PlayerDAOIMPL(emfSpy);
+
+	    // Act & Assert
+	    RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+	        dao.createPlayer(player);
+	    });
+
+	    // Verify the rollback
+	    Mockito.verify(transactionSpy).rollback();
+	    Mockito.verify(emSpy).close();
+
+	    // Verify exception message
+	    assertEquals("Simulated Exception", exception.getMessage());
+	}
+	@Test
+	void testCreatePlayerFailsWhenTransactionIsNull() {
+	    // Arrange
+	    Player player = new PlayerBuilder().withName("Player").build();
+	    EntityManager emMock = Mockito.mock(EntityManager.class);
+	    Mockito.when(emMock.getTransaction()).thenReturn(null);
+
+	    EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
+	    Mockito.when(emfMock.createEntityManager()).thenReturn(emMock);
+
+	    PlayerDAOIMPL dao = new PlayerDAOIMPL(emfMock);
+
+	    // Act & Assert
+	    IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+	        dao.createPlayer(player);
+	    });
+
+	    // Verify exception message
+	    assertEquals("Transaction is null", exception.getMessage());
+	}
+
+	@Test
+	void testDeletePlayerFailsWhenTransactionIsNull() {
+	    // Arrange
+	    Player player = new Player();
+	    player.setId(1L);
+	    EntityManager emMock = Mockito.mock(EntityManager.class);
+	    Mockito.when(emMock.getTransaction()).thenReturn(null);
+
+	    EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
+	    Mockito.when(emfMock.createEntityManager()).thenReturn(emMock);
+
+	    PlayerDAOIMPL dao = new PlayerDAOIMPL(emfMock);
+
+	    // Act & Assert
+	    IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+	        dao.deletePlayer(player);
+	    });
+
+	    // Verify exception message
+	    assertEquals("Transaction is null", exception.getMessage());
 	}
 
 	@Test
@@ -979,4 +1051,131 @@ public class GameMapDAOIT {
 		assertTrue(exception.getCause() instanceof IllegalArgumentException);
 		assertTrue(exception.getCause().getMessage().contains("MapId can not be null"));
 	}
+	// Test for updatePlayer when player.getId() is not null
+	@Test
+	void testUpdatePlayer_withPlayerIdNotNull_exceptionThrown_playerIdNotNull() {
+	    // Arrange
+	    Player player = new PlayerBuilder().withName("Test Player").build();
+	    // Persist the player to assign an ID
+	    EntityManager em = emf.createEntityManager();
+	    EntityTransaction transaction = em.getTransaction();
+	    transaction.begin();
+	    em.persist(player);
+	    transaction.commit();
+	    em.close();
+
+	    // Spy on EntityManagerFactory and simulate exception
+	    EntityManagerFactory emfSpy = Mockito.spy(emf);
+	    EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
+	    EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+	    Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
+	    Mockito.doThrow(new RuntimeException("Simulated Exception"))
+	           .when(emSpy).merge(Mockito.any(Player.class));
+	    Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
+
+	    PlayerDAOIMPL dao = new PlayerDAOIMPL(emfSpy);
+
+	    // Act & Assert
+	    RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+	        dao.updatePlayer(player);
+	    });
+
+	    // Verify that rollback and close were called
+	    Mockito.verify(transactionSpy).rollback();
+	    Mockito.verify(emSpy).close();
+
+	    // Assert that the exception message is as expected
+	    assertEquals("Simulated Exception", exception.getMessage());
+	}
+
+	// Test for deletePlayer when player.getId() is not null
+	@Test
+	void testDeletePlayer_withPlayerIdNotNull_exceptionThrown_playerIdNotNull() {
+	    // Arrange
+	    Player player = new PlayerBuilder().withName("Test Player").build();
+	    // Persist the player to assign an ID
+	    EntityManager em = emf.createEntityManager();
+	    EntityTransaction transaction = em.getTransaction();
+	    transaction.begin();
+	    em.persist(player);
+	    transaction.commit();
+	    em.close();
+
+	    // Spy on EntityManagerFactory and simulate exception
+	    EntityManagerFactory emfSpy = Mockito.spy(emf);
+	    EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
+	    EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+	    Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
+	    Mockito.when(emSpy.find(Player.class, player.getId())).thenReturn(player);
+	    Mockito.doThrow(new RuntimeException("Simulated Exception"))
+	           .when(emSpy).remove(Mockito.any(Player.class));
+	    Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
+
+	    PlayerDAOIMPL dao = new PlayerDAOIMPL(emfSpy);
+
+	    // Act & Assert
+	    RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+	        dao.deletePlayer(player);
+	    });
+
+	    // Verify that rollback and close were called
+	    Mockito.verify(transactionSpy).rollback();
+	    Mockito.verify(emSpy).close();
+
+	    // Assert that the exception message is as expected
+	    assertEquals("Simulated Exception", exception.getMessage());
+	}
+
+	// Test for updatePlayer when player.getId() is null
+	@Test
+	void testUpdatePlayer_withNullPlayerId_exceptionThrown_playerIdIsNull() {
+	    // Arrange
+	    Player player = new PlayerBuilder().withName("Test Player").build();
+	    // player.getId() is null
+
+	    // Spy on EntityManagerFactory and simulate exception
+	    EntityManagerFactory emfSpy = Mockito.spy(emf);
+	    EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
+	    EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+	    Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
+	    Mockito.doThrow(new RuntimeException("Simulated Exception"))
+	           .when(emSpy).merge(Mockito.any(Player.class));
+	    Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
+
+	    PlayerDAOIMPL dao = new PlayerDAOIMPL(emfSpy);
+
+	    // Act & Assert
+	    RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+	        dao.updatePlayer(player);
+	    });
+
+	    // Verify that rollback and close were called
+	    Mockito.verify(transactionSpy).rollback();
+	    Mockito.verify(emSpy).close();
+
+	    // Assert that the exception message is as expected
+	    assertEquals("Simulated Exception", exception.getMessage());
+	}
+
+	// Test for deletePlayer when player.getId() is null
+	@Test
+	void testDeletePlayer_withNullPlayerId_exceptionThrown_playerIdIsNull() {
+	    // Arrange
+	    Player player = new PlayerBuilder().withName("Test Player").build();
+	    // player.getId() is null
+
+	    PlayerDAOIMPL dao = new PlayerDAOIMPL(emf);
+
+	    // Act & Assert
+	    IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+	        dao.deletePlayer(player);
+	    });
+
+	    // Assert that the exception message is as expected
+	    assertEquals("Tried to delete non-existing player with ID N/A", exception.getMessage());
+	}
+
 }

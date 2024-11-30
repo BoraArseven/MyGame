@@ -1,8 +1,14 @@
 package com.boracompany.mygame.model;
 
-import java.util.Objects;
-
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "app_player") // Table name for the Player entity
@@ -85,20 +91,20 @@ public class Player {
 		this.map = map;
 	}
 
+	
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null || getClass() != obj.getClass())
-			return false;
-		Player player = (Player) obj;
-		return Objects.equals(id, player.id); // Only compare by ID if present
+	    if (this == obj) return true;
+	    if (obj == null || getClass() != obj.getClass()) return false;
+	    Player player = (Player) obj;
+	    return id != null && id.equals(player.id);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id); // Hash based on ID only
+	    return id != null ? id.hashCode() : 0;
 	}
+
 
 	@Override
 	public String toString() {

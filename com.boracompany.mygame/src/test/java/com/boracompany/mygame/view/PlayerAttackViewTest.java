@@ -8,10 +8,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -29,6 +32,7 @@ import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import com.boracompany.mygame.controller.GameController;
@@ -74,7 +78,7 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 	public void reset() {
 		GuiActionRunner.execute(() -> playerAttackView.resetErrorLabel());
 	}
-
+	
 	@Test
 	@GUITest
 	public void testMapListAndPlayerListsPopulate() {
@@ -118,6 +122,125 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 		assertThat(attackerListModel.getElementAt(1)).isEqualTo(testPlayer2);
 		assertThat(defenderListModel.getElementAt(0)).isEqualTo(testPlayer1);
 		assertThat(defenderListModel.getElementAt(1)).isEqualTo(testPlayer2);
+	}
+	@Test
+	@GUITest
+	public void testAttackButtonClickedWhenAttackerIsNull() {
+	    // Set up the map and defender
+	    GameMap testMap = new GameMap(1L, "TestMap");
+	    Player testDefender = new Player("Defender", 80, 15, true);
+	    testDefender.setMap(testMap);
+
+	    // Mock the GameController behavior
+	    when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+	    when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Collections.singletonList(testDefender));
+
+	    // Inject mock controller and set up the view
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.setGameController(mockGameController);
+	        playerAttackView.getMapListModel().addElement(testMap);
+	    });
+
+	    // Select the map
+	    window.list("mapList").selectItem(0);
+
+	    // Ensure that no attacker is selected
+	    assertThat(window.list("attackerList").selection()).isEmpty();
+
+	    // Select the defender
+	    window.list("defenderList").selectItem(0);
+
+	    // Manually enable the attack button for testing
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.getBtnAttack().setEnabled(true);
+	    });
+
+	    // Click the attack button
+	    window.button("btnAttack").click();
+
+	    // Verify that the error message is displayed
+	    window.label("errorLabel").requireText("Attacker and defender must be selected.");
+
+	    // Verify that the attack method was not called
+	    verify(mockGameController, times(0)).attack(any(), any());
+	}
+	@Test
+	@GUITest
+	public void testAttackButtonClickedWhenDefenderIsNull() {
+	    // Set up the map and attacker
+	    GameMap testMap = new GameMap(1L, "TestMap");
+	    Player testAttacker = new Player("Attacker", 80, 15, true);
+	    testAttacker.setMap(testMap);
+
+	    // Mock the GameController behavior
+	    when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+	    when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Collections.singletonList(testAttacker));
+
+	    // Inject mock controller and set up the view
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.setGameController(mockGameController);
+	        playerAttackView.getMapListModel().addElement(testMap);
+	    });
+
+	    // Select the map
+	    window.list("mapList").selectItem(0);
+
+	    // Select the attacker
+	    window.list("attackerList").selectItem(0);
+
+	    // Ensure that no defender is selected
+	    assertThat(window.list("defenderList").selection()).isEmpty();
+
+	    // Manually enable the attack button for testing
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.getBtnAttack().setEnabled(true);
+	    });
+
+	    // Click the attack button
+	    window.button("btnAttack").click();
+
+	    // Verify that the error message is displayed
+	    window.label("errorLabel").requireText("Attacker and defender must be selected.");
+
+	    // Verify that the attack method was not called
+	    verify(mockGameController, times(0)).attack(any(), any());
+	}
+	@Test
+	@GUITest
+	public void testAttackButtonClickedWhenNeitherAttackerNorDefenderSelected() {
+	    // Set up the map
+	    GameMap testMap = new GameMap(1L, "TestMap");
+
+	    // Mock the GameController behavior
+	    when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+	    when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Collections.emptyList());
+
+	    // Inject mock controller and set up the view
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.setGameController(mockGameController);
+	        playerAttackView.getMapListModel().addElement(testMap);
+	    });
+
+	    // Select the map
+	    window.list("mapList").selectItem(0);
+
+	    // Ensure that no attacker or defender is selected
+	    assertThat(window.list("attackerList").selection()).isEmpty();
+	    assertThat(window.list("defenderList").selection()).isEmpty();
+
+	    // Manually enable the attack button for testing
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.getBtnAttack().setEnabled(true);
+	    });
+
+	    // Click the attack button
+	    window.button("btnAttack").click();
+
+	    // Verify that the error message is displayed
+	    window.label("errorLabel").requireText("Attacker and defender must be selected.");
+
+	    // Verify that the attack method was not called
+	    verify(mockGameController, times(0)).attack(any(), any());
 	}
 
 	@Test
@@ -840,6 +963,119 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 		// Verify that the correct error message is displayed
 		window.label("errorLabel").requireText("Attacker and defender must be selected.");
 	}
+	@Test
+	@GUITest
+	public void testAttackButtonClickedWhenAttackerEqualsDefender() {
+	    // Set up the map and player
+	    GameMap testMap = new GameMap(1L, "TestMap");
+	    Player testPlayer = new Player("Player1", 100, 20, true);
+	    testPlayer.setMap(testMap);
+
+	    // Mock the GameController behavior
+	    when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+	    when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Collections.singletonList(testPlayer));
+
+	    // Inject mock controller and set up the view
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.setGameController(mockGameController);
+	        playerAttackView.getMapListModel().addElement(testMap);
+	    });
+
+	    // Select the map
+	    window.list("mapList").selectItem(0);
+
+	    // Select the same player as both attacker and defender
+	    window.list("attackerList").selectItem(0);
+	    window.list("defenderList").selectItem(0);
+
+	    // Click the attack button
+	    window.button("btnAttack").click();
+
+	    // Verify that the error message is displayed
+	    window.label("errorLabel").requireText("A player cannot attack itself.");
+
+	    // Verify that the attack method was not called
+	    verify(mockGameController, times(0)).attack(any(), any());
+	}
+	@Test
+	@GUITest
+	public void testAttackButtonClickedWhenAttackSucceeds() {
+	    // Set up the map and players
+	    GameMap testMap = new GameMap(1L, "TestMap");
+	    Player testAttacker = new Player("Attacker", 100, 20, true);
+	    Player testDefender = new Player("Defender", 80, 15, true);
+	    testAttacker.setMap(testMap);
+	    testDefender.setMap(testMap);
+
+	    // Mock the GameController behavior
+	    when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+	    when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Arrays.asList(testAttacker, testDefender));
+
+	    // Inject mock controller and set up the view
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.setGameController(mockGameController);
+	        playerAttackView.getMapListModel().addElement(testMap);
+	    });
+
+	    // Select the map
+	    window.list("mapList").selectItem(0);
+
+	    // Select the attacker and defender
+	    window.list("attackerList").selectItem(0);
+	    window.list("defenderList").selectItem(1);
+
+	    // Ensure the attack button is enabled
+	    window.button("btnAttack").requireEnabled();
+
+	    // Click the attack button
+	    window.button("btnAttack").click();
+
+	    // Verify that the attack method was called
+	    verify(mockGameController, times(1)).attack(testAttacker, testDefender);
+
+	    // Verify that the error message is cleared
+	    window.label("errorLabel").requireText("");
+	}
+	@Test
+	@GUITest
+	public void testAttackButtonClickedWhenAttackThrowsException() {
+	    // Set up the map and players
+	    GameMap testMap = new GameMap(1L, "TestMap");
+	    Player testAttacker = new Player("Attacker", 100, 20, true);
+	    Player testDefender = new Player("Defender", 80, 15, true);
+	    testAttacker.setMap(testMap);
+	    testDefender.setMap(testMap);
+
+	    // Mock the GameController behavior
+	    when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+	    when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Arrays.asList(testAttacker, testDefender));
+	    doThrow(new RuntimeException("Attack failed")).when(mockGameController).attack(testAttacker, testDefender);
+
+	    // Inject mock controller and set up the view
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.setGameController(mockGameController);
+	        playerAttackView.getMapListModel().addElement(testMap);
+	    });
+
+	    // Select the map
+	    window.list("mapList").selectItem(0);
+
+	    // Select the attacker and defender
+	    window.list("attackerList").selectItem(0);
+	    window.list("defenderList").selectItem(1);
+
+	    // Ensure the attack button is enabled
+	    window.button("btnAttack").requireEnabled();
+
+	    // Click the attack button
+	    window.button("btnAttack").click();
+
+	    // Verify that the attack method was called
+	    verify(mockGameController, times(1)).attack(testAttacker, testDefender);
+
+	    // Verify that the error message is displayed
+	    window.label("errorLabel").requireText("Failed to perform attack.");
+	}
 
 	@Test
 	@GUITest
@@ -883,6 +1119,308 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 
 		// Verify the warning log is generated (optionally, use LogCaptor or verify
 		// logger)
+	}
+	@Test
+	public void testAttackButtonActionListener() {
+	    // Retrieve the ActionListeners attached to the "Attack" button
+		GuiActionRunner.execute(() -> {
+	    ActionListener[] listeners = playerAttackView.getBtnAttack().getActionListeners();
+
+	    // Assert that there is exactly one listener and it is not null
+	    assertThat(listeners).hasSize(1);
+	    assertThat(listeners[0]).isNotNull();
+
+	    // Simulate a click on the "Attack" button
+	    ActionEvent event = new ActionEvent(playerAttackView.getBtnAttack(), ActionEvent.ACTION_PERFORMED, "Attack");
+	    listeners[0].actionPerformed(event);
+		});
+	    // Verify that the attackSelectedPlayers() method was invoked
+	    verify(mockGameController, never()).attack(any(), any()); // No players selected in this case
+	}
+	@Test
+	@GUITest
+	public void testAttackButtonClickWithNullAttackerAndDefender() {
+	    // Arrange
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.getAttackerListModel().clear();
+	        playerAttackView.getDefenderListModel().clear();
+	    });
+
+	    window.button("btnAttack").click();
+
+	    // there should not be an error since button was not enable
+	    window.label("errorLabel").requireText("");
+	}
+
+	@Test
+	@GUITest
+	public void testAttackButtonClickWithSelfAttack() {
+	    // Set up a map and a single player
+	    GameMap testMap = new GameMap(1L, "TestMap");
+	    Player testPlayer = new Player("Player1", 100, 20, true);
+	    testPlayer.setMap(testMap);
+
+	    // Mock the GameController
+	    when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+	    when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Collections.singletonList(testPlayer));
+
+	    // Populate the map and player lists
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.getMapListModel().addElement(testMap);
+	        playerAttackView.getAttackerListModel().addElement(testPlayer);
+	        playerAttackView.getDefenderListModel().addElement(testPlayer);
+	    });
+
+	    // Select the player as both attacker and defender
+	    window.list("attackerList").selectItem(0);
+	    window.list("defenderList").selectItem(0);
+
+	    // Click the "Attack" button
+	    window.button("btnAttack").click();
+
+	    // Verify the error message
+	    window.label("errorLabel").requireText("A player cannot attack itself.");
+	}
+	@Test
+	@GUITest
+	public void testAttackButtonClickWithValidAttack() {
+	    // Arrange
+	    Player player1 = new PlayerBuilder().withName("Player1").withHealth(100).withDamage(20).build();
+	    Player player2 = new PlayerBuilder().withName("Player2").withHealth(80).withDamage(15).build();
+	    GameMap testMap = new GameMap(1L, "TestMap");
+
+	    // Associate players with the map
+	    player1.setMap(testMap);
+	    player2.setMap(testMap);
+
+	    // Mock GameController behavior
+	    when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+	    when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Arrays.asList(player1, player2));
+
+	    // Act
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.getMapListModel().addElement(testMap);
+	        playerAttackView.refreshMapList(); // Populate map list
+	    });
+	    window.list("mapList").selectItem(0); // Select the map
+
+	    GuiActionRunner.execute(() -> {
+	        // Manually add players to attacker and defender lists
+	        playerAttackView.getAttackerListModel().addElement(player1);
+	        playerAttackView.getDefenderListModel().addElement(player2);
+	        // Select attacker and defender
+	        playerAttackView.getAttackerList().setSelectedValue(player1, true);
+	        playerAttackView.getDefenderList().setSelectedValue(player2, true);
+	    });
+
+	    // Click the attack button
+	    window.button("btnAttack").click();
+
+	    // Assert
+	    verify(mockGameController).attack(player1, player2);
+	}
+	@Test
+	@GUITest
+	public void testAttackButtonClickedWithNoAttackerSelected() {
+	    // Set up the map and defender
+	    GameMap testMap = new GameMap(1L, "TestMap");
+	    Player testDefender = new Player("Defender", 80, 15, true);
+	    testDefender.setMap(testMap);
+
+	    // Mock the GameController behavior
+	    when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+	    when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Collections.singletonList(testDefender));
+
+	    // Inject mock controller and set up the view
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.setGameController(mockGameController);
+	        playerAttackView.getMapListModel().addElement(testMap);
+	    });
+
+	    // Select the map
+	    window.list("mapList").selectItem(0);
+
+	    // Select the defender but no attacker
+	    window.list("defenderList").selectItem(0);
+
+	    // Force enable the button for testing
+	    GuiActionRunner.execute(() -> playerAttackView.getBtnAttack().setEnabled(true));
+
+	    // Click the attack button
+	    window.button("btnAttack").click();
+
+	    // Verify the error message
+	    window.label("errorLabel").requireText("Attacker and defender must be selected.");
+
+	    // Ensure no attack occurred
+	    verify(mockGameController, times(0)).attack(any(), any());
+	}
+
+	@Test
+	@GUITest
+	public void testAttackButtonClickedWithNoDefenderSelected() {
+	    // Set up the map and attacker
+	    GameMap testMap = new GameMap(1L, "TestMap");
+	    Player testAttacker = new Player("Attacker", 100, 20, true);
+	    testAttacker.setMap(testMap);
+
+	    // Mock the GameController behavior
+	    when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+	    when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Collections.singletonList(testAttacker));
+
+	    // Inject mock controller and set up the view
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.setGameController(mockGameController);
+	        playerAttackView.getMapListModel().addElement(testMap);
+	    });
+
+	    // Select the map
+	    window.list("mapList").selectItem(0);
+
+	    // Select the attacker but no defender
+	    window.list("attackerList").selectItem(0);
+
+	    // Force enable the button for testing
+	    GuiActionRunner.execute(() -> playerAttackView.getBtnAttack().setEnabled(true));
+
+	    // Click the attack button
+	    window.button("btnAttack").click();
+
+	    // Verify the error message
+	    window.label("errorLabel").requireText("Attacker and defender must be selected.");
+
+	    // Ensure no attack occurred
+	    verify(mockGameController, times(0)).attack(any(), any());
+	}
+	@Test
+	@GUITest
+	public void testActionListenerAddedToBtnAttack() {
+	    // Get the list of ActionListeners attached to the button
+	    ActionListener[] listeners = playerAttackView.getBtnAttack().getActionListeners();
+
+	    // Assert that the listener is attached to the button
+	    assertThat(listeners).hasSize(1);
+
+	    // Verify that the attached listener calls attackSelectedPlayers when triggered
+	    GuiActionRunner.execute(() -> {
+	        ActionEvent event = new ActionEvent(playerAttackView.getBtnAttack(), ActionEvent.ACTION_PERFORMED, "Attack");
+	        listeners[0].actionPerformed(event);
+	    });
+
+	    // Ensure no exceptions occur and that the button click was handled
+	    verify(mockGameController, times(0)).attack(any(), any()); // No players selected, so attack won't be called
+	}
+
+	@Test
+	@GUITest
+	public void testAddActionListenerToBtnAttack() {
+	    // Arrange
+	    JButton btnAttack = playerAttackView.getBtnAttack();
+
+	    // Get the list of ActionListeners attached to the button
+	    ActionListener[] listeners = btnAttack.getActionListeners();
+
+	    // Assert that exactly one listener is attached to the button
+	    assertThat(listeners).hasSize(1);
+
+	    // Simulate a button click to ensure the listener is triggered
+	    GuiActionRunner.execute(() -> {
+	        ActionEvent event = new ActionEvent(btnAttack, ActionEvent.ACTION_PERFORMED, "Attack");
+	        listeners[0].actionPerformed(event);
+	    });
+
+	    // Assert
+	    // Verify that `attackSelectedPlayers` was triggered by the ActionListener
+	    verify(mockGameController, times(0)).attack(any(), any()); // Ensure no attack occurred as no players are selected
+	}
+
+
+	@Test
+	@GUITest
+	public void testAttackButtonClickedWithValidAttack() {
+	    GameMap testMap = new GameMap(1L, "TestMap");
+	    Player testAttacker = new Player("Attacker", 100, 20, true);
+	    Player testDefender = new Player("Defender", 80, 15, true);
+	    testAttacker.setMap(testMap);
+	    testDefender.setMap(testMap);
+
+	    // Mock GameController
+	    when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+	    when(mockGameController.getPlayersFromMap(testMap.getId()))
+	            .thenReturn(Arrays.asList(testAttacker, testDefender));
+
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.setGameController(mockGameController);
+	        playerAttackView.getMapListModel().addElement(testMap);
+	    });
+
+	    window.list("mapList").selectItem(0);
+	    window.list("attackerList").selectItem(0);
+	    window.list("defenderList").selectItem(1);
+
+	    // Click the attack button
+	    window.button("btnAttack").click();
+
+	    // Verify attack occurred
+	    verify(mockGameController, times(1)).attack(testAttacker, testDefender);
+
+	    // Verify no error message
+	    window.label("errorLabel").requireText("");
+	}
+
+	@Test
+	@GUITest
+	public void testAttackButtonClickedWithSelfAttack() {
+	    GameMap testMap = new GameMap(1L, "TestMap");
+	    Player testPlayer = new Player("Player1", 100, 20, true);
+	    testPlayer.setMap(testMap);
+
+	    // Mock GameController
+	    when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+	    when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Collections.singletonList(testPlayer));
+
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.setGameController(mockGameController);
+	        playerAttackView.getMapListModel().addElement(testMap);
+	    });
+
+	    window.list("mapList").selectItem(0);
+	    window.list("attackerList").selectItem(0);
+	    window.list("defenderList").selectItem(0);
+
+	    // Click the attack button
+	    window.button("btnAttack").click();
+
+	    // Verify error message
+	    window.label("errorLabel").requireText("A player cannot attack itself.");
+
+	    // Ensure no attack occurred
+	    verify(mockGameController, times(0)).attack(any(), any());
+	}
+
+	@Test
+	@GUITest
+	public void testSetGameControllerUpdatesAttackListener() {
+	    // Arrange: Create a mock GameController
+	    GameController newGameController = Mockito.mock(GameController.class);
+
+	    // Act: Set the new GameController in the view
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.setGameController(newGameController);
+	    });
+
+	    // Simulate clicking the attack button
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.getAttackerListModel().addElement(new Player("Attacker", 100, 20, true));
+	        playerAttackView.getDefenderListModel().addElement(new Player("Defender", 80, 15, true));
+	        playerAttackView.getAttackerList().setSelectedIndex(0);
+	        playerAttackView.getDefenderList().setSelectedIndex(0);
+	    });
+
+	    window.button("btnAttack").click();
+
+	    // Assert: Verify that the attack method was invoked in the new GameController
+	    verify(newGameController, times(1)).attack(any(Player.class), any(Player.class));
 	}
 
 }

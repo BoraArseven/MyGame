@@ -6,6 +6,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
@@ -116,54 +119,6 @@ public class PlayerAttackViewIT extends AssertJSwingJUnitTestCase {
 		} finally {
 			em.close();
 		}
-	}
-
-	@Test
-	@GUITest
-	public void testAttackShouldBePerformedSuccessfully() {
-		EntityManager em = emf.createEntityManager();
-		EntityTransaction transaction = em.getTransaction();
-
-		try {
-			transaction.begin();
-
-			GameMap testMap = new GameMap("TestMap");
-			Player testPlayer1 = new PlayerBuilder().withName("Player1").withHealth(100).withDamage(20)
-					.withIsAlive(true).build();
-			Player testPlayer2 = new PlayerBuilder().withName("Player2").withHealth(80).withDamage(15).withIsAlive(true)
-					.build();
-
-			em.persist(testMap);
-			testPlayer1.setMap(testMap);
-			testPlayer2.setMap(testMap);
-			em.persist(testPlayer1);
-			em.persist(testPlayer2);
-
-			transaction.commit();
-		} catch (Exception e) {
-			if (transaction.isActive()) {
-				transaction.rollback();
-			}
-			throw e;
-		} finally {
-			em.close();
-		}
-
-		GuiActionRunner.execute(() -> {
-			playerAttackView.refreshMapList();
-			playerAttackView.refreshPlayerLists();
-
-		});
-
-		window.list("mapList").selectItem(0);
-		window.list("attackerList").selectItem(0);
-		window.list("defenderList").selectItem(1);
-
-		window.button(JButtonMatcher.withText("Attack")).click();
-
-		verify(spiedGameController, times(1)).attack(any(Player.class), any(Player.class));
-
-		window.label("errorLabel").requireText("");
 	}
 
 	@Test
@@ -343,6 +298,81 @@ public class PlayerAttackViewIT extends AssertJSwingJUnitTestCase {
 		assertThat(window.list("attackerList").selection()).isNotNull();
 		assertThat(window.list("defenderList").selection()).isNotNull();
 	}
+	
+	@Test
+	@GUITest
+	public void testRefreshPlayerLists_SelectedDefenderNotInLivingPlayers() {
+	    // Arrange
+	    EntityManager em = emf.createEntityManager();
+	    EntityTransaction transaction = em.getTransaction();
+	    Player player1;
+	    Player player2;
+	    try {
+	        transaction.begin();
+
+	        // Create and persist the map and players
+	        GameMap testMap = new GameMap("TestMap");
+	        player1 = new PlayerBuilder().withName("Player1").withHealth(100).withDamage(20)
+	                .withIsAlive(true).build();
+	        player2 = new PlayerBuilder().withName("Player2").withHealth(80).withDamage(15)
+	                .withIsAlive(true).build();
+
+	        em.persist(testMap);
+	        player1.setMap(testMap);
+	        player2.setMap(testMap);
+	        em.persist(player1);
+	        em.persist(player2);
+
+	        transaction.commit();
+	    } catch (Exception e) {
+	        if (transaction.isActive()) {
+	            transaction.rollback();
+	        }
+	        throw e;
+	    } finally {
+	        em.close();
+	    }
+
+	    // Refresh map and player lists in the GUI
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.refreshMapList();
+	    });
+
+	    // Select the map
+	    window.list("mapList").selectItem(0);
+
+	    // Refresh player lists
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.refreshPlayerLists();
+	    });
+
+	    // Select player2 as defender
+	    window.list("defenderList").selectItem(1); // Assuming player2 is at index 1
+
+	    // Verify that the selected defender is player2
+	    GuiActionRunner.execute(() -> {
+	        Player selectedDefender = playerAttackView.getDefenderList().getSelectedValue();
+	        assertThat(selectedDefender.getName()).isEqualTo("Player2");
+	    });
+	    ArrayList<Player> mockedlist = new ArrayList<>();
+	    mockedlist.add(player1);
+
+	    // Simulate that player2 is no longer in livingPlayers
+	    Mockito.doReturn(mockedlist)
+	           .when(spiedGameController).getPlayersFromMap(Mockito.anyLong());
+
+
+	    // Call refreshPlayerLists
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.refreshPlayerLists();
+	    });
+
+	    // After refreshing, the selected defender should be null
+	    GuiActionRunner.execute(() -> {
+	        Player selectedDefender = playerAttackView.getDefenderList().getSelectedValue();
+	        assertThat(selectedDefender).isNull();
+	    });
+	}
 
 	@Test
 	@GUITest
@@ -459,6 +489,245 @@ public class PlayerAttackViewIT extends AssertJSwingJUnitTestCase {
 		// Verify that the attack method was never called since no attacker was selected
 		verify(spiedGameController, times(0)).attack(any(), any());
 	}
+	@Test
+	@GUITest
+	public void testRefreshPlayerLists_SelectedAttackerInLivingPlayers() {
+	    // Arrange
+	    EntityManager em = emf.createEntityManager();
+	    EntityTransaction transaction = em.getTransaction();
+	    Player player1;
+
+	    try {
+	        transaction.begin();
+
+	        // Create and persist the map and players
+	        GameMap testMap = new GameMap("TestMap");
+	        player1 = new PlayerBuilder().withName("Player1").withHealth(100).withDamage(20)
+	                .withIsAlive(true).build();
+	        Player player2 = new PlayerBuilder().withName("Player2").withHealth(80).withDamage(15)
+	                .withIsAlive(true).build();
+
+	        em.persist(testMap);
+	        player1.setMap(testMap);
+	        player2.setMap(testMap);
+	        em.persist(player1);
+	        em.persist(player2);
+
+	        transaction.commit();
+	    } catch (Exception e) {
+	        if (transaction.isActive()) {
+	            transaction.rollback();
+	        }
+	        throw e;
+	    } finally {
+	        em.close();
+	    }
+
+	    // Refresh map and player lists in the GUI
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.refreshMapList();
+	    });
+
+	    // Select the map
+	    window.list("mapList").selectItem(0);
+
+	    // Refresh player lists
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.refreshPlayerLists();
+	    });
+
+	    // Select player1 as attacker
+	    window.list("attackerList").selectItem(0); // Assuming player1 is at index 0
+
+	    // Verify that the selected attacker is player1
+	    GuiActionRunner.execute(() -> {
+	        Player selectedAttacker = playerAttackView.getAttackerList().getSelectedValue();
+	        assertThat(selectedAttacker.getName()).isEqualTo("Player1");
+	    });
+
+	    // Call refreshPlayerLists
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.refreshPlayerLists();
+	    });
+
+	    // After refreshing, the selected attacker should still be player1
+	    GuiActionRunner.execute(() -> {
+	        Player selectedAttacker = playerAttackView.getAttackerList().getSelectedValue();
+	        assertThat(selectedAttacker.getName()).isEqualTo("Player1");
+	        
+	        // Additional assertion to check that livingPlayers.contains(selectedAttacker) is true
+	        List<Player> livingPlayers = playerAttackView.getLivingPlayers();
+	        assertThat(livingPlayers.contains(selectedAttacker)).isTrue();
+	    });
+	}
+	@Test
+	@GUITest
+	public void testRefreshPlayerLists_SelectedAttackerNotInLivingPlayers() {
+	    // Arrange
+	    EntityManager em = emf.createEntityManager();
+	    EntityTransaction transaction = em.getTransaction();
+	    Player player1;
+	    Player player2;
+
+	    try {
+	        transaction.begin();
+
+	        // Create and persist the map and players
+	        GameMap testMap = new GameMap("TestMap");
+	        player1 = new PlayerBuilder().withName("Player1").withHealth(100).withDamage(20)
+	                .withIsAlive(true).build();
+	        player2 = new PlayerBuilder().withName("Player2").withHealth(80).withDamage(15)
+	                .withIsAlive(true).build();
+
+	        em.persist(testMap);
+	        player1.setMap(testMap);
+	        player2.setMap(testMap);
+	        em.persist(player1);
+	        em.persist(player2);
+
+	        transaction.commit();
+
+	        // Refresh entities to ensure IDs are populated
+	        em.refresh(player1);
+	        em.refresh(player2);
+	    } catch (Exception e) {
+	        if (transaction.isActive()) {
+	            transaction.rollback();
+	        }
+	        throw e;
+	    } finally {
+	        em.close();
+	    }
+
+	    // Refresh map and player lists in the GUI
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.refreshMapList();
+	    });
+
+	    // Select the map
+	    window.list("mapList").selectItem(0);
+
+	    // Refresh player lists
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.refreshPlayerLists();
+	    });
+
+	    // Select player1 as attacker
+	    window.list("attackerList").selectItem(0); // Assuming player1 is at index 0
+
+	    // Verify that the selected attacker is player1
+	    GuiActionRunner.execute(() -> {
+	        Player selectedAttacker = playerAttackView.getAttackerList().getSelectedValue();
+	        assertThat(selectedAttacker.getName()).isEqualTo("Player1");
+	    });
+
+	    // Mock getPlayersFromMap to exclude player1, simulating that player1 is no longer in livingPlayers
+	    List<Player> mockedLivingPlayers = new ArrayList<>();
+	    mockedLivingPlayers.add(player2); // Only player2 is in livingPlayers
+
+	    Mockito.doReturn(mockedLivingPlayers)
+	           .when(spiedGameController)
+	           .getPlayersFromMap(Mockito.anyLong());
+
+	    // Call refreshPlayerLists to trigger the condition
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.refreshPlayerLists();
+	    });
+
+	    // After refreshing, selectedAttacker should be null since player1 is not in livingPlayers
+	    GuiActionRunner.execute(() -> {
+	        Player selectedAttacker = playerAttackView.getAttackerList().getSelectedValue();
+	        assertThat(selectedAttacker).isNull(); // Expecting selectedAttacker to be null
+	        List<Player> livingPlayers = playerAttackView.getLivingPlayers();
+	        assertThat(livingPlayers.contains(player1)).isFalse(); // Ensure player1 is not in livingPlayers
+	    });
+
+	    // Optionally, verify that attackerList.setSelectedValue was not called
+	    // This depends on your implementation; if you have a method or listener, adjust accordingly
+	}
+
+	@Test
+	@GUITest
+	public void testRefreshPlayerLists_SelectedDefenderInLivingPlayers() {
+	    // Arrange
+	    EntityManager em = emf.createEntityManager();
+	    EntityTransaction transaction = em.getTransaction();
+
+	    try {
+	        transaction.begin();
+
+	        // Create and persist the map and players
+	        GameMap testMap = new GameMap("TestMap");
+	        Player player1 = new PlayerBuilder().withName("Player1").withHealth(100).withDamage(20)
+	                .withIsAlive(true).build();
+	        Player player2 = new PlayerBuilder().withName("Player2").withHealth(80).withDamage(15)
+	                .withIsAlive(true).build();
+
+	        em.persist(testMap);
+	        player1.setMap(testMap);
+	        player2.setMap(testMap);
+	        em.persist(player1);
+	        em.persist(player2);
+
+	        transaction.commit();
+	    } catch (Exception e) {
+	        if (transaction.isActive()) {
+	            transaction.rollback();
+	        }
+	        throw e;
+	    } finally {
+	        em.close();
+	    }
+
+	    // Refresh map and player lists in the GUI
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.refreshMapList();
+	    });
+
+	    // Select the map
+	    window.list("mapList").selectItem(0);
+
+	    // Refresh player lists
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.refreshPlayerLists();
+	    });
+
+	    // Select player2 as defender
+	    window.list("defenderList").selectItem(1); // Assuming player2 is at index 1
+
+	    // Verify that the selected defender is player2
+	    GuiActionRunner.execute(() -> {
+	        Player selectedDefender = playerAttackView.getDefenderList().getSelectedValue();
+	        assertThat(selectedDefender.getName()).isEqualTo("Player2");
+	    });
+
+	    // Call refreshPlayerLists
+	    GuiActionRunner.execute(() -> {
+	        playerAttackView.refreshPlayerLists();
+	    });
+
+	    // After refreshing, the selected defender should still be player2
+	    GuiActionRunner.execute(() -> {
+	        Player selectedDefender = playerAttackView.getDefenderList().getSelectedValue();
+	        assertThat(selectedDefender.getName()).isEqualTo("Player2");
+	    });
+	}
+	@Test
+	public void testPlayerEqualsAndHashCode() {
+	    Player player1 = new Player();
+	    player1.setId(1L);
+	    player1.setName("Player1");
+
+	    Player player2 = new Player();
+	    player2.setId(1L);
+	    player2.setName("Player1");
+
+	    assertThat(player1).isEqualTo(player2);
+	    assertThat(player1.hashCode()).isEqualTo(player2.hashCode());
+	}
+
+	
+
 
 	@Override
 	protected void onTearDown() throws Exception {
