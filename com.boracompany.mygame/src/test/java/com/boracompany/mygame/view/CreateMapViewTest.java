@@ -528,7 +528,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 		GuiActionRunner.execute(() -> createMapView.getDeleteButton().doClick());
 
 		// Assert: Verify that the error message "No map selected" is displayed
-		window.label("ErrorMessageLabel").requireText("No map selected");
+		window.label("ErrorMessageLabel").requireText("No map selected to delete.");
 
 		// Verify that the map list remains empty
 		DefaultListModel<GameMap> listModel = createMapView.getListMapsModel();

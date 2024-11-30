@@ -163,15 +163,19 @@ public class CreateMapView extends JFrame {
 		getDeleteButton().setName("DeleteButton");
 		getDeleteButton().setEnabled(false);
 		getDeleteButton().addActionListener(e -> {
-			GameMap selectedMap = list.getSelectedValue();
-			if (selectedMap != null) {
-				// Call mapRemoved() if a map is selected
-				mapRemoved(selectedMap);
-			} else {
-				// Show error message when no map is selected
-				showError("No map selected", null);
-			}
+		    GameMap selectedMap = getListMaps().getSelectedValue();
+		    try {
+		        if (selectedMap != null) {
+		            gameController.deleteMap(selectedMap.getId());
+		            refreshMapList();
+		        } else {
+		            errorMessageLabel.setText("No map selected to delete.");
+		        }
+		    } catch (Exception ex) {
+		        errorMessageLabel.setText("Failed to remove map from the database: " + selectedMap.getName());
+		    }
 		});
+
 
 		GridBagConstraints gbc_deleteButton = new GridBagConstraints();
 		gbc_deleteButton.insets = new Insets(0, 0, 5, 5);
@@ -220,6 +224,9 @@ public class CreateMapView extends JFrame {
 		} else {
 			errorMessageLabel.setText(errorMessage);
 		}
+	}
+	public JList<GameMap> getListMaps() {
+	    return list;
 	}
 
 	public void showAllMaps(List<GameMap> maps) {
