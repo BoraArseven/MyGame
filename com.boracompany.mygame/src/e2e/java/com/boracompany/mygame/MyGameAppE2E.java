@@ -248,6 +248,170 @@ public class MyGameAppE2E extends AssertJSwingJUnitTestCase {
 
 		logger.info("Full application flow test completed successfully");
 	}
+	
+	 @Test
+	    public void testSelectionsArePreservedAfterAttack() {
+	        logger.info("Starting testSelectionsArePreservedAfterAttack");
+
+	        // Step 1: Open Create Map window and create a map
+	        logger.info("Step 1: Creating a new map");
+	        window.button("Create Map").click();
+	        robot().waitForIdle();
+
+	        FrameFixture createMapWindow = findWindowByTitle("Create Map");
+	        createMapWindow.requireVisible();
+
+	        // Enter map name
+	        createMapWindow.textBox("NameText").enterText("TestMap");
+	        // Click the "Create Map" button
+	        createMapWindow.button("CreateMapButton").click();
+	        // Click the "Main Menu" button to return
+	        createMapWindow.button("MainMenuButton").click();
+	        robot().waitForIdle();
+
+	        // Ensure the Create Map window has closed
+	        createMapWindow.requireNotVisible();
+	        logger.info("Create Map window closed successfully.");
+
+	        // Re-find the main menu window
+	        window = findWindowByTitle("Main Menu");
+	        window.requireVisible();
+
+	        // Step 2: Open Create Player window and create two players
+	        logger.info("Step 2: Creating Player1");
+	        window.button("Create Player").click();
+	        robot().waitForIdle();
+
+	        FrameFixture createPlayerWindow = findWindowByTitle("Create Player");
+	        createPlayerWindow.requireVisible();
+
+	        // Create Player 1
+	        createPlayerWindow.textBox("NameText").enterText("Player1");
+	        createPlayerWindow.textBox("DamageText").enterText("20");
+	        createPlayerWindow.textBox("HealthText").enterText("100");
+	        createPlayerWindow.button("CreatePlayerButton").click();
+	        robot().waitForIdle();
+
+	        // Verify that the text fields are cleared after creating Player 1
+	        createPlayerWindow.textBox("NameText").requireText("");
+	        createPlayerWindow.textBox("DamageText").requireText("");
+	        createPlayerWindow.textBox("HealthText").requireText("");
+
+	        // Create Player 2 in the same window
+	        logger.info("Step 2: Creating Player2");
+
+	        // Enter data for Player 2
+	        createPlayerWindow.textBox("NameText").enterText("Player2");
+	        createPlayerWindow.textBox("DamageText").enterText("15");
+	        createPlayerWindow.textBox("HealthText").enterText("80");
+	        createPlayerWindow.button("CreatePlayerButton").click();
+	        robot().waitForIdle();
+
+	        // Verify that the text fields are cleared after creating Player 2
+	        createPlayerWindow.textBox("NameText").requireText("");
+	        createPlayerWindow.textBox("DamageText").requireText("");
+	        createPlayerWindow.textBox("HealthText").requireText("");
+
+	        // Now click "Main Menu" to close the Create Player window
+	        createPlayerWindow.button("MainMenuButton").click();
+	        robot().waitForIdle();
+
+	        // Ensure the Create Player window has closed
+	        createPlayerWindow.requireNotVisible();
+	        logger.info("Create Player window closed successfully.");
+
+	        // Re-find the main menu window
+	        window = findWindowByTitle("Main Menu");
+	        window.requireVisible();
+
+	        // Step 3: Open Add Players to Maps window and add the two players to the created map
+	        logger.info("Step 3: Adding Player1 and Player2 to TestMap");
+	        window.button("Add Players to Maps").click();
+	        robot().waitForIdle();
+
+	        FrameFixture addPlayersToMapsWindow = findWindowByTitle("Add Players to Maps");
+	        addPlayersToMapsWindow.requireVisible();
+
+	        // Select the map "TestMap"
+	        addPlayersToMapsWindow.list("mapList").selectItem("TestMap");
+	        robot().waitForIdle();
+
+	        // Add Player1 to the map
+	        addPlayersToMapsWindow.list("playerList").selectItem(Pattern.compile("^Player1.*"));
+	        addPlayersToMapsWindow.button("Add Selected Player to Map").click();
+	        robot().waitForIdle();
+
+	        // Select the map "TestMap" again (if required by the UI)
+	        addPlayersToMapsWindow.list("mapList").selectItem("TestMap");
+	        robot().waitForIdle();
+
+	        // Add Player2 to the map
+	        addPlayersToMapsWindow.list("playerList").selectItem(Pattern.compile("^Player2.*"));
+	        addPlayersToMapsWindow.button("Add Selected Player to Map").click();
+	        robot().waitForIdle();
+
+	        // Close Add Players to Maps window by clicking "Main Menu"
+	        addPlayersToMapsWindow.button("Main Menu").click();
+	        robot().waitForIdle();
+
+	        // Ensure the Add Players to Maps window has closed
+	        addPlayersToMapsWindow.requireNotVisible();
+	        logger.info("Add Players to Maps window closed successfully.");
+
+	        // Re-find the main menu window
+	        window = findWindowByTitle("Main Menu");
+	        window.requireVisible();
+
+	        // Step 4: Open the Player Attack window and perform an attack
+	        logger.info("Step 4: Performing an attack and verifying selections are preserved");
+	        window.button("Play").click();
+	        robot().waitForIdle();
+
+	        FrameFixture playerAttackWindow = findWindowByTitle("Player Attack");
+	        playerAttackWindow.requireVisible();
+
+	        // Select the map "TestMap"
+	        playerAttackWindow.list("mapList").selectItem("TestMap");
+	        robot().waitForIdle();
+
+	        // Select attacker "Player1"
+	        playerAttackWindow.list("attackerList").selectItem(Pattern.compile("^Player1.*"));
+	        robot().waitForIdle();
+
+	        // Select defender "Player2"
+	        playerAttackWindow.list("defenderList").selectItem(Pattern.compile("^Player2.*"));
+	        robot().waitForIdle();
+
+	        // Perform the attack
+	        playerAttackWindow.button("btnAttack").click();
+	        robot().waitForIdle();
+
+	        // Verify that the selections are preserved after attack
+	     // Assert that the selected items start with "Player1" and "Player2"
+	        
+	        String[] attackerSelection = playerAttackWindow.list("attackerList").selection();
+	        String[] defenderSelection = playerAttackWindow.list("defenderList").selection();
+	        assertThat(attackerSelection[0]).startsWith("Player1");
+	        logger.info("Attacker selection preserved correctly.");
+
+	        assertThat(defenderSelection[0]).startsWith("Player2");
+	        logger.info("Defender selection preserved correctly.");
+	        logger.info("Selections are preserved after attack.");
+
+	        // Optionally verify that the health of the defender has decreased appropriately
+	        String[] defenderItems = playerAttackWindow.list("defenderList").contents();
+	        assertThat(defenderItems).anySatisfy(item -> {
+	            assertThat(item).contains("Player2").contains("Health: 60"); // Adjust expected health as per damage logic
+	        });
+	        logger.info("Attack from 'Player1' to 'Player2' was successful and health decreased as expected.");
+
+	        // Close the Player Attack window
+	        playerAttackWindow.button("Main Menu").click();
+	        robot().waitForIdle();
+	        playerAttackWindow.requireNotVisible();
+
+	        logger.info("testSelectionsArePreservedAfterAttack completed successfully");
+	    }
 
 	private FrameFixture findWindowByTitle(String title) {
 		return WindowFinder.findFrame(new GenericTypeMatcher<JFrame>(JFrame.class) {

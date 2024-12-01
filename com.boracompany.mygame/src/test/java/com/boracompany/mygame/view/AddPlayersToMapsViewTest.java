@@ -7,6 +7,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -18,6 +21,7 @@ import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -162,29 +166,35 @@ public class AddPlayersToMapsViewTest extends AssertJSwingJUnitTestCase {
 		assertThat(selectedPlayerIndex).isZero();
 	}
 
+
 	@Test
-	@GUITest
 	public void testAddSelectedPlayerToMap() {
-		// Set up the test data
-		GuiActionRunner.execute(() -> {
-			DefaultListModel<GameMap> mapListModel = addPlayersToMaps.getMapListModel();
-			mapListModel.addElement(new GameMap(1L, "TestMap"));
+	    // Arrange
+	    GameMap testMap = new GameMap("TestMap");
+	    testMap.setId(1L);
 
-			DefaultListModel<Player> playerListModel = addPlayersToMaps.getPlayerListModel();
-			playerListModel.addElement(new PlayerBuilder().withName("TestPlayer").build());
-		});
+	    Player testPlayer = new PlayerBuilder().withName("TestPlayer").withDamage(10f).withHealth(10f).build();
+	    testPlayer.setId(1L);
 
-		// Select a map and player
-		window.list("mapList").selectItem(0);
-		window.list("playerList").selectItem(0);
+	    Mockito.when(mockGameController.getAllMaps()).thenReturn(Arrays.asList(testMap));
+	    Mockito.when(mockGameController.getAllPlayers()).thenReturn(Arrays.asList(testPlayer));
 
-		// Click the button to add the player to the map
-		window.button(JButtonMatcher.withText("Add Selected Player to Map")).click();
+	    // Act
+	    GuiActionRunner.execute(() -> {
+	        addPlayersToMaps.refreshMapList();
+	        addPlayersToMaps.refreshPlayerList();
+	    });
 
-		// Verify the controller's addPlayerToMap method was called with the correct
-		// arguments
-		verify(mockGameController).addPlayerToMap(1L, new PlayerBuilder().withName("TestPlayer").build());
+	    window.list("mapList").selectItem(0); // Select the map
+	    window.list("playerList").selectItem(0); // Select the player
+
+	    window.button(JButtonMatcher.withText("Add Selected Player to Map")).click();
+
+	    // Assert
+	    Mockito.verify(mockGameController).addPlayerToMap(1L, testPlayer);
+	    window.label("errorLabel").requireText("");
 	}
+
 
 	@Test
 	@GUITest
@@ -319,31 +329,39 @@ public class AddPlayersToMapsViewTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
-	@GUITest
 	public void testAddSelectedPlayerToMapWhenBothMapAndPlayerAreNotNull() {
-		// Set up the test data with a map and player both selected
-		GuiActionRunner.execute(() -> {
-			DefaultListModel<GameMap> mapListModel = addPlayersToMaps.getMapListModel();
-			mapListModel.addElement(new GameMap(1L, "TestMap"));
+	    // Arrange
+	    GameMap testMap = new GameMap("TestMap");
+	    testMap.setId(1L);
+	    Player testPlayer = new PlayerBuilder().withName("TestPlayer").withHealth(10f).withDamage(10f).build();
+	    testPlayer.setId(1L);
 
-			DefaultListModel<Player> playerListModel = addPlayersToMaps.getPlayerListModel();
-			playerListModel.addElement(new PlayerBuilder().withName("TestPlayer").build());
-		});
+	    when(mockGameController.getAllMaps()).thenReturn(Arrays.asList(testMap));
+	    when(mockGameController.getAllPlayers()).thenReturn(Arrays.asList(testPlayer));
 
-		// Select both a map and player (both are not null)
-		window.list("mapList").selectItem(0); // Select map
-		window.list("playerList").selectItem(0); // Select player
+	    GuiActionRunner.execute(() -> {
+	        addPlayersToMaps.refreshMapList();
+	        addPlayersToMaps.refreshPlayerList();
+	    });
 
-		// Click the button to add the player to the map
-		window.button(JButtonMatcher.withText("Add Selected Player to Map")).click();
+	    // Act: Select a map and a player
+	    window.list("mapList").selectItem(0);
+	    window.list("playerList").selectItem(0);
+	    window.button(JButtonMatcher.withText("Add Selected Player to Map")).click();
 
-		// Verify the controller's addPlayerToMap method was called with the correct
-		// arguments
-		verify(mockGameController).addPlayerToMap(1L, new PlayerBuilder().withName("TestPlayer").build());
+	    // Assert: Verify the controller interaction
+	    ArgumentCaptor<Long> mapIdCaptor = ArgumentCaptor.forClass(Long.class);
+	    ArgumentCaptor<Player> playerCaptor = ArgumentCaptor.forClass(Player.class);
+	    verify(mockGameController).addPlayerToMap(mapIdCaptor.capture(), playerCaptor.capture());
 
-		// Check that the error label remains empty because the operation was successful
-		window.label("errorLabel").requireText("");
+	    // Verify captured arguments
+	    assertThat(mapIdCaptor.getValue()).isEqualTo(1L);
+	    assertThat(playerCaptor.getValue().getName()).isEqualTo("TestPlayer");
+
+	    // Ensure no error message
+	    window.label("errorLabel").requireText("");
 	}
+
 
 	@Test
 	@GUITest
@@ -430,25 +448,44 @@ public class AddPlayersToMapsViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test
 	public void testAddSelectedPlayerToMapWhenBothSelectedMapAndPlayerAreNotNull() {
-		// Set up the test data in the list models
-		GuiActionRunner.execute(() -> {
-			DefaultListModel<GameMap> mapListModel = addPlayersToMaps.getMapListModel();
-			mapListModel.addElement(new GameMap(1L, "TestMap"));
+	    // Arrange
+	    GameMap testMap = new GameMap("TestMap");
+	    testMap.setId(2L);
+	    Player testPlayer = new PlayerBuilder().withName("TestPlayer").withHealth(10f).withDamage(0f).build();
+	    testPlayer.setId(1L);
 
-			DefaultListModel<Player> playerListModel = addPlayersToMaps.getPlayerListModel();
-			playerListModel.addElement(new PlayerBuilder().withName("TestPlayer").build());
-		});
+	    Mockito.when(mockGameController.getAllMaps()).thenReturn(Arrays.asList(testMap));
+	    Mockito.when(mockGameController.getAllPlayers()).thenReturn(Arrays.asList(testPlayer));
 
-		// Simulate selecting a map and a player
-		window.list("mapList").selectItem(0);
-		window.list("playerList").selectItem(0);
+	    GuiActionRunner.execute(() -> {
+	        addPlayersToMaps.refreshMapList();
+	        addPlayersToMaps.refreshPlayerList();
+	    });
 
-		// Call the method directly to bypass UI event triggers
-		GuiActionRunner.execute(() -> addPlayersToMaps.addSelectedPlayerToMap());
+	    window.list("mapList").selectItem(0);
+	    window.list("playerList").selectItem(0);
 
-		// Verify the controller's addPlayerToMap method was called with the correct
-		// arguments
-		verify(mockGameController).addPlayerToMap(1L, new PlayerBuilder().withName("TestPlayer").build());
+	    // Act
+	    window.button(JButtonMatcher.withText("Add Selected Player to Map")).click();
+
+	    // Assert
+	    // Use ArgumentCaptor to capture arguments
+	    ArgumentCaptor<Long> mapIdCaptor = ArgumentCaptor.forClass(Long.class);
+	    ArgumentCaptor<Player> playerCaptor = ArgumentCaptor.forClass(Player.class);
+
+	    Mockito.verify(mockGameController).addPlayerToMap(mapIdCaptor.capture(), playerCaptor.capture());
+
+	    // Assert that the map ID is correct
+	    assertEquals(Long.valueOf(2L), mapIdCaptor.getValue());
+
+	    // Assert that the player has the expected properties
+	    Player capturedPlayer = playerCaptor.getValue();
+	    assertEquals("TestPlayer", capturedPlayer.getName());
+	    assertEquals(10f, capturedPlayer.getHealth());
+	    assertEquals(0f, capturedPlayer.getDamage());
+
+	    // Ensure no error message
+	    window.label("errorLabel").requireText("");
 	}
 
 	@Test

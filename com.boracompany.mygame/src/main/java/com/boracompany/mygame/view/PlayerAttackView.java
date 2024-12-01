@@ -5,6 +5,9 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.annotation.Generated;
@@ -45,6 +48,11 @@ public class PlayerAttackView extends JFrame {
 
 	public void setGameController(GameController gameController) {
 		this.gameController = gameController;
+		// Re-attach the action listener to ensure it uses the updated gameController
+
+		//btnAttack.removeActionListener(btnAttack.getActionListeners()[0]);
+		//btnAttack.addActionListener(e -> attackSelectedPlayers());
+
 		refreshMapList();
 		refreshPlayerLists();
 	}
@@ -132,7 +140,9 @@ public class PlayerAttackView extends JFrame {
 		gbc_btnAttack.insets = new Insets(0, 0, 5, 0);
 		gbc_btnAttack.gridx = 1;
 		gbc_btnAttack.gridy = 3;
-		btnAttack.addActionListener(e -> attackSelectedPlayers());
+		
+		btnAttack.addActionListener(e -> 
+		attackSelectedPlayers());
 		contentPane.add(btnAttack, gbc_btnAttack);
 
 		// Error label
@@ -187,12 +197,19 @@ public class PlayerAttackView extends JFrame {
 	}
 
 	// Refresh the player lists when a map is selected
-	// Refresh the player lists when a map is selected
 	protected void refreshPlayerLists() {
 		GameMap selectedMap = mapList.getSelectedValue();
 
 		if (selectedMap != null) {
-			List<Player> livingPlayers = gameController.getPlayersFromMap(selectedMap.getId());
+			// Create a mutable copy of the list
+			List<Player> livingPlayers = new ArrayList<>(gameController.getPlayersFromMap(selectedMap.getId()));
+
+			// Preserve the currently selected attacker and defender
+			Player selectedAttacker = attackerList.getSelectedValue();
+			Player selectedDefender = defenderList.getSelectedValue();
+
+			// Sort the list of players to maintain consistent order
+			livingPlayers.sort(Comparator.comparing(Player::getName));
 
 			attackerListModel.clear();
 			defenderListModel.clear();
@@ -201,11 +218,23 @@ public class PlayerAttackView extends JFrame {
 				attackerListModel.addElement(player);
 				defenderListModel.addElement(player);
 			}
+
+			// Reselect the previously selected attacker and defender, if they still exist
+			// in the list
+			if (selectedAttacker != null && livingPlayers.contains(selectedAttacker)) {
+				attackerList.setSelectedValue(selectedAttacker, true);
+			}
+			if (selectedDefender != null && livingPlayers.contains(selectedDefender)) {
+				defenderList.setSelectedValue(selectedDefender, true);
+			}
+
+			// Update the state of the attack button
+			updateButtonState();
 		}
 	}
 
 	// Method to update the state of the attack button
-	private void updateButtonState() {
+	void updateButtonState() {
 		boolean isAttackerSelected = !attackerList.isSelectionEmpty();
 		boolean isDefenderSelected = !defenderList.isSelectionEmpty();
 		btnAttack.setEnabled(isAttackerSelected && isDefenderSelected);
@@ -214,6 +243,7 @@ public class PlayerAttackView extends JFrame {
 	// Method to perform an attack between the selected attacker and defender
 	protected void attackSelectedPlayers() {
 		// Get the selected attacker and defender from the lists
+
 		Player attacker = attackerList.getSelectedValue();
 		Player defender = defenderList.getSelectedValue();
 
@@ -303,6 +333,15 @@ public class PlayerAttackView extends JFrame {
 	@ExcludeFromJacocoGeneratedReport
 	void resetErrorLabel() {
 		errorLabel.setText(""); // Clear the error label
+	}
+
+	public List<Player> getLivingPlayers() {
+		return Collections.list(attackerListModel.elements());
+	}
+
+	@ExcludeFromJacocoGeneratedReport
+	public JLabel getErrorLabel() {
+		return errorLabel;
 	}
 
 	public void refreshMapList() {

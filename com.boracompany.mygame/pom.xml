@@ -5,7 +5,7 @@
 
 	<groupId>com.boracompany</groupId>
 	<artifactId>mygame</artifactId>
-	<version>0.0.9-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>com.boracompany.mygame</name>
@@ -421,7 +421,7 @@ since javax.xml.bind has been removed from the JDK -->
 											<limit>
 												<counter>LINE</counter>
 												<value>COVEREDRATIO</value>
-												<minimum>0.85</minimum>
+												<minimum>1.00</minimum>
 											</limit>
 										</limits>
 									</rule>

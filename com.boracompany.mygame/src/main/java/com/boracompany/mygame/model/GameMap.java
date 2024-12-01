@@ -74,22 +74,16 @@ public class GameMap {
 
 	// Override equals method
 	@ExcludeFromJacocoGeneratedReport
-	@Override
-	public boolean equals(Object o) {
-		if (this == o)
-			return true; // Check if it's the same object reference
-		if (o == null || getClass() != o.getClass())
-			return false; // Check for null and class type
+	  @Override
+	    public boolean equals(Object o) {
+	        if (this == o) return true;
+	        if (!(o instanceof GameMap)) return false;
+	        GameMap gameMap = (GameMap) o;
+	        return Objects.equals(id, gameMap.id);
+	    }
 
-		GameMap gameMap = (GameMap) o;
-
-		// Assuming 'id' uniquely identifies a GameMap
-		return Objects.equals(id, gameMap.id);
-	}
-
-	// Override hashCode method
-	@Override
-	public int hashCode() {
-		return Objects.hash(id); // Generate hash based on the unique ID
-	}
+	    @Override
+	    public int hashCode() {
+	        return Objects.hash(id);
+	    }
 }

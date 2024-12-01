@@ -1,6 +1,7 @@
 package com.boracompany.mygame.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -108,7 +109,54 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 		window = new FrameFixture(robot(), createPlayerView);
 		window.show();
 	}
+	@Test
+    @GUITest
+    public void testDeletePlayer_FailureDuringDeletion_ShowsErrorMessage() {
+        // Arrange: Create a player via the controller to ensure it has an ID
+        final Player[] playerHolder = new Player[1];
 
+        // Create a spy of the GameController
+        GameController spyGameController = Mockito.spy(gameController);
+
+        // Inject the spy into the view
+        GuiActionRunner.execute(() -> {
+            createPlayerView.setSchoolController(spyGameController);
+            Player p = spyGameController.createPlayer("Player1", 100, 10);
+            createPlayerView.playerAdded(p); // Add the player with ID to the view
+            playerHolder[0] = p; // Assign the player to the array
+        });
+
+        Player player = playerHolder[0]; // Retrieve the player after the lambda execution
+
+        // Ensure player ID is not null
+        assertNotNull(player.getId(), "Player ID should not be null");
+
+        // Simulate an exception during deletion using anyLong()
+        doThrow(new RuntimeException("Simulated deletion failure"))
+            .when(spyGameController)
+            .deletePlayer(Mockito.anyLong());
+
+        // Act: Try to delete the player from the UI
+        window.list("ListPlayers").selectItem(0);
+        window.button(JButtonMatcher.withText("Delete Selected")).click();
+
+        // Assert: Verify that the error message is displayed
+        assertThat(window.label("ErrorMessageLabel").text())
+                .contains("Failed to remove player from the database: " + player.getName());
+
+        // The player should still be in the list since deletion failed
+        assertThat(window.list("ListPlayers").contents()).containsExactly(player.toString());
+
+        // The player should still be in the database
+        EntityManager em = emf.createEntityManager();
+        try {
+            List<Player> remainingPlayers = em.createQuery("SELECT p FROM Player p WHERE p.id = :id", Player.class)
+                    .setParameter("id", player.getId()).getResultList();
+            assertThat(remainingPlayers).isNotEmpty(); // Player should still exist in the database
+        } finally {
+            em.close();
+        }
+    }
 	private void resetDatabase() {
 		EntityManager em = emf.createEntityManager();
 		EntityTransaction transaction = em.getTransaction();
@@ -128,6 +176,27 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 		}
 	}
 
+	
+
+	@Test
+	@GUITest
+	public void testShowAllPlayers() {
+		// Arrange: Create players
+		Player player1 = new PlayerBuilder().withName("Player1").withDamage(10).withHealth(100).build();
+		Player player2 = new PlayerBuilder().withName("Player2").withDamage(20).withHealth(200).build();
+
+		// Act: Show all players
+		GuiActionRunner.execute(() -> createPlayerView.showAllPlayers(Arrays.asList(player1, player2)));
+
+		// Assert: Players are displayed in the list
+		assertThat(window.list("ListPlayers").contents()).containsExactly(player1.toString(), player2.toString());
+	}
+
+	@Override
+	protected void onTearDown() throws Exception {
+		// Close Mockito mocks
+		closeable.close();
+	}
 	@Test
 	@GUITest
 	public void testCreatePlayerAndDelete() {
@@ -163,27 +232,6 @@ public class CreatePlayerViewIT extends AssertJSwingJUnitTestCase {
 			em.close();
 		}
 	}
-
-	@Test
-	@GUITest
-	public void testShowAllPlayers() {
-		// Arrange: Create players
-		Player player1 = new PlayerBuilder().withName("Player1").withDamage(10).withHealth(100).build();
-		Player player2 = new PlayerBuilder().withName("Player2").withDamage(20).withHealth(200).build();
-
-		// Act: Show all players
-		GuiActionRunner.execute(() -> createPlayerView.showAllPlayers(Arrays.asList(player1, player2)));
-
-		// Assert: Players are displayed in the list
-		assertThat(window.list("ListPlayers").contents()).containsExactly(player1.toString(), player2.toString());
-	}
-
-	@Override
-	protected void onTearDown() throws Exception {
-		// Close Mockito mocks
-		closeable.close();
-	}
-
 	@Test
 	@GUITest
 	public void testCreateMultiplePlayers() {

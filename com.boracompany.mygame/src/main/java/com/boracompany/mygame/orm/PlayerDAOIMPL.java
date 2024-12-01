@@ -7,7 +7,6 @@ import javax.annotation.Generated;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
-import javax.persistence.TypedQuery;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,7 +14,7 @@ import org.apache.logging.log4j.Logger;
 import com.boracompany.mygame.model.Player;
 
 public class PlayerDAOIMPL implements PlayerDAO {
-    private static final String TRANSACTION_NULL_MESSAGE = "Transaction is null";
+    public static final String TRANSACTION_NULL_MESSAGE = "Transaction is null";
     private static final Logger LOGGER = LogManager.getLogger(PlayerDAOIMPL.class);
     private EntityManagerFactory emf;
 
@@ -28,21 +27,18 @@ public class PlayerDAOIMPL implements PlayerDAO {
         this.emf = emf;
     }
 
-    @Override
     public List<Player> getAllPlayers() {
         EntityManager em = emf.createEntityManager();
         try {
-            TypedQuery<Player> query = em.createQuery("SELECT p FROM Player p", Player.class);
-            return query.getResultList();
+            return em.createQuery("SELECT p FROM Player p", Player.class).getResultList();
         } finally {
             em.close();
         }
     }
-
     @Override
     public Player getPlayer(Long id) {
         EntityManager em = emf.createEntityManager();
-        try {
+        try { 
             return em.find(Player.class, id);
         } finally {
             em.close();
@@ -73,6 +69,11 @@ public class PlayerDAOIMPL implements PlayerDAO {
     @Override
     public void deletePlayer(Player player) {
         executeInTransaction(em -> {
+            // Explicitly check if player ID is null
+            if (player.getId() == null) {
+                throw new IllegalStateException("Tried to delete non-existing player with ID N/A");
+            }
+
             Player managedPlayer = em.find(Player.class, player.getId());
             if (managedPlayer != null) {
                 em.remove(managedPlayer);
@@ -83,6 +84,7 @@ public class PlayerDAOIMPL implements PlayerDAO {
         }, "An error occurred while trying to delete player with ID {}: {}", 
            player.getId() != null ? player.getId() : "N/A");
     }
+
 
     /**
      * Executes a database operation within a transaction.
