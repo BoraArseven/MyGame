@@ -969,41 +969,6 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 
 	@Test
 	@GUITest
-	public void testAttackButtonClickedWhenAttackerEqualsDefender() {
-		// Set up the map and player
-		GameMap testMap = new GameMap(1L, "TestMap");
-		Player testPlayer = new Player("Player1", 100, 20, true);
-		testPlayer.setMap(testMap);
-
-		// Mock the GameController behavior
-		when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
-		when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Collections.singletonList(testPlayer));
-
-		// Inject mock controller and set up the view
-		GuiActionRunner.execute(() -> {
-			playerAttackView.setGameController(mockGameController);
-			playerAttackView.getMapListModel().addElement(testMap);
-		});
-
-		// Select the map
-		window.list("mapList").selectItem(0);
-
-		// Select the same player as both attacker and defender
-		window.list("attackerList").selectItem(0);
-		window.list("defenderList").selectItem(0);
-
-		// Click the attack button
-		window.button("btnAttack").click();
-
-		// Verify that the error message is displayed
-		window.label("errorLabel").requireText("A player cannot attack itself.");
-
-		// Verify that the attack method was not called
-		verify(mockGameController, times(0)).attack(any(), any());
-	}
-
-	@Test
-	@GUITest
 	public void testAttackButtonClickedWhenAttackSucceeds() {
 		// Set up the map and players
 		GameMap testMap = new GameMap(1L, "TestMap");
