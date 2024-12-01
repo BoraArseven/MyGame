@@ -1160,7 +1160,7 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 		window.button("btnAttack").click();
 		String errorlabeltest = window.label("errorLabel").text();
 		// there should not be an error since button was not enable
-		assertEquals(errorlabeltest, "");
+		assertEquals("", errorlabeltest);
 	}
 
 	@Test
@@ -1188,13 +1188,11 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 
 		// Click the "Attack" button
 		window.button("btnAttack").click();
-		
+
 		String errorlabeltest = window.label("errorLabel").text();
 		// there should not be an error since button was not enable
-		assertEquals(errorlabeltest, "A player cannot attack itself.");
+		assertEquals("A player cannot attack itself.", errorlabeltest);
 	}
-
-	
 
 	@Test
 	@GUITest
