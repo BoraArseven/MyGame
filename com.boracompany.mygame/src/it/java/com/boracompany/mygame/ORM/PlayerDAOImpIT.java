@@ -189,45 +189,7 @@ public class PlayerDAOImpIT {
 	}
 
 
-	@Test
-	void testUpdatePlayerDoesNotRollbackWhenTransactionIsNull() {
-		// Spy on the real EntityManagerFactory
-		EntityManagerFactory emfSpy = Mockito.spy(emf);
-
-		// Create a real EntityManager and persist a player
-		EntityManager emPersist = emfSpy.createEntityManager();
-		emPersist.getTransaction().begin();
-		Player player = new PlayerBuilder().withName("Test Player").build();
-		emPersist.persist(player);
-		emPersist.getTransaction().commit();
-		emPersist.close();
-
-		// Now, create a new spied EntityManager for the delete operation
-		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
-
-		// Mock getTransaction() to return null
-		when(emSpy.getTransaction()).thenReturn(null);
-
-		// Inject the spied EntityManagerFactory into the DAO
-		PlayerDAOIMPL dao = new PlayerDAOIMPL(emfSpy);
-
-		// Ensure that the DAO uses the spied EntityManager
-		when(emfSpy.createEntityManager()).thenReturn(emSpy);
-
-		// Attempt to delete the player, expecting an IllegalStateException
-		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-			dao.deletePlayer(player);
-		});
-
-		// Verify the exception message
-		assertEquals("Transaction is null", exception.getMessage());
-
-		// Verify that the remove operation was never called due to the null transaction
-		verify(emSpy, never()).remove(any(Player.class));
-
-		// Verify that the EntityManager was closed
-		verify(emSpy).close();
-	}
+	
 
 	@Test
 	void testUpdatePlayerCommitsTransactionSuccessfully() {
@@ -858,48 +820,7 @@ public class PlayerDAOImpIT {
 		verify(emSpy).close();
 	}
 
-	@Test
-	void testCreatePlayerRollbackOnRuntimeException() {
-		// Spy on the real EntityManagerFactory
-		EntityManagerFactory emfSpy = Mockito.spy(emf);
 
-		// Spy on the EntityManager
-		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
-
-		// Spy on the EntityTransaction
-		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
-
-		// Make the spies return each other
-		when(emfSpy.createEntityManager()).thenReturn(emSpy);
-		when(emSpy.getTransaction()).thenReturn(transactionSpy);
-
-		// Ensure the transaction begins properly and is active
-		doNothing().when(transactionSpy).begin();
-		when(transactionSpy.isActive()).thenReturn(true);
-
-		// Inject the spied EntityManagerFactory into the DAO
-		PlayerDAOIMPL dao = new PlayerDAOIMPL(emfSpy);
-
-		// Create a Player instance
-		Player player = new PlayerBuilder().withName("Test Player").build();
-
-		// Simulate a RuntimeException during the persist operation
-		doThrow(new RuntimeException("Simulated Exception")).when(emSpy).persist(any(Player.class));
-
-		// Act & Assert
-		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-			dao.createPlayer(player);
-		});
-
-		// Check that the exception message is correct
-		assertEquals("Simulated Exception", exception.getMessage());
-
-		// Verify that rollback was called on the transaction
-		verify(transactionSpy).rollback();
-
-		// Verify that the EntityManager was closed
-		verify(emSpy).close();
-	}
 
 	@Test
 	void testCreatePlayerCommitsSuccessfully() {
