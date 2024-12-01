@@ -50,9 +50,6 @@ public class PlayerAttackView extends JFrame {
 		this.gameController = gameController;
 		// Re-attach the action listener to ensure it uses the updated gameController
 
-		//btnAttack.removeActionListener(btnAttack.getActionListeners()[0]);
-		//btnAttack.addActionListener(e -> attackSelectedPlayers());
-
 		refreshMapList();
 		refreshPlayerLists();
 	}

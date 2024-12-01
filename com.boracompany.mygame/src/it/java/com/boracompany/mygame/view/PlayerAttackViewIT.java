@@ -557,7 +557,7 @@ public class PlayerAttackViewIT extends AssertJSwingJUnitTestCase {
 	        
 	        // Additional assertion to check that livingPlayers.contains(selectedAttacker) is true
 	        List<Player> livingPlayers = playerAttackView.getLivingPlayers();
-	        assertThat(livingPlayers.contains(selectedAttacker)).isTrue();
+	        assertThat(livingPlayers).contains(selectedAttacker);
 	    });
 	}
 	@Test
@@ -639,7 +639,7 @@ public class PlayerAttackViewIT extends AssertJSwingJUnitTestCase {
 	        Player selectedAttacker = playerAttackView.getAttackerList().getSelectedValue();
 	        assertThat(selectedAttacker).isNull(); // Expecting selectedAttacker to be null
 	        List<Player> livingPlayers = playerAttackView.getLivingPlayers();
-	        assertThat(livingPlayers.contains(player1)).isFalse(); // Ensure player1 is not in livingPlayers
+	        assertThat(livingPlayers).doesNotContain(player1); // Ensure player1 is not in livingPlayers
 	    });
 
 	    // Optionally, verify that attackerList.setSelectedValue was not called
@@ -723,7 +723,7 @@ public class PlayerAttackViewIT extends AssertJSwingJUnitTestCase {
 	    player2.setName("Player1");
 
 	    assertThat(player1).isEqualTo(player2);
-	    assertThat(player1.hashCode()).isEqualTo(player2.hashCode());
+	    assertThat(player1).hasSameHashCodeAs(player2);
 	}
 
 	
