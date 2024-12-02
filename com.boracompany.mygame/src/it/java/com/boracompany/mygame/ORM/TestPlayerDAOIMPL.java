@@ -1,8 +1,8 @@
 package com.boracompany.mygame.ORM;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
 
 import com.boracompany.mygame.model.Player;
 import com.boracompany.mygame.orm.PlayerDAOIMPL;

@@ -8,8 +8,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.spi.PersistenceUnitInfo;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.spi.PersistenceUnitInfo;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -43,36 +43,36 @@ public class HibernateUtil {
 	}
 
 	private static void initializeInternal(String dbUrl, String dbUser, String dbPassword) {
-		Map<String, Object> properties = new HashMap<>();
-		if (dbUrl == null || dbUser == null || dbPassword == null) {
-			throw new IllegalArgumentException("Database connection properties must not be null");
-		}
+	    Map<String, Object> properties = new HashMap<>();
+	    if (dbUrl == null || dbUser == null || dbPassword == null) {
+	        throw new IllegalArgumentException("Database connection properties must not be null");
+	    }
 
-		// Extract the database name from the URL
-		String cleanDbUrl = dbUrl.split("\\?")[0]; // Remove query parameters
-		String databaseName = cleanDbUrl.substring(cleanDbUrl.lastIndexOf('/') + 1);
-		String baseDbUrl = cleanDbUrl.substring(0, cleanDbUrl.lastIndexOf('/')) + "/postgres";
+	    // Extract the database name from the URL
+	    String cleanDbUrl = dbUrl.split("\\?")[0]; // Remove query parameters
+	    String databaseName = cleanDbUrl.substring(cleanDbUrl.lastIndexOf('/') + 1);
+	    String baseDbUrl = cleanDbUrl.substring(0, cleanDbUrl.lastIndexOf('/')) + "/postgres";
 
-		// Check and create database if it doesn't exist
-		createDatabaseIfNotExists(baseDbUrl, dbUser, dbPassword, databaseName);
+	    // Check and create database if it doesn't exist
+	    createDatabaseIfNotExists(baseDbUrl, dbUser, dbPassword, databaseName);
 
-		properties.put(AvailableSettings.URL, dbUrl);
-		properties.put(AvailableSettings.USER, dbUser);
-		properties.put(AvailableSettings.PASS, dbPassword);
-		properties.put(AvailableSettings.DIALECT, "org.hibernate.dialect.PostgreSQLDialect");
-		properties.put(AvailableSettings.HBM2DDL_AUTO, "update");
-		properties.put(AvailableSettings.SHOW_SQL, "true");
+	    properties.put(AvailableSettings.JAKARTA_JDBC_URL, dbUrl);
+	    properties.put(AvailableSettings.JAKARTA_JDBC_USER, dbUser);
+	    properties.put(AvailableSettings.JAKARTA_JDBC_PASSWORD, dbPassword);
+	    properties.put(AvailableSettings.DIALECT, "org.hibernate.dialect.PostgreSQLDialect");
+	    properties.put(AvailableSettings.HBM2DDL_AUTO, "update");
+	    properties.put(AvailableSettings.SHOW_SQL, "true");
 
-		// HikariCP settings
-		properties.put("hibernate.hikari.connectionTimeout", "20000");
-		properties.put("hibernate.hikari.minimumIdle", "10");
-		properties.put("hibernate.hikari.maximumPoolSize", "20");
-		properties.put("hibernate.hikari.idleTimeout", "300000");
-		properties.put("hibernate.hikari.maxLifetime", "1800000");
-		properties.put("hibernate.hikari.poolName", "MyHikariCP");
+	    // HikariCP settings
+	    properties.put("hibernate.hikari.connectionTimeout", "20000");
+	    properties.put("hibernate.hikari.minimumIdle", "10");
+	    properties.put("hibernate.hikari.maximumPoolSize", "20");
+	    properties.put("hibernate.hikari.idleTimeout", "300000");
+	    properties.put("hibernate.hikari.maxLifetime", "1800000");
+	    properties.put("hibernate.hikari.poolName", "MyHikariCP");
 
-		entityManagerFactory = new HibernatePersistenceProvider()
-				.createContainerEntityManagerFactory(createPersistenceUnitInfo(), properties);
+	    entityManagerFactory = new HibernatePersistenceProvider()
+	            .createContainerEntityManagerFactory(createPersistenceUnitInfo(), properties);
 	}
 
 	public static EntityManagerFactory getEntityManagerFactory() {

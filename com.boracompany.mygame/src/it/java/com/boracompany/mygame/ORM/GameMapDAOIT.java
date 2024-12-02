@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.PersistenceException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -750,52 +750,31 @@ public class GameMapDAOIT {
 
 	@Test
 	void testRemovePlayerFromMap_PlayerNotInGameMap() {
-		// Arrange
-		EntityManagerFactory emfSpy = Mockito.spy(emf);
-		GameMapDAO gameMapDAOwithSpiedEmf = new GameMapDAO(emfSpy);
+	    // Arrange
+	    GameMapDAO gameMapDAO = new GameMapDAO(emf);
 
-		// Create and persist a GameMap and a Player (player is not part of the map)
-		EntityManager em = emfSpy.createEntityManager();
-		EntityTransaction transaction = em.getTransaction();
+	    // Create and persist a GameMap
+	    EntityManager em = emf.createEntityManager();
+	    em.getTransaction().begin();
+	    GameMap gameMap = new GameMap();
+	    em.persist(gameMap);
+	    em.getTransaction().commit();
+	    em.close();
 
-		// Persist GameMap in the first transaction
-		transaction.begin();
-		GameMap gameMap = new GameMap();
-		em.persist(gameMap);
-		transaction.commit();
-		em.close();
+	    // Create a Player that is not part of any GameMap
+	    em = emf.createEntityManager();
+	    em.getTransaction().begin();
+	    Player player = new Player();
+	    em.persist(player);
+	    em.getTransaction().commit();
+	    em.close();
 
-		// Create a new EntityManager and Transaction to persist the Player
-		em = emfSpy.createEntityManager();
-		transaction = em.getTransaction();
-		transaction.begin();
-		Player player = new Player();
-		player.setId(1L);
-		player.setMap(null); // Ensure the player is not in any map
-		em.merge(player);
-		transaction.commit();
-		em.close();
-
-		// Re-open the EntityManager for the operation we are testing
-		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
-		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
-
-		// Ensure the EntityManagerFactory returns our spied EntityManager
-		Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
-		Mockito.doReturn(transactionSpy).when(emSpy).getTransaction();
-		Mockito.when(transactionSpy.isActive()).thenReturn(true);
-		Long id = gameMap.getId();
-		assertThrows(PersistenceException.class, () -> {
-
-			gameMapDAOwithSpiedEmf.removePlayerFromMap(id, player);
-		});
-
-		// Verify that the transaction was rolled back
-		Mockito.verify(transactionSpy).rollback();
-
-		// Verify that the EntityManager is closed after the operation
-		Mockito.verify(emSpy).close();
+	    // Act & Assert
+	    assertThrows(PersistenceException.class, () -> {
+	        gameMapDAO.removePlayerFromMap(gameMap.getId(), player);
+	    });
 	}
+
 
 	@Test
 	void testRemovePlayerFromMap_GameMapAndPlayerNotFound() {

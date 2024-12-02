@@ -5,11 +5,12 @@ import org.apache.logging.log4j.Logger;
 
 import com.boracompany.mygame.model.GameMap;
 import com.boracompany.mygame.model.Player;
+//With this
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.PersistenceException;
 import java.util.List;
 
 public class GameMapDAO implements IGameMapDAO {

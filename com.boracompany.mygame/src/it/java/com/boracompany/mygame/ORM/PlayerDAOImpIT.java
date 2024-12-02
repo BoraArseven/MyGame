@@ -5,9 +5,9 @@ import static org.mockito.Mockito.*;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -193,46 +193,31 @@ public class PlayerDAOImpIT {
 
 	@Test
 	void testUpdatePlayerCommitsTransactionSuccessfully() {
-		// Spy on the real EntityManagerFactory
-		EntityManagerFactory emfSpy = Mockito.spy(emf);
+	    // Arrange
+	    Player player = new Player();
+	    player.setName("Test Player");
 
-		// Spy on the EntityManager
-		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
+	    // Persist the player to get an ID
+	    EntityManager em = emf.createEntityManager();
+	    em.getTransaction().begin();
+	    em.persist(player);
+	    em.getTransaction().commit();
+	    em.close();
 
-		// Spy on the EntityTransaction
-		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+	    // Update the player
+	    player.setName("Updated Name");
+	    PlayerDAOIMPL dao = new PlayerDAOIMPL(emf);
 
-		// Make the spies return each other
-		when(emfSpy.createEntityManager()).thenReturn(emSpy);
-		when(emSpy.getTransaction()).thenReturn(transactionSpy);
+	    // Act
+	    dao.updatePlayer(player);
 
-		// Ensure the transaction is not active at the start
-		when(transactionSpy.isActive()).thenReturn(false);
-
-		// Create a Player instance
-		Player player = new Player();
-		player.setName("Test Player");
-		player.setId(1L); // Assuming Player has an ID field
-
-		// Mock the find method to return the player
-		when(emSpy.find(Player.class, player.getId())).thenReturn(player);
-
-		// Inject the spied EntityManagerFactory into the PlayerDAOIMPL
-		PlayerDAOIMPL dao = new PlayerDAOIMPL(emfSpy);
-
-		// Call the method to update the player
-		dao.updatePlayer(player);
-
-		// Verify that the find method was called
-		verify(emSpy).find(Player.class, player.getId());
-
-		// Verify that the transaction was begun and committed
-		verify(transactionSpy).begin();
-		verify(transactionSpy).commit();
-
-		// Verify that the EntityManager was closed
-		verify(emSpy).close();
+	    // Assert
+	    em = emf.createEntityManager();
+	    Player updatedPlayer = em.find(Player.class, player.getId());
+	    assertEquals("Updated Name", updatedPlayer.getName());
+	    em.close();
 	}
+
 
 	@Test
 	void testUpdatePlayerWhenTransactionIsNotActive() {

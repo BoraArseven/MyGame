@@ -15,7 +15,7 @@ import picocli.CommandLine.Option;
 
 import java.awt.EventQueue;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 @Command(name = "MyGame", mixinStandardHelpOptions = true, version = "1.0", description = "Starts the MyGame application")
 public class Main implements Runnable {

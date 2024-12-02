@@ -1,6 +1,6 @@
 package com.boracompany.mygame.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import com.boracompany.mygame.main.ExcludeFromJacocoGeneratedReport;
 
