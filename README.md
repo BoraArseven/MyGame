@@ -29,3 +29,7 @@ DB_URL=jdbc:postgresql://mygamepostgres:5432/${POSTGRES_DB}<br>
 
 Database is saved to .db folder which is shared with containers, and if password is forgotten, please simply remove that folder.
 
+Maven command might need sudo permissions.
+
+This probably is not needed but if there is something wrong with GUI, the socat server can be runned with Socat.sh.
+
