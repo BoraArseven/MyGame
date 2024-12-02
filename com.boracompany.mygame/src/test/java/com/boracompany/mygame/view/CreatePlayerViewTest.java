@@ -40,7 +40,7 @@ public class CreatePlayerViewTest extends AssertJSwingJUnitTestCase {
 	protected void onSetUp() {
 		closeable = MockitoAnnotations.openMocks(this);
 		// Create the GUI on the Event Dispatch Thread
-		createPlayerView = GuiActionRunner.execute(() -> new CreatePlayerView());
+		createPlayerView = GuiActionRunner.execute(CreatePlayerView::new);
 		createPlayerView.setSchoolController(gameController);
 		window = new FrameFixture(robot(), createPlayerView); // Pass robot to FrameFixture
 		window.show(); // shows the frame to test
