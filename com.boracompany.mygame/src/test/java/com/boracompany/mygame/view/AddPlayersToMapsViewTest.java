@@ -44,7 +44,7 @@ public class AddPlayersToMapsViewTest extends AssertJSwingJUnitTestCase {
 	protected void onSetUp() {
 
 		MockitoAnnotations.openMocks(this);
-		addPlayersToMaps = GuiActionRunner.execute(() -> new AddPlayersToMapsView());
+		addPlayersToMaps = GuiActionRunner.execute(AddPlayersToMapsView::new);
 		mockGameController = Mockito.mock(GameController.class);
 		addPlayersToMaps.setGameController(mockGameController);
 		window = new FrameFixture(robot(), addPlayersToMaps);

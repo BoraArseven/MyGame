@@ -44,7 +44,7 @@ public class CreateMapViewTest extends AssertJSwingJUnitTestCase {
 	protected void onSetUp() {
 		closeable = MockitoAnnotations.openMocks(this);
 		// Create the GUI on the Event Dispatch Thread
-		createMapView = GuiActionRunner.execute(() -> new CreateMapView());
+		createMapView = GuiActionRunner.execute(CreateMapView::new);
 		createMapView.setGameController(gameController);
 		window = new FrameFixture(robot(), createMapView); // Pass robot to FrameFixture
 		window.show(); // shows the frame to test
