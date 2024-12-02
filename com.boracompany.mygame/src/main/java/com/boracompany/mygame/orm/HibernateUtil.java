@@ -56,9 +56,13 @@ public class HibernateUtil {
 	    // Check and create database if it doesn't exist
 	    createDatabaseIfNotExists(baseDbUrl, dbUser, dbPassword, databaseName);
 
-	    properties.put(AvailableSettings.JAKARTA_JDBC_URL, dbUrl);
-	    properties.put(AvailableSettings.JAKARTA_JDBC_USER, dbUser);
-	    properties.put(AvailableSettings.JAKARTA_JDBC_PASSWORD, dbPassword);
+	    // Use standard JPA properties
+	    properties.put("jakarta.persistence.jdbc.url", dbUrl);
+	    properties.put("jakarta.persistence.jdbc.user", dbUser);
+	    properties.put("jakarta.persistence.jdbc.password", dbPassword);
+	    properties.put("jakarta.persistence.jdbc.driver", "org.postgresql.Driver"); // Include if necessary
+
+	    // Hibernate-specific properties
 	    properties.put(AvailableSettings.DIALECT, "org.hibernate.dialect.PostgreSQLDialect");
 	    properties.put(AvailableSettings.HBM2DDL_AUTO, "update");
 	    properties.put(AvailableSettings.SHOW_SQL, "true");
