@@ -28,7 +28,7 @@ jobs:
       - name: Cache SonarCloud packages
         uses: actions/cache@v4
         with:
-          path: ~/.sonar/cache
+
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
@@ -38,6 +38,7 @@ jobs:
         with:
           path: |
             ~/.m2
+            ~/.sonar/cache
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
@@ -61,7 +62,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed for PR decoration
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          xvfb-run mvn org.sonar:sonar \
+          xvfb-run mvn sonarsource/sonarcloud-github-action@v1.0.21 \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
             -Dsonar.cpd.exclusions=**/generated/**/*.java,**/CreateMapView.java,**/CreatePlayerView.java,**/MainMenuView.java,**/PlayerAttackView.java \
             -Dsonar.issue.ignore.multicriteria=e2e_rule,ignore_cycles \
