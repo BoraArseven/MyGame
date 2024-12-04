@@ -26,9 +26,9 @@ import com.boracompany.mygame.orm.HibernateUtil;
 @RunWith(org.assertj.swing.junit.runner.GUITestRunner.class)
 @Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-public class MyGameAppITE2E extends AssertJSwingJUnitTestCase {
+public class ITMyGameAppE2E extends AssertJSwingJUnitTestCase {
 
-	private static final Logger logger = LogManager.getLogger(MyGameAppITE2E.class);
+	private static final Logger logger = LogManager.getLogger(ITMyGameAppE2E.class);
 	private static PostgreSQLContainer<?> postgreSQLContainer;
 	private FrameFixture window;
 
