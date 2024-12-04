@@ -73,8 +73,3 @@ jobs:
             -Dsonar.projectKey=BoraArseven_MyGame \
             -Dsonar.host.url=https://sonarcloud.io
 
-      # Step 8: Generate JUnit report (optional)
-      - name: Generate JUnit Report
-        run: >
-          mvn -f com.boracompany.mygame/pom.xml
-          surefire-report:report-only site:site -DgenerateReports=false
