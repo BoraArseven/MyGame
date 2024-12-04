@@ -143,6 +143,7 @@ public class CreateMapView extends JFrame {
 				getDeleteButton().setEnabled(list.getSelectedIndex() != -1);
 			}
 		});
+		
 		list.setName("ListMaps");
 		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		scrollPane.setViewportView(list);
