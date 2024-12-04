@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: 17
-          distribution: 'zulu'
+          distribution: 'temurin'
 
       # Step 3: Cache Maven packages
       - name: Cache Maven packages
