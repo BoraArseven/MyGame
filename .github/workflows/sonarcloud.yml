@@ -24,7 +24,7 @@ jobs:
           java-version: 17
           distribution: 'zulu' # Alternative distributions are also supported
 
-      # Step 4: Cache Maven packages
+      # Step 3: Cache Maven packages
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
@@ -34,29 +34,24 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      # Step 5: Generate JaCoCo coverage report
+      # Step 4: Generate JaCoCo coverage report
       - name: Generate JaCoCo Report
         working-directory: com.boracompany.mygame
         run: |
           xvfb-run mvn clean verify -Pjacoco \
             -Djacoco.outputDir=target/site/jacoco
 
-      # Step 6: Verify JaCoCo report
+      # Step 5: Verify JaCoCo report
       - name: List JaCoCo Report Directory
         working-directory: com.boracompany.mygame
         run: |
           ls -la target/site/jacoco/
-	
-      # Step 7: Run SonarCloud analysis
+
+      # Step 6: Run SonarCloud analysis
       - name: SonarCloud Analysis
         uses: SonarSource/sonarcloud-github-action@v3.1.0
         with:
           projectBaseDir: com.boracompany.mygame  # Adjust if needed
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed for PR decoration
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_SCANNER_OPTS: "-Xmx2048m"  # Optional: increase memory allocation for large projects
-        with:
           args: >
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
             -Dsonar.cpd.exclusions=**/generated/**/*.java,**/CreateMapView.java,**/CreatePlayerView.java,**/MainMenuView.java,**/PlayerAttackView.java
@@ -67,4 +62,7 @@ jobs:
             -Dsonar.issue.ignore.multicriteria.ignore_cycles.resourceKey=**/*.java
             -Dsonar.projectKey=BoraArseven_MyGame
             -Dsonar.host.url=https://sonarcloud.io
-
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed for PR decoration
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_SCANNER_OPTS: "-Xmx2048m"  # Optional: increase memory allocation for large projects
