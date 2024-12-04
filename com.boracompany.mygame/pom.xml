@@ -379,10 +379,7 @@ since javax.xml.bind has been removed from the JDK -->
 					<groupId>org.jacoco</groupId>
 					<artifactId>jacoco-maven-plugin</artifactId>
 					<version>0.8.10</version>
-
 					<configuration>
-
-
 						<rules>
 							<rule>
 								<element>METHOD</element>
@@ -412,8 +409,9 @@ since javax.xml.bind has been removed from the JDK -->
 								<goal>report</goal>
 							</goals>
 							<configuration>
-								<outputDirectory>
-									${project.build.directory}/site/jacoco</outputDirectory>
+								<formats>
+									<format>XML</format>
+								</formats>
 							</configuration>
 						</execution>
 						<execution>
