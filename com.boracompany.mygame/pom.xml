@@ -328,7 +328,7 @@ since javax.xml.bind has been removed from the JDK -->
 							<param>com.boracompany.mygame.e2e.*</param>
 						</excludedClasses>
 						<excludedTestClasses>
-							<param>com.boracompany.mygame.MyGameAppE2E</param>
+							<param>com.boracompany.mygame.MyGameAppITE2E</param>
 							<param>com.boracompany.mygame.IT.*</param> <!--
 							Exclude IT folder -->
 							<param>com.boracompany.mygame.e2e.*</param>
