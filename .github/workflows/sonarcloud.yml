@@ -51,11 +51,11 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          xvfb-run mvn sonar:sonar \
-            -Dsonar.projectKey=BoraArseven_MyGame \
-            -Dsonar.organization=boraarseven \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-            -Dsonar.java.binaries=target/classes \
-            -Dsonar.cpd.exclusions=**/generated/**/*.java,**/CreateMapView.java,**/CreatePlayerView.java,**/MainMenuView.java,**/PlayerAttackView.java
+           xvfb-run mvn sonar:sonar \
+           -Dsonar.projectKey=BoraArseven_MyGame \
+           -Dsonar.organization=boraarseven \
+           -Dsonar.host.url=https://sonarcloud.io \
+           -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+           -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+           -Dsonar.java.binaries=target/classes \
+           -Dsonar.coverage.exclusions="src/main/java/com/boracompany/mygame/model/**/*.java,src/main/java/com/boracompany/mygame/main/**/*.java,src/main/java/com/boracompany/mygame/view/MainMenuView.java,src/main/java/com/boracompany/mygame/orm/HibernatePersistenceUnitInfo.java,src/main/java/com/boracompany/mygame/orm/HibernateUtil.java"
