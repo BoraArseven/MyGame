@@ -38,7 +38,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed for PR decoration
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-            xvfb-run mvn -B -e verify -Pjacoco  org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            xvfb-run mvn -B verify -Pjacoco  org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
               -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
               -Dsonar.cpd.exclusions=**/generated/**/*.java,**/CreateMapView.java,**/CreatePlayerView.java,**/MainMenuView.java,**/PlayerAttackView.java \
               -Dsonar.issue.ignore.multicriteria=e2e_rule,ignore_cycles \
@@ -52,4 +52,7 @@ jobs:
         run: >
             mvn -f com.boracompany.mygame/pom.xml
             surefire-report:report-only site:site -DgenerateReports=false
-
+      - name: List JaCoCo Report Directory
+        working-directory: com.boracompany.mygame
+        run: |
+            ls -la target/site/jacoco/

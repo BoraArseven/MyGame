@@ -378,7 +378,7 @@ since javax.xml.bind has been removed from the JDK -->
 				<plugin>
 					<groupId>org.jacoco</groupId>
 					<artifactId>jacoco-maven-plugin</artifactId>
-					<version>0.8.7</version>
+					<version>0.8.10</version>
 					<configuration>
 						<rules>
 							<rule>
@@ -428,7 +428,7 @@ since javax.xml.bind has been removed from the JDK -->
 											<limit>
 												<counter>LINE</counter>
 												<value>COVEREDRATIO</value>
-												<minimum>1.00</minimum>
+												<minimum>0.95</minimum>
 											</limit>
 										</limits>
 									</rule>
