@@ -501,7 +501,7 @@ since javax.xml.bind has been removed from the JDK -->
 					<plugin>
 						<groupId>org.sonarsource.scanner.maven</groupId>
 						<artifactId>sonar-maven-plugin</artifactId>
-						<version>3.9.1.2184</version> <!-- Use the latest version -->
+						<version>${sonar-maven-plugin.version}</version> <!-- Use the latest version -->
 					</plugin>
 				</plugins>
 			</build>
