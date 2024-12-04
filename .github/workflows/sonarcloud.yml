@@ -49,7 +49,7 @@ jobs:
         working-directory: com.boracompany.mygame
         run: |
           cat target/site/jacoco/jacoco.xml | grep -A 5 "selectedAttacker"
-		  
+
       # Step 6: Run SonarCloud analysis with Maven
       - name: Run SonarCloud Analysis
         working-directory: com.boracompany.mygame
