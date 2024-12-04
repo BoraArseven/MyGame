@@ -24,14 +24,6 @@ jobs:
           java-version: 17
           distribution: 'zulu' # Alternative distributions are also supported
 
-      # Step 3: Cache SonarCloud packages
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v4
-        with:
-
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
       # Step 4: Cache Maven packages
       - name: Cache Maven packages
         uses: actions/cache@v3
