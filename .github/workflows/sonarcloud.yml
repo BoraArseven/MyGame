@@ -51,13 +51,8 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-           xvfb-run mvn sonar:sonar \
-           -Dsonar.projectKey=BoraArseven_MyGame \
-           -Dsonar.organization=boraarseven \
-           -Dsonar.host.url=https://sonarcloud.io \
-           -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-           -Dsonar.java.binaries=target/classes \
-           -Dsonar.coverage.exclusions="src/main/java/com/boracompany/mygame/model/**/*.java,src/main/java/com/boracompany/mygame/main/**/*.java,src/main/java/com/boracompany/mygame/view/MainMenuView.java,src/main/java/com/boracompany/mygame/orm/HibernatePersistenceUnitInfo.java,src/main/java/com/boracompany/mygame/orm/HibernateUtil.java"
-           -Dsonar.cpd.exclusions="src/main/java/com/boracompany/mygame/view/*.java"
-
-		   
+            xvfb-run mvn -B verify -Pjacoco,sonar org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+            -Dsonar.projectKey=BoraArseven_MyGame \
+            -Dsonar.organization=boraarseven \
+            -Dsonar.host.url=https://sonarcloud.io
