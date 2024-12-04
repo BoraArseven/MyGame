@@ -34,11 +34,11 @@
 	</properties>
 
 	<dependencies>
-<dependency>
-    <groupId>org.sonarsource.scanner.maven</groupId>
-    <artifactId>sonar-maven-plugin</artifactId>
-    <version>${sonar-maven-plugin.version}</version>
-</dependency>
+		<dependency>
+			<groupId>org.sonarsource.scanner.maven</groupId>
+			<artifactId>sonar-maven-plugin</artifactId>
+			<version>${sonar-maven-plugin.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -384,12 +384,13 @@ since javax.xml.bind has been removed from the JDK -->
 				<plugin>
 					<groupId>org.jacoco</groupId>
 					<artifactId>jacoco-maven-plugin</artifactId>
-					<version>0.8.10</version>
+					<version>0.8.12</version>
 					<configuration>
 						<rules>
 							<rule>
 								<element>METHOD</element>
 								<excludes>
+									<exclude>**/generated/**</exclude>
 									<exclude>
 										*@com.boracompany.mygame.Main.ExcludeFromJacocoGeneratedReport*</exclude>
 								</excludes>
@@ -501,7 +502,8 @@ since javax.xml.bind has been removed from the JDK -->
 					<plugin>
 						<groupId>org.sonarsource.scanner.maven</groupId>
 						<artifactId>sonar-maven-plugin</artifactId>
-						<version>${sonar-maven-plugin.version}</version> <!-- Use the latest version -->
+						<version>${sonar-maven-plugin.version}</version> <!-- Use
+						the latest version -->
 					</plugin>
 				</plugins>
 			</build>
