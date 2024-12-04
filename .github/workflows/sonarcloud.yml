@@ -39,6 +39,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
             xvfb-run mvn -B -e verify -Pjacoco  sonar:sonar \
+              -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
               -Dsonar.cpd.exclusions=**/generated/**/*.java,**/CreateMapView.java,**/CreatePlayerView.java,**/MainMenuView.java,**/PlayerAttackView.java \
               -Dsonar.issue.ignore.multicriteria=e2e_rule,ignore_cycles \
               -Dsonar.issue.ignore.multicriteria.e2e_rule.ruleKey=java:S3577 \

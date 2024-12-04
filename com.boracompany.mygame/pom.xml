@@ -409,6 +409,7 @@ since javax.xml.bind has been removed from the JDK -->
 								<goal>report</goal>
 							</goals>
 							<configuration>
+							  <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
 								<formats>
 									<format>XML</format>
 								</formats>
