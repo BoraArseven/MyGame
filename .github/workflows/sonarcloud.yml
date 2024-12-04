@@ -38,7 +38,6 @@ jobs:
         with:
           path: |
             ~/.m2
-            ~/.sonar/cache
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
@@ -62,7 +61,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed for PR decoration
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          xvfb-run mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+          xvfb-run mvn org.sonar:sonar \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
             -Dsonar.cpd.exclusions=**/generated/**/*.java,**/CreateMapView.java,**/CreatePlayerView.java,**/MainMenuView.java,**/PlayerAttackView.java \
             -Dsonar.issue.ignore.multicriteria=e2e_rule,ignore_cycles \
