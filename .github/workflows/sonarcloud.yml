@@ -50,9 +50,12 @@ jobs:
       # Step 7: Run SonarCloud analysis
       - name: SonarCloud Analysis
         working-directory: com.boracompany.mygame
+        uses: SonarSource/sonarcloud-github-action@v3.1.0
+        projectBaseDir: my-custom-directory
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed for PR decoration
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed for PR decoration
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        args: >
         run: |
           xvfb-run mvn -Pjacoco sonar:sonar \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
@@ -64,4 +67,3 @@ jobs:
             -Dsonar.issue.ignore.multicriteria.ignore_cycles.resourceKey=**/*.java \
             -Dsonar.projectKey=BoraArseven_MyGame \
             -Dsonar.host.url=https://sonarcloud.io
-
