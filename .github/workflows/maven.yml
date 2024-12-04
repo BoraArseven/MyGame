@@ -1,38 +1,84 @@
-name: Java 17 CI with Maven
+name: Java 17 CI with SonarCloud and Coveralls
 
 on:
   push:
+    branches:
+      - main
   pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   build:
-
+    name: Build, Analyze, and Test Coverage
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: 17
-    - name: Cache local Maven repository
-      uses: actions/cache@v4
-      with:
-        path: ~/.m2/repository
-        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          ${{ runner.os }}-maven
-    - name: Build with Maven
-      run: xvfb-run mvn clean verify -Pjacoco -DrepoToken=${{ secrets.COVERALLS_REPO_TOKEN }} coveralls:report
-      working-directory: com.boracompany.mygame
-    - name: Generate JUnit Report
-      run: >
-         mvn -f com.boracompany.mygame/pom.xml
-         surefire-report:report-only site:site -DgenerateReports=false
-      if: ${{ always() }}
-    - name: Archive JUnit Report
-      uses: actions/upload-artifact@v4
-      if: ${{ always() }}
-      with:
-        name: surefire-report-jdk-17
-        path: '**/target/site'
+      # Checkout the repository
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full repository clone for accurate analysis
+
+      # Set up JDK 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'  # Alternative: 'zulu'
+          java-version: 17
+
+      # Cache Maven repository
+      - name: Cache local Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven
+
+      # Cache SonarCloud packages
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      # Run Maven build, verify, and coverage report
+      - name: Build, verify, and analyze
+        working-directory: com.boracompany.mygame
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed for PR decoration
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+        run: |
+          xvfb-run mvn clean verify -Pjacoco \
+            org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+            -Dsonar.cpd.exclusions=**/generated/**/*.java,**/CreateMapView.java,**/CreatePlayerView.java,**/MainMenuView.java,**/PlayerAttackView.java \
+            -Dsonar.issue.ignore.multicriteria=e2e_rule,ignore_cycles \
+            -Dsonar.issue.ignore.multicriteria.e2e_rule.ruleKey=java:S3577 \
+            -Dsonar.issue.ignore.multicriteria.e2e_rule.resourceKey=**/MyGameAppE2E.java \
+            -Dsonar.issue.ignore.multicriteria.ignore_cycles.ruleKey=javaarchitecture:S7027 \
+            -Dsonar.issue.ignore.multicriteria.ignore_cycles.resourceKey=**/*.java \
+            -Dsonar.projectKey=BoraArseven_MyGame \
+            -Dsonar.host.url=https://sonarcloud.io \
+            coveralls:report
+
+      # Generate JUnit Report
+      - name: Generate JUnit Report
+        run: >
+          mvn -f com.boracompany.mygame/pom.xml
+          surefire-report:report-only site:site -DgenerateReports=false
+        if: ${{ always() }}
+
+      # Archive JUnit Report
+      - name: Archive JUnit Report
+        uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: surefire-report-jdk-17
+          path: '**/target/site'
+
+      # List JaCoCo Report Directory
+      - name: List JaCoCo Report Directory
+        working-directory: com.boracompany.mygame
+        run: |
+          ls -la target/site/jacoco/
