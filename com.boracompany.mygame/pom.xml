@@ -30,9 +30,15 @@
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 		<pitest.version>1.16.1</pitest.version>
 		<hibernate.version>6.6.3.Final</hibernate.version>
+		<sonar-maven-plugin.version>5.0.0.4389</sonar-maven-plugin.version>
 	</properties>
 
 	<dependencies>
+<dependency>
+    <groupId>org.sonarsource.scanner.maven</groupId>
+    <artifactId>sonar-maven-plugin</artifactId>
+    <version>${sonar-maven-plugin.version}</version>
+</dependency>
 
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -409,7 +415,8 @@ since javax.xml.bind has been removed from the JDK -->
 								<goal>report</goal>
 							</goals>
 							<configuration>
-							  <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
+								<outputDirectory>
+									${project.build.directory}/site/jacoco</outputDirectory>
 								<formats>
 									<format>XML</format>
 								</formats>
@@ -483,6 +490,18 @@ since javax.xml.bind has been removed from the JDK -->
 								</goals>
 							</execution>
 						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>sonar</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.sonarsource.scanner.maven</groupId>
+						<artifactId>sonar-maven-plugin</artifactId>
+						<version>3.9.1.2184</version> <!-- Use the latest version -->
 					</plugin>
 				</plugins>
 			</build>
