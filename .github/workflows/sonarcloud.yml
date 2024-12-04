@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: Build and analyze
+    name: Build, Test, and Analyze
     runs-on: ubuntu-latest
     steps:
       # Step 1: Checkout the repository
@@ -22,49 +22,40 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: 17
-          distribution: 'zulu' # Alternative distributions are also supported
+          distribution: 'zulu'
 
       # Step 3: Cache Maven packages
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.m2
-            ~/.sonar/cache
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven
 
-      # Step 4: Generate JaCoCo coverage report
-      - name: Generate JaCoCo Report
+      # Step 4: Build, test, and generate JaCoCo coverage report
+      - name: Build and Generate Coverage
         working-directory: com.boracompany.mygame
         run: |
-          xvfb-run mvn clean verify -Pjacoco \
-            -Djacoco.outputDir=target/site/jacoco
+          xvfb-run mvn clean verify -Pjacoco
 
-      # Step 5: Verify JaCoCo report
+      # Step 5: List JaCoCo report for verification
       - name: List JaCoCo Report Directory
         working-directory: com.boracompany.mygame
         run: |
           ls -la target/site/jacoco/
 
-      # Step 6: Run SonarCloud analysis
-      - name: SonarCloud Analysis
-        uses: SonarSource/sonarcloud-github-action@v3.1.0
-        with:
-          projectBaseDir: com.boracompany.mygame  # Adjust if needed
-          args: >
-            -Dsonar.java.binaries=target/classes
-            -Dsonar.organization=boraarseven
-            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-            -Dsonar.cpd.exclusions=**/generated/**/*.java,**/CreateMapView.java,**/CreatePlayerView.java,**/MainMenuView.java,**/PlayerAttackView.java
-            -Dsonar.issue.ignore.multicriteria=e2e_rule,ignore_cycles
-            -Dsonar.issue.ignore.multicriteria.e2e_rule.ruleKey=java:S3577
-            -Dsonar.issue.ignore.multicriteria.e2e_rule.resourceKey=**/MyGameAppE2E.java
-            -Dsonar.issue.ignore.multicriteria.ignore_cycles.ruleKey=javaarchitecture:S7027
-            -Dsonar.issue.ignore.multicriteria.ignore_cycles.resourceKey=**/*.java
-            -Dsonar.projectKey=BoraArseven_MyGame
-            -Dsonar.host.url=https://sonarcloud.io
+      # Step 6: Run SonarCloud analysis with Maven
+      - name: Run SonarCloud Analysis
+        working-directory: com.boracompany.mygame
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed for PR decoration
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_SCANNER_OPTS: "-Xmx2048m"  # Optional: increase memory allocation for large projects
+        run: |
+          xvfb-run mvn sonar:sonar \
+            -Dsonar.projectKey=BoraArseven_MyGame \
+            -Dsonar.organization=boraarseven \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+            -Dsonar.java.binaries=target/classes \
+            -Dsonar.cpd.exclusions=**/generated/**/*.java,**/CreateMapView.java,**/CreatePlayerView.java,**/MainMenuView.java,**/PlayerAttackView.java
