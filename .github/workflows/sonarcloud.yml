@@ -38,7 +38,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed for PR decoration
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-            xvfb-run mvn -B -e verify -Pjacoco  org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389 \
+            xvfb-run mvn -B -e verify -Pjacoco  sonar:sonar \
               -Dsonar.cpd.exclusions=**/generated/**/*.java,**/CreateMapView.java,**/CreatePlayerView.java,**/MainMenuView.java,**/PlayerAttackView.java \
               -Dsonar.issue.ignore.multicriteria=e2e_rule,ignore_cycles \
               -Dsonar.issue.ignore.multicriteria.e2e_rule.ruleKey=java:S3577 \
