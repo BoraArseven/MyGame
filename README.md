@@ -12,7 +12,7 @@ SonarCloud Security Rating: [![Security Rating](https://sonarcloud.io/api/projec
 SonarCloud Reliability Rating: [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=BoraArseven_MyGame&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=BoraArseven_MyGame)  <br>
 SonarCloud Duplicated Lines: [![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=BoraArseven_MyGame&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=BoraArseven_MyGame)  <br>
 Latest Mutation Testing Report: https://boraarseven.github.io/MyGame/<br>
-
+SonarCloud Coverage [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=BoraArseven_MyGame&metric=coverage)](https://sonarcloud.io/summary/new_code?id=BoraArseven_MyGame)<br>
 This Project Uses Java 17.<br>
 
 Usage:<br>
