@@ -1095,6 +1095,55 @@ public class PlayerAttackViewTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
+	@GUITest
+	public void testRefreshPlayerLists_SelectedAttackerNotInLivingPlayers() {
+		// Arrange
+		GameMap testMap = new GameMap(1L, "TestMap");
+		Player player1 = new Player("Player1", 100, 20, true);
+		Player player2 = new Player("Player2", 80, 15, true);
+		player1.setMap(testMap);
+		player2.setMap(testMap);
+
+		// Mock the GameController to return both players initially
+		when(mockGameController.getAllMaps()).thenReturn(Collections.singletonList(testMap));
+		when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Arrays.asList(player1, player2));
+
+		// Inject the mock controller into the view
+		GuiActionRunner.execute(() -> {
+			playerAttackView.setGameController(mockGameController);
+			playerAttackView.getMapListModel().addElement(testMap);
+		});
+
+		// Select the map
+		window.list("mapList").selectItem(0);
+
+		// Select player1 as the attacker
+		window.list("attackerList").selectItem(0); // Assuming player1 is at index 0
+
+		// Verify that the selected attacker is player1
+		GuiActionRunner.execute(() -> {
+			Player selectedAttacker = playerAttackView.getAttackerList().getSelectedValue();
+			assertThat(selectedAttacker).isEqualTo(player1);
+		});
+
+		// Now mock the GameController to return only player2 (player1 is no longer in
+		// livingPlayers)
+		when(mockGameController.getPlayersFromMap(testMap.getId())).thenReturn(Collections.singletonList(player2));
+
+		// Refresh player lists
+		GuiActionRunner.execute(() -> {
+			playerAttackView.refreshPlayerLists();
+		});
+
+		// After refreshing, selectedAttacker should be null since player1 is no longer
+		// in the list
+		GuiActionRunner.execute(() -> {
+			Player selectedAttackerAfterRefresh = playerAttackView.getAttackerList().getSelectedValue();
+			assertThat(selectedAttackerAfterRefresh).isNull(); // Attacker selection should be cleared
+		});
+	}
+
+	@Test
 	public void testAttackButtonActionListener() {
 		// Retrieve the ActionListeners attached to the "Attack" button
 		GuiActionRunner.execute(() -> {

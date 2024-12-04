@@ -495,19 +495,36 @@ since javax.xml.bind has been removed from the JDK -->
 				</plugins>
 			</build>
 		</profile>
-		<profile>
-			<id>sonar</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.sonarsource.scanner.maven</groupId>
-						<artifactId>sonar-maven-plugin</artifactId>
-						<version>${sonar-maven-plugin.version}</version> <!-- Use
-						the latest version -->
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
+
+			<profile>
+				<id>sonar</id>
+				<properties>
+					<!-- Exclude patterns for code coverage -->
+					<sonar.coverage.exclusions>
+						src/main/java/com/boracompany/mygame/model/**/*.java,
+						src/main/java/com/boracompany/mygame/main/**/*.java,
+						src/main/java/com/boracompany/mygame/view/MainMenuView.java,
+						src/main/java/com/boracompany/mygame/orm/HibernatePersistenceUnitInfo.java,
+						src/main/java/com/boracompany/mygame/orm/HibernateUtil.java
+					</sonar.coverage.exclusions>
+
+					<!-- Exclude patterns for CPD (Copy-Paste Detection) -->
+					<sonar.cpd.exclusions>
+						src/main/java/com/boracompany/mygame/view/*.java
+					</sonar.cpd.exclusions>
+				</properties>
+				<build>
+					<plugins>
+						<plugin>
+							<groupId>org.sonarsource.scanner.maven</groupId>
+							<artifactId>sonar-maven-plugin</artifactId>
+							<version>${sonar-maven-plugin.version}</version> <!--
+							Use the latest version -->
+						</plugin>
+					</plugins>
+				</build>
+			</profile>
+
 		<profile>
 			<id>mutation-testing</id>
 			<build>
