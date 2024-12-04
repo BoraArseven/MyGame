@@ -47,23 +47,23 @@ jobs:
         run: |
           ls -la target/site/jacoco/
 
-		  # Step 7: Run SonarCloud analysis
-		  - name: SonarCloud Analysis
-		    uses: SonarSource/sonarcloud-github-action@v3.1.0
-		    with:
-		      projectBaseDir: com.boracompany.mygame  # Adjust if needed
-		    env:
-		      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed for PR decoration
-		      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-		      SONAR_SCANNER_OPTS: "-Xmx2048m"  # Optional: increase memory allocation for large projects
-		    args: >
-		      -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-		      -Dsonar.cpd.exclusions=**/generated/**/*.java,**/CreateMapView.java,**/CreatePlayerView.java,**/MainMenuView.java,**/PlayerAttackView.java
-		      -Dsonar.issue.ignore.multicriteria=e2e_rule,ignore_cycles
-		      -Dsonar.issue.ignore.multicriteria.e2e_rule.ruleKey=java:S3577
-		      -Dsonar.issue.ignore.multicriteria.e2e_rule.resourceKey=**/MyGameAppE2E.java
-		      -Dsonar.issue.ignore.multicriteria.ignore_cycles.ruleKey=javaarchitecture:S7027
-		      -Dsonar.issue.ignore.multicriteria.ignore_cycles.resourceKey=**/*.java
-		      -Dsonar.projectKey=BoraArseven_MyGame
-		      -Dsonar.host.url=https://sonarcloud.io
+      # Step 7: Run SonarCloud analysis
+      - name: SonarCloud Analysis
+        uses: SonarSource/sonarcloud-github-action@v3.1.0
+        with:
+          projectBaseDir: com.boracompany.mygame  # Adjust if needed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed for PR decoration
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_SCANNER_OPTS: "-Xmx2048m"  # Optional: increase memory allocation for large projects
+        args: >
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+          -Dsonar.cpd.exclusions=**/generated/**/*.java,**/CreateMapView.java,**/CreatePlayerView.java,**/MainMenuView.java,**/PlayerAttackView.java
+          -Dsonar.issue.ignore.multicriteria=e2e_rule,ignore_cycles
+          -Dsonar.issue.ignore.multicriteria.e2e_rule.ruleKey=java:S3577
+          -Dsonar.issue.ignore.multicriteria.e2e_rule.resourceKey=**/MyGameAppE2E.java
+          -Dsonar.issue.ignore.multicriteria.ignore_cycles.ruleKey=javaarchitecture:S7027
+          -Dsonar.issue.ignore.multicriteria.ignore_cycles.resourceKey=**/*.java
+          -Dsonar.projectKey=BoraArseven_MyGame
+          -Dsonar.host.url=https://sonarcloud.io
 
