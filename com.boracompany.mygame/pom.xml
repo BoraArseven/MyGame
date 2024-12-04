@@ -328,7 +328,7 @@ since javax.xml.bind has been removed from the JDK -->
 							<param>com.boracompany.mygame.e2e.*</param>
 						</excludedClasses>
 						<excludedTestClasses>
-							<param>com.boracompany.mygame.MyGameAppE2E</param>
+							<param>com.boracompany.mygame.MyGameAppITE2E</param>
 							<param>com.boracompany.mygame.IT.*</param> <!--
 							Exclude IT folder -->
 							<param>com.boracompany.mygame.e2e.*</param>
@@ -512,17 +512,15 @@ since javax.xml.bind has been removed from the JDK -->
             src/main/java/com/boracompany/mygame/view/*.java
         </sonar.cpd.exclusions>
 
-        <!-- Exclude specific SonarQube rules -->
-        <!-- Define the criteria keys -->
-        <sonar.issue.ignore.multicriteria>e1,e2</sonar.issue.ignore.multicriteria>
+        <!-- Exclude specific SonarQube rule -->
+        <!-- Define the criteria key -->
+        <sonar.issue.ignore.multicriteria>e1</sonar.issue.ignore.multicriteria>
 
-        <!-- First rule to ignore -->
+        <!-- Specify the rule to ignore -->
         <sonar.issue.ignore.multicriteria.e1.ruleKey>javaarchitecture:S7027</sonar.issue.ignore.multicriteria.e1.ruleKey>
-        <sonar.issue.ignore.multicriteria.e1.resourceKey>**/*.java</sonar.issue.ignore.multicriteria.e1.resourceKey>
 
-        <!-- Second rule to ignore -->
-        <sonar.issue.ignore.multicriteria.e2.ruleKey>java:S3577</sonar.issue.ignore.multicriteria.e2.ruleKey>
-        <sonar.issue.ignore.multicriteria.e2.resourceKey>**/*.java</sonar.issue.ignore.multicriteria.e2.resourceKey>
+        <!-- Specify the files where the rule should be ignored -->
+        <sonar.issue.ignore.multicriteria.e1.resourceKey>**/*.java</sonar.issue.ignore.multicriteria.e1.resourceKey>
     </properties>
     <build>
         <plugins>
@@ -534,7 +532,6 @@ since javax.xml.bind has been removed from the JDK -->
         </plugins>
     </build>
 </profile>
-
 
 		<profile>
 			<id>mutation-testing</id>
