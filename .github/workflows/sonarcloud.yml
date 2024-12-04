@@ -53,6 +53,7 @@ jobs:
         with:
           projectBaseDir: com.boracompany.mygame  # Adjust if needed
           args: >
+            -Dsonar.java.binaries=target/classes
             -Dsonar.organization=boraarseven
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
             -Dsonar.cpd.exclusions=**/generated/**/*.java,**/CreateMapView.java,**/CreatePlayerView.java,**/MainMenuView.java,**/PlayerAttackView.java
