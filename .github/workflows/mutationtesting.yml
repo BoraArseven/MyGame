@@ -37,7 +37,6 @@ jobs:
           name: pitest-report
           path: com.boracompany.mygame/target/pit-reports/**/*
 
-
       - name: Deploy Pitest Report to GitHub Pages
         if: always()
         uses: peaceiris/actions-gh-pages@v4

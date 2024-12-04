@@ -37,7 +37,7 @@ jobs:
       - name: Build and Generate Coverage
         working-directory: com.boracompany.mygame
         run: |
-          xvfb-run mvn clean verify -Pjacoco
+          xvfb-run mvn verify -Pjacoco
 
       # Step 5: List JaCoCo report for verification
       - name: List JaCoCo Report Directory
@@ -45,6 +45,11 @@ jobs:
         run: |
           ls -la target/site/jacoco/
 
+      - name: Verify JaCoCo XML
+        working-directory: com.boracompany.mygame
+        run: |
+          cat target/site/jacoco/jacoco.xml | grep -A 5 "selectedAttacker"
+		  
       # Step 6: Run SonarCloud analysis with Maven
       - name: Run SonarCloud Analysis
         working-directory: com.boracompany.mygame
