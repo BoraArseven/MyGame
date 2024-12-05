@@ -26,7 +26,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 
 @Testcontainers
-public class HibernateUtilIT {
+ class HibernateUtilIT {
 
 	@Container
 	private static PostgreSQLContainer<?> postgresContainer = extracted().withDatabaseName("testdb")
