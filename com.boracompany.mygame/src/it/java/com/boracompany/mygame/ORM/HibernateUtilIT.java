@@ -1,8 +1,8 @@
 package com.boracompany.mygame.ORM;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -57,7 +57,7 @@ public class HibernateUtilIT {
 	private String containerpassword;
 
 	@AfterEach
-	void tearDown() {
+	public void tearDown() {
 		// Close HibernateUtil
 		HibernateUtil.close();
 	}
@@ -125,18 +125,21 @@ public class HibernateUtilIT {
 
 	@Test
 	public void testCloseWhenEntityManagerFactoryIsNull() {
-		// Ensure entityManagerFactory is null
+		// Ensure the entityManagerFactory is null by explicitly closing it
 		HibernateUtil.close();
 
-		// Assert that entityManagerFactory is null after the first close
-		assertNull(HibernateUtil.getEntityManagerFactory(), "EntityManagerFactory should be null after close.");
+		// Call close() again, expecting no exceptions
+		assertDoesNotThrow(() -> HibernateUtil.close(),
+				"Calling close when entityManagerFactory is null should not throw exceptions");
 
-		// Call close() again
-		HibernateUtil.close();
+		// Verify that entityManagerFactory is still null after calling close()
+		Exception exception = assertThrows(IllegalStateException.class, () -> {
+			HibernateUtil.getEntityManagerFactory();
+		});
 
-		// Assert again to confirm no changes or exceptions occur
-		assertNull(HibernateUtil.getEntityManagerFactory(),
-				"EntityManagerFactory should remain null after subsequent close calls.");
+		String expectedMessage = "HibernateUtil is not initialized.";
+		String actualMessage = exception.getMessage();
+		assertTrue(actualMessage.contains(expectedMessage), "Exception message should indicate uninitialized state");
 	}
 
 	@Test
