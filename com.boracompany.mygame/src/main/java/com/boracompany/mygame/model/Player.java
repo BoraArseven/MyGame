@@ -91,20 +91,20 @@ public class Player {
 		this.map = map;
 	}
 
-	
 	@Override
 	public boolean equals(Object obj) {
-	    if (this == obj) return true;
-	    if (obj == null || getClass() != obj.getClass()) return false;
-	    Player player = (Player) obj;
-	    return id != null && id.equals(player.id);
+		if (this == obj)
+			return true;
+		if (obj == null || getClass() != obj.getClass())
+			return false;
+		Player player = (Player) obj;
+		return id != null && id.equals(player.id);
 	}
 
 	@Override
 	public int hashCode() {
-	    return id != null ? id.hashCode() : 0;
+		return id != null ? id.hashCode() : 0;
 	}
-
 
 	@Override
 	public String toString() {

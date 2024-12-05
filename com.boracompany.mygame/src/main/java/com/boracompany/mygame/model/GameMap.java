@@ -74,16 +74,18 @@ public class GameMap {
 
 	// Override equals method
 	@ExcludeFromJacocoGeneratedReport
-	  @Override
-	    public boolean equals(Object o) {
-	        if (this == o) return true;
-	        if (!(o instanceof GameMap)) return false;
-	        GameMap gameMap = (GameMap) o;
-	        return Objects.equals(id, gameMap.id);
-	    }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (!(o instanceof GameMap))
+			return false;
+		GameMap gameMap = (GameMap) o;
+		return Objects.equals(id, gameMap.id);
+	}
 
-	    @Override
-	    public int hashCode() {
-	        return Objects.hash(id);
-	    }
+	@Override
+	public int hashCode() {
+		return Objects.hash(id);
+	}
 }

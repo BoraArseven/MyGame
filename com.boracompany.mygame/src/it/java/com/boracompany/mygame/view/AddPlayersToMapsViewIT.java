@@ -56,7 +56,7 @@ public class AddPlayersToMapsViewIT extends AssertJSwingJUnitTestCase {
 			.withPassword("test");
 
 	private static PostgreSQLContainer<?> extracted() {
-		return new PostgreSQLContainer<>("postgres:13.3");
+		return new PostgreSQLContainer<>("postgres:14.15");
 	}
 
 	@BeforeClass

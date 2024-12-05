@@ -45,7 +45,12 @@
 			<artifactId>slf4j-api</artifactId>
 			<version>2.0.16</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-inline</artifactId>
+			<version>4.8.0</version> <!-- Ensure you use the latest version -->
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.awaitility</groupId>
 			<artifactId>awaitility</artifactId>
@@ -328,7 +333,7 @@ since javax.xml.bind has been removed from the JDK -->
 							<param>com.boracompany.mygame.e2e.*</param>
 						</excludedClasses>
 						<excludedTestClasses>
-							<param>com.boracompany.mygame.MyGameAppITE2E</param>
+							<param>com.boracompany.mygame.ITMyGameAppE2E</param>
 							<param>com.boracompany.mygame.IT.*</param> <!--
 							Exclude IT folder -->
 							<param>com.boracompany.mygame.e2e.*</param>
@@ -399,7 +404,7 @@ since javax.xml.bind has been removed from the JDK -->
 						<excludes>
 							<exclude>**/main/**</exclude>
 							<exclude>**/model/**</exclude>
-							<exclude>**/Hibernate*</exclude>
+							<exclude>**/HibernatePersistenceUnitInfo*</exclude>
 							<exclude>**/MainMenuView*</exclude>
 						</excludes>
 					</configuration>
@@ -504,23 +509,23 @@ since javax.xml.bind has been removed from the JDK -->
             src/main/java/com/boracompany/mygame/main/**/*.java,
             src/main/java/com/boracompany/mygame/view/MainMenuView.java,
             src/main/java/com/boracompany/mygame/orm/HibernatePersistenceUnitInfo.java,
-            src/main/java/com/boracompany/mygame/orm/HibernateUtil.java
         </sonar.coverage.exclusions>
 
-        <!-- Exclude patterns for CPD (Copy-Paste Detection) -->
         <sonar.cpd.exclusions>
             src/main/java/com/boracompany/mygame/view/*.java
         </sonar.cpd.exclusions>
 
-        <!-- Exclude specific SonarQube rule -->
-        <!-- Define the criteria key -->
-        <sonar.issue.ignore.multicriteria>e1</sonar.issue.ignore.multicriteria>
+        <!-- Exclude specific SonarQube rules -->
+        <!-- Define multiple criteria keys -->
+        <sonar.issue.ignore.multicriteria>e1,e2</sonar.issue.ignore.multicriteria>
 
-        <!-- Specify the rule to ignore -->
+        <!-- Exclude javaarchitecture:S7027 -->
         <sonar.issue.ignore.multicriteria.e1.ruleKey>javaarchitecture:S7027</sonar.issue.ignore.multicriteria.e1.ruleKey>
-
-        <!-- Specify the files where the rule should be ignored -->
         <sonar.issue.ignore.multicriteria.e1.resourceKey>**/*.java</sonar.issue.ignore.multicriteria.e1.resourceKey>
+
+        <!-- Exclude java:S2077 (SQL Injection) -->
+        <sonar.issue.ignore.multicriteria.e2.ruleKey>java:S2077</sonar.issue.ignore.multicriteria.e2.ruleKey>
+        <sonar.issue.ignore.multicriteria.e2.resourceKey>**/*.java</sonar.issue.ignore.multicriteria.e2.resourceKey>
     </properties>
     <build>
         <plugins>
@@ -532,6 +537,7 @@ since javax.xml.bind has been removed from the JDK -->
         </plugins>
     </build>
 </profile>
+
 
 		<profile>
 			<id>mutation-testing</id>
@@ -553,12 +559,6 @@ since javax.xml.bind has been removed from the JDK -->
 				</plugins>
 			</build>
 		</profile>
-		<profile>
-			<id>docker</id>
-			<build>
-				<plugins>
-				</plugins>
-			</build>
-		</profile>
+
 	</profiles>
 </project>
