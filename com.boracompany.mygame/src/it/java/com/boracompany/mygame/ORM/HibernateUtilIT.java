@@ -115,7 +115,7 @@ import jakarta.persistence.EntityTransaction;
 	}
 
 	@Test
-	public void testGetEntityManagerFactoryBeforeInitialization() {
+	 void testGetEntityManagerFactoryBeforeInitialization() {
 		HibernateUtil.close(); // Ensure it's not initialized
 		Exception exception = assertThrows(IllegalStateException.class, HibernateUtil::getEntityManagerFactory);
 		String expectedMessage = "HibernateUtil is not initialized.";
@@ -124,7 +124,7 @@ import jakarta.persistence.EntityTransaction;
 	}
 
 	@Test
-	public void testCloseWhenEntityManagerFactoryIsNull() {
+	 void testCloseWhenEntityManagerFactoryIsNull() {
 		// Ensure the entityManagerFactory is null by explicitly closing it
 		HibernateUtil.close();
 
