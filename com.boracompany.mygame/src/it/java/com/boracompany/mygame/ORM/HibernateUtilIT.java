@@ -26,7 +26,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 
 @Testcontainers
-public class HibernateUtilIT {
+ class HibernateUtilIT {
 
 	@Container
 	private static PostgreSQLContainer<?> postgresContainer = extracted().withDatabaseName("testdb")
@@ -115,7 +115,7 @@ public class HibernateUtilIT {
 	}
 
 	@Test
-	public void testGetEntityManagerFactoryBeforeInitialization() {
+	 void testGetEntityManagerFactoryBeforeInitialization() {
 		HibernateUtil.close(); // Ensure it's not initialized
 		Exception exception = assertThrows(IllegalStateException.class, HibernateUtil::getEntityManagerFactory);
 		String expectedMessage = "HibernateUtil is not initialized.";
@@ -124,7 +124,7 @@ public class HibernateUtilIT {
 	}
 
 	@Test
-	public void testCloseWhenEntityManagerFactoryIsNull() {
+	 void testCloseWhenEntityManagerFactoryIsNull() {
 		// Ensure the entityManagerFactory is null by explicitly closing it
 		HibernateUtil.close();
 

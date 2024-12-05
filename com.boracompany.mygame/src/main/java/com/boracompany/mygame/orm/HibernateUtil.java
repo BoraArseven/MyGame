@@ -89,7 +89,7 @@ public class HibernateUtil {
 		}
 		return entityManagerFactory;
 	}
-//impossible to test inner if (at least as far as I know)
+
 	@ExcludeFromJacocoGeneratedReport
 	public static void close() {
 		if (entityManagerFactory != null) {
@@ -127,46 +127,44 @@ public class HibernateUtil {
 	}
 
 	private static void createDatabase(Connection conn, String databaseName) throws SQLException {
-	    // Validate the database name
-	    if (!isValidDatabaseName(databaseName)) {
-	        throw new IllegalArgumentException("Invalid database name: " + databaseName);
-	    }
+		// Validate the database name
+		if (!isValidDatabaseName(databaseName)) {
+			throw new IllegalArgumentException("Invalid database name: " + databaseName);
+		}
 
-	    // Construct the SQL statement with the validated database name
-	    String sql = "CREATE DATABASE \"" + databaseName + "\"";
+		// Construct the SQL statement with the validated database name
+		String sql = "CREATE DATABASE \"" + databaseName + "\"";
 
-	    try (Statement stmt = conn.createStatement()) {
-	        stmt.execute(sql);
-	    }
+		try (Statement stmt = conn.createStatement()) {
+			stmt.execute(sql);
+		}
 	}
 
-
-	// impossible to reach the null condition
 	@ExcludeFromJacocoGeneratedReport
 	private static boolean isValidDatabaseName(String databaseName) {
-	    if (databaseName == null) {
-	        return false;
-	    }
-	    // Ensure the database name is between 1 and 64 characters
-	    if (databaseName.length() < 1 || databaseName.length() > 64) {
-	        return false;
-	    }
-	    // Allow only letters, digits, and underscores
-	    if (!databaseName.matches("^[a-zA-Z0-9_]+$")) {
-	        return false;
-	    }
-	    // Disallow SQL reserved keywords (optional but recommended)
-	    String lowerCaseName = databaseName.toLowerCase();
-	    Set<String> reservedKeywords = Set.of(
-	        // Add common SQL reserved keywords
-	        "select", "insert", "update", "delete", "create", "drop", "alter", "table",
-	        "database", "from", "where", "join", "on", "group", "by", "having", "order", "limit"
-	        // ... (add more as needed)
-	    );
-	    if (reservedKeywords.contains(lowerCaseName)) {
-	        return false;
-	    }
-	    return true;
+		// Safeguard for null, even if it’s considered unreachable
+		if (databaseName == null) {
+			return false;
+		}
+
+		// Ensure the database name length is between 1 and 64 characters
+		if (databaseName.length() < 1 || databaseName.length() > 64) {
+			return false;
+		}
+
+		// Allow only letters, digits, and underscores
+		if (!databaseName.matches("^\\w+$")) {
+			return false;
+		}
+
+		// Disallow SQL reserved keywords (optional but recommended)
+		String lowerCaseName = databaseName.toLowerCase();
+		Set<String> reservedKeywords = Set.of("select", "insert", "update", "delete", "create", "drop", "alter",
+				"table", "database", "from", "where", "join", "on", "group", "by", "having", "order", "limit"
+		// Add more keywords as needed
+		);
+
+		return !reservedKeywords.contains(lowerCaseName);
 	}
 
 }
