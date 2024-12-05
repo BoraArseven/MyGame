@@ -148,7 +148,7 @@ public class HibernateUtil {
 		}
 
 		// Ensure the database name length is between 1 and 64 characters
-		if (databaseName.length() < 1 || databaseName.length() > 64) {
+		if (databaseName.isEmpty() || databaseName.length() > 64) {
 			return false;
 		}
 
