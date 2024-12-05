@@ -37,7 +37,7 @@ public class ITMyGameAppE2E extends AssertJSwingJUnitTestCase {
 		logger.info("Setting up PostgreSQL container");
 
 		// Initialize PostgreSQLContainer with default values
-		postgreSQLContainer = new PostgreSQLContainer<>("postgres:13.3");
+		postgreSQLContainer = new PostgreSQLContainer<>("postgres:14.15");
 		postgreSQLContainer.start();
 		logger.info("PostgreSQL container started at URL: {}", postgreSQLContainer.getJdbcUrl());
 

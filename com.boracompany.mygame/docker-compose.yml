@@ -1,6 +1,6 @@
 services:
   mygamepostgres:
-    image: postgres:14
+    image: postgres:14.15
     container_name: mypostgrescontainer
     environment:
       POSTGRES_USER: postgres
