@@ -2,6 +2,7 @@ package com.boracompany.mygame.ORM;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -44,31 +45,31 @@ public class HibernateUtilIT {
 
 		// Get connection details from the container
 		validJdbcUrl = postgresContainer.getJdbcUrl();
-		username = postgresContainer.getUsername();
-		password = postgresContainer.getPassword();
+		containerusarname = postgresContainer.getUsername();
+		containerpassword = postgresContainer.getPassword();
 
 		// Initialize HibernateUtil
-		HibernateUtil.initialize(validJdbcUrl, username, password);
+		HibernateUtil.initialize(validJdbcUrl, containerusarname, containerpassword);
 	}
 
 	private String validJdbcUrl;
-	private String username;
-	private String password;
+	private String containerusarname;
+	private String containerpassword;
 
 	@AfterEach
-	public void tearDown() {
+	void tearDown() {
 		// Close HibernateUtil
 		HibernateUtil.close();
 	}
 
 	@Test
-	public void testEntityManagerFactoryInitialization() {
+	void testEntityManagerFactoryInitialization() {
 		EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
 		assertNotNull(emf, "EntityManagerFactory should be initialized");
 	}
 
 	@Test
-	public void testPersistAndRetrievePlayer() {
+	void testPersistAndRetrievePlayer() {
 		EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
 		EntityTransaction tx = em.getTransaction();
 
@@ -99,7 +100,7 @@ public class HibernateUtilIT {
 	}
 
 	@Test
-	public void testInitializeWithNullParameters() {
+	void testInitializeWithNullParameters() {
 		// Ensure that the entityManagerFactory is null
 		HibernateUtil.close();
 
@@ -116,13 +117,9 @@ public class HibernateUtilIT {
 	@Test
 	public void testGetEntityManagerFactoryBeforeInitialization() {
 		HibernateUtil.close(); // Ensure it's not initialized
-		Exception exception = assertThrows(IllegalStateException.class, () -> {
-			HibernateUtil.getEntityManagerFactory();
-		});
-
+		Exception exception = assertThrows(IllegalStateException.class, HibernateUtil::getEntityManagerFactory);
 		String expectedMessage = "HibernateUtil is not initialized.";
 		String actualMessage = exception.getMessage();
-
 		assertTrue(actualMessage.contains(expectedMessage), "Exception message should indicate uninitialized state");
 	}
 
@@ -131,14 +128,19 @@ public class HibernateUtilIT {
 		// Ensure entityManagerFactory is null
 		HibernateUtil.close();
 
+		// Assert that entityManagerFactory is null after the first close
+		assertNull(HibernateUtil.getEntityManagerFactory(), "EntityManagerFactory should be null after close.");
+
 		// Call close() again
 		HibernateUtil.close();
 
-		// If no exception is thrown, the test passes
+		// Assert again to confirm no changes or exceptions occur
+		assertNull(HibernateUtil.getEntityManagerFactory(),
+				"EntityManagerFactory should remain null after subsequent close calls.");
 	}
 
 	@Test
-	public void testCreateDatabaseIfNotExistsSQLException() {
+	void testCreateDatabaseIfNotExistsSQLException() {
 		// Close any existing EntityManagerFactory
 		HibernateUtil.close();
 
@@ -159,7 +161,7 @@ public class HibernateUtilIT {
 	}
 
 	@Test
-	public void testInitializeWithInvalidDatabaseName() {
+	void testInitializeWithInvalidDatabaseName() {
 		// Close any existing EntityManagerFactory
 		HibernateUtil.close();
 
@@ -180,11 +182,11 @@ public class HibernateUtilIT {
 	}
 
 	@Test
-	public void testInitializeWithNullDbPassword() {
+	void testInitializeWithNullDbPassword() {
 		HibernateUtil.close(); // Ensure entityManagerFactory is null
 
 		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-			HibernateUtil.initialize(validJdbcUrl, username, null);
+			HibernateUtil.initialize(validJdbcUrl, containerusarname, null);
 		});
 
 		String expectedMessage = "Database connection properties must not be null";
@@ -194,11 +196,11 @@ public class HibernateUtilIT {
 	}
 
 	@Test
-	public void testInitializeWithNullDbUser() {
+	void testInitializeWithNullDbUser() {
 		HibernateUtil.close(); // Ensure entityManagerFactory is null
 
 		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-			HibernateUtil.initialize(validJdbcUrl, null, password);
+			HibernateUtil.initialize(validJdbcUrl, null, containerpassword);
 		});
 
 		String expectedMessage = "Database connection properties must not be null";
@@ -208,11 +210,11 @@ public class HibernateUtilIT {
 	}
 
 	@Test
-	public void testInitializeWithNullDbUrl() {
+	void testInitializeWithNullDbUrl() {
 		HibernateUtil.close(); // Ensure entityManagerFactory is null
 
 		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-			HibernateUtil.initialize(null, username, password);
+			HibernateUtil.initialize(null, containerusarname, containerpassword);
 		});
 
 		String expectedMessage = "Database connection properties must not be null";
@@ -222,13 +224,13 @@ public class HibernateUtilIT {
 	}
 
 	@Test
-	public void testInitializeWhenAlreadyInitialized() {
+	void testInitializeWhenAlreadyInitialized() {
 		// Ensure entityManagerFactory is initialized
 		EntityManagerFactory emf1 = HibernateUtil.getEntityManagerFactory();
 		assertNotNull(emf1, "EntityManagerFactory should be initialized");
 
 		// Call initialize again with the same parameters
-		HibernateUtil.initialize(validJdbcUrl, username, password);
+		HibernateUtil.initialize(validJdbcUrl, containerusarname, containerpassword);
 		EntityManagerFactory emf2 = HibernateUtil.getEntityManagerFactory();
 
 		// Verify that the same instance is returned (no reinitialization)
@@ -236,7 +238,7 @@ public class HibernateUtilIT {
 
 		// Now, call initialize with different parameters (should not reinitialize)
 		String anotherValidJdbcUrl = validJdbcUrl; // Using the same URL for simplicity
-		HibernateUtil.initialize(anotherValidJdbcUrl, username, password);
+		HibernateUtil.initialize(anotherValidJdbcUrl, containerusarname, containerpassword);
 		EntityManagerFactory emf3 = HibernateUtil.getEntityManagerFactory();
 
 		// Verify that the EntityManagerFactory has not changed
@@ -248,13 +250,13 @@ public class HibernateUtilIT {
 	 * Ensures thread-safe initialization.
 	 */
 	@Test
-	public void testInitializeConcurrentAccess() throws InterruptedException {
+	void testInitializeConcurrentAccess() throws InterruptedException {
 		// Close any existing EntityManagerFactory
 		HibernateUtil.close();
 
 		final String jdbcUrl = validJdbcUrl;
-		final String user = username;
-		final String pass = password;
+		final String user = containerusarname;
+		final String pass = containerpassword;
 
 		// Create a latch to synchronize threads
 		CountDownLatch latch = new CountDownLatch(1);
@@ -292,15 +294,15 @@ public class HibernateUtilIT {
 	}
 
 	@Test
-	public void testInitializeWhenDatabaseExists() {
+	void testInitializeWhenDatabaseExists() {
 		// Close any existing EntityManagerFactory
 		HibernateUtil.close();
 
 		// Initialize with the default database (which should already exist)
-		HibernateUtil.initialize(validJdbcUrl, username, password);
+		HibernateUtil.initialize(validJdbcUrl, containerusarname, containerpassword);
 
 		// Attempt to initialize again with the same parameters
-		HibernateUtil.initialize(validJdbcUrl, username, password);
+		HibernateUtil.initialize(validJdbcUrl, containerusarname, containerpassword);
 
 		// Verify that EntityManagerFactory is initialized
 		EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
@@ -310,7 +312,7 @@ public class HibernateUtilIT {
 	}
 
 	@Test
-	public void testDatabaseCreationWhenNotExists() {
+	void testDatabaseCreationWhenNotExists() {
 		// Close any existing EntityManagerFactory
 		HibernateUtil.close();
 
@@ -319,7 +321,7 @@ public class HibernateUtilIT {
 		String jdbcUrlWithNewDb = validJdbcUrl.replace("testdb", uniqueDatabaseName);
 
 		// Initialize HibernateUtil with the new database name
-		HibernateUtil.initialize(jdbcUrlWithNewDb, username, password);
+		HibernateUtil.initialize(jdbcUrlWithNewDb, containerusarname, containerpassword);
 
 		// Verify that EntityManagerFactory is initialized
 		EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
@@ -354,100 +356,100 @@ public class HibernateUtilIT {
 			em.close();
 		}
 	}
+
 	@Test
-	public void testInitializeWithEmptyDatabaseName() {
-	    // Close any existing EntityManagerFactory
-	    HibernateUtil.close();
+	void testInitializeWithEmptyDatabaseName() {
+		// Close any existing EntityManagerFactory
+		HibernateUtil.close();
 
-	    // Create a JDBC URL that ends with '/', resulting in an empty database name
-	    String jdbcUrlWithEmptyDbName = validJdbcUrl.substring(0, validJdbcUrl.lastIndexOf('/') + 1);
+		// Create a JDBC URL that ends with '/', resulting in an empty database name
+		String jdbcUrlWithEmptyDbName = validJdbcUrl.substring(0, validJdbcUrl.lastIndexOf('/') + 1);
 
-	    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-	        HibernateUtil.initialize(jdbcUrlWithEmptyDbName, username, password);
-	    });
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+			HibernateUtil.initialize(jdbcUrlWithEmptyDbName, containerusarname, containerpassword);
+		});
 
-	    String expectedMessage = "Invalid database name";
-	    String actualMessage = exception.getMessage();
+		String expectedMessage = "Invalid database name";
+		String actualMessage = exception.getMessage();
 
-	    assertTrue(actualMessage.contains(expectedMessage), "Exception message should indicate invalid database name");
+		assertTrue(actualMessage.contains(expectedMessage), "Exception message should indicate invalid database name");
 	}
 
 	@Test
-	public void testInitializeWithTooLongDatabaseName() {
-	    // Close any existing EntityManagerFactory
-	    HibernateUtil.close();
+	void testInitializeWithTooLongDatabaseName() {
+		// Close any existing EntityManagerFactory
+		HibernateUtil.close();
 
-	    // Create a database name longer than 64 characters
-	    String longDatabaseName = "a".repeat(65);
-	    String jdbcUrlWithLongDbName = validJdbcUrl.replace("testdb", longDatabaseName);
+		// Create a database name longer than 64 characters
+		String longDatabaseName = "a".repeat(65);
+		String jdbcUrlWithLongDbName = validJdbcUrl.replace("testdb", longDatabaseName);
 
-	    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-	        HibernateUtil.initialize(jdbcUrlWithLongDbName, username, password);
-	    });
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+			HibernateUtil.initialize(jdbcUrlWithLongDbName, containerusarname, containerpassword);
+		});
 
-	    String expectedMessage = "Invalid database name";
-	    String actualMessage = exception.getMessage();
+		String expectedMessage = "Invalid database name";
+		String actualMessage = exception.getMessage();
 
-	    assertTrue(actualMessage.contains(expectedMessage), "Exception message should indicate invalid database name");
+		assertTrue(actualMessage.contains(expectedMessage), "Exception message should indicate invalid database name");
 	}
 
 	@Test
-	public void testInitializeWithInvalidCharactersInDatabaseName() {
-	    // Close any existing EntityManagerFactory
-	    HibernateUtil.close();
+	void testInitializeWithInvalidCharactersInDatabaseName() {
+		// Close any existing EntityManagerFactory
+		HibernateUtil.close();
 
-	    // Use a database name with invalid characters
-	    String invalidDatabaseName = "invalid-db-name!@#";
-	    String jdbcUrlWithInvalidDbName = validJdbcUrl.replace("testdb", invalidDatabaseName);
+		// Use a database name with invalid characters
+		String invalidDatabaseName = "invalid-db-name!@#";
+		String jdbcUrlWithInvalidDbName = validJdbcUrl.replace("testdb", invalidDatabaseName);
 
-	    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-	        HibernateUtil.initialize(jdbcUrlWithInvalidDbName, username, password);
-	    });
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+			HibernateUtil.initialize(jdbcUrlWithInvalidDbName, containerusarname, containerpassword);
+		});
 
-	    String expectedMessage = "Invalid database name";
-	    String actualMessage = exception.getMessage();
+		String expectedMessage = "Invalid database name";
+		String actualMessage = exception.getMessage();
 
-	    assertTrue(actualMessage.contains(expectedMessage), "Exception message should indicate invalid database name");
+		assertTrue(actualMessage.contains(expectedMessage), "Exception message should indicate invalid database name");
 	}
 
 	@Test
-	public void testInitializeWithReservedKeywordDatabaseName() {
-	    // Close any existing EntityManagerFactory
-	    HibernateUtil.close();
+	void testInitializeWithReservedKeywordDatabaseName() {
+		// Close any existing EntityManagerFactory
+		HibernateUtil.close();
 
-	    // Use a reserved SQL keyword as the database name
-	    String reservedKeywordDatabaseName = "SELECT";
-	    String jdbcUrlWithReservedDbName = validJdbcUrl.replace("testdb", reservedKeywordDatabaseName);
+		// Use a reserved SQL keyword as the database name
+		String reservedKeywordDatabaseName = "SELECT";
+		String jdbcUrlWithReservedDbName = validJdbcUrl.replace("testdb", reservedKeywordDatabaseName);
 
-	    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-	        HibernateUtil.initialize(jdbcUrlWithReservedDbName, username, password);
-	    });
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+			HibernateUtil.initialize(jdbcUrlWithReservedDbName, containerusarname, containerpassword);
+		});
 
-	    String expectedMessage = "Invalid database name";
-	    String actualMessage = exception.getMessage();
+		String expectedMessage = "Invalid database name";
+		String actualMessage = exception.getMessage();
 
-	    assertTrue(actualMessage.contains(expectedMessage), "Exception message should indicate invalid database name");
+		assertTrue(actualMessage.contains(expectedMessage), "Exception message should indicate invalid database name");
 	}
 
 	@Test
-	public void testInitializeWithValidDatabaseName() {
-	    // Close any existing EntityManagerFactory
-	    HibernateUtil.close();
+	void testInitializeWithValidDatabaseName() {
+		// Close any existing EntityManagerFactory
+		HibernateUtil.close();
 
-	    // Use a valid database name
-	    String validDatabaseName = "valid_db_name123";
-	    String jdbcUrlWithValidDbName = validJdbcUrl.replace("testdb", validDatabaseName);
+		// Use a valid database name
+		String validDatabaseName = "valid_db_name123";
+		String jdbcUrlWithValidDbName = validJdbcUrl.replace("testdb", validDatabaseName);
 
-	    // Initialize HibernateUtil
-	    HibernateUtil.initialize(jdbcUrlWithValidDbName, username, password);
+		// Initialize HibernateUtil
+		HibernateUtil.initialize(jdbcUrlWithValidDbName, containerusarname, containerpassword);
 
-	    // Verify that EntityManagerFactory is initialized
-	    EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
-	    assertNotNull(emf, "EntityManagerFactory should be initialized");
+		// Verify that EntityManagerFactory is initialized
+		EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
+		assertNotNull(emf, "EntityManagerFactory should be initialized");
 
-	    // Close the EntityManagerFactory
-	    HibernateUtil.close();
+		// Close the EntityManagerFactory
+		HibernateUtil.close();
 	}
 
-	
 }
