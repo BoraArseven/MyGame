@@ -129,14 +129,11 @@ public class HibernateUtilIT {
 		HibernateUtil.close();
 
 		// Call close() again, expecting no exceptions
-		assertDoesNotThrow(() -> HibernateUtil.close(),
+		assertDoesNotThrow(HibernateUtil::close,
 				"Calling close when entityManagerFactory is null should not throw exceptions");
 
 		// Verify that entityManagerFactory is still null after calling close()
-		Exception exception = assertThrows(IllegalStateException.class, () -> {
-			HibernateUtil.getEntityManagerFactory();
-		});
-
+		Exception exception = assertThrows(IllegalStateException.class, HibernateUtil::getEntityManagerFactory);
 		String expectedMessage = "HibernateUtil is not initialized.";
 		String actualMessage = exception.getMessage();
 		assertTrue(actualMessage.contains(expectedMessage), "Exception message should indicate uninitialized state");
