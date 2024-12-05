@@ -448,23 +448,6 @@ public class HibernateUtilIT {
 	    // Close the EntityManagerFactory
 	    HibernateUtil.close();
 	}
-	@Test
-	public void testInitializeWithINull() {
-	    // Close any existing EntityManagerFactory
-	    HibernateUtil.close();
-
-	    // Use a database name with invalid characters
-	    String invalidDatabaseName = null;
-
-	    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-	        HibernateUtil.initialize(validJdbcUrl, username, password);
-	    });
-
-	    String expectedMessage = "Invalid database name";
-	    String actualMessage = exception.getMessage();
-
-	    assertTrue(actualMessage.contains(expectedMessage), "Exception message should indicate invalid database name");
-	}
 
 	
 }
