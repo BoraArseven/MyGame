@@ -1,6 +1,5 @@
 package com.boracompany.mygame.controller;
 
-import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -8,8 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -70,17 +73,16 @@ class GameControllerIT {
 
 	@BeforeEach
 	void setUp() {
-
 		// Initialize DAOs with the EntityManagerFactory
 		gameMapDAO = spy(new GameMapDAO(emf));
 		playerDAO = spy(new PlayerDAOIMPL(emf));
 
 		// Initialize the PlayerBuilder
 		playerBuilder = new PlayerBuilder();
-		// Initialize the mocked Logger
+		// Spy on the logger with inline mocking
 		logger = spy(logger);
-		// Spy on the GameController
-		controller = spy(new GameController(playerDAO, gameMapDAO, logger));
+		// Initialize the GameController with the spied logger
+		controller = new GameController(playerDAO, gameMapDAO, logger);
 
 		// Reset database before each test
 		resetDatabase();
@@ -116,8 +118,25 @@ class GameControllerIT {
 
 	@Test
 	void testAddPlayersToMapFromController() {
+		EntityManager em1 = emf.createEntityManager();
 		// Arrange: Create a new player and a game map
 		Player addedPlayer = playerBuilder.withDamage(10).withHealth(20).withName("AddedPlayer1").build();
+		EntityTransaction tx1 = em1.getTransaction();
+		try {
+			tx1.begin();
+			em1.persist(addedPlayer);
+
+			tx1.commit();
+			em1.refresh(addedPlayer);
+		} catch (Exception e) {
+			if (tx1.isActive()) {
+				tx1.rollback();
+			}
+			throw e;
+		} finally {
+			em1.close();
+		}
+
 		GameMap map = new GameMap();
 		map.setName("TestMap");
 
@@ -412,8 +431,6 @@ class GameControllerIT {
 		});
 	}
 
-
-
 	@Test
 	void testCreatePlayer_SetsIsAliveCorrectly() {
 		// Arrange
@@ -582,6 +599,116 @@ class GameControllerIT {
 
 			logger.info("Defender's health after attack: {}, isAlive: {}", updatedDefender.getHealth(),
 					updatedDefender.isAlive());
+		} finally {
+			em.close();
+		}
+	}
+
+	@Test
+	void testConcurrentAttacksOnDefender() throws InterruptedException {
+		// Create and persist one defender with large health
+		Player defender = playerBuilder.resetBuilder().withName("ConcurrentDefender").withHealth(1000f).withDamage(10f)
+				.withIsAlive(true).build();
+		playerDAO.createPlayer(defender);
+
+		// Create attackers
+		int attackerCount = 20;
+		float attackDamage = 10f;
+		Player[] attackers = new Player[attackerCount];
+		for (int i = 0; i < attackerCount; i++) {
+			attackers[i] = playerBuilder.resetBuilder().withName("Attacker" + i).withHealth(100f)
+					.withDamage(attackDamage).withIsAlive(true).build();
+			playerDAO.createPlayer(attackers[i]);
+		}
+
+		// No need to create a map for this test, attacks do not require maps
+		// But if your business logic requires it, persist a map and add players.
+
+		// Prepare concurrency tools
+		ExecutorService executor = Executors.newFixedThreadPool(attackerCount);
+		CountDownLatch startLatch = new CountDownLatch(1);
+		CountDownLatch doneLatch = new CountDownLatch(attackerCount);
+
+		for (Player attacker : attackers) {
+			executor.submit(() -> {
+				try {
+					startLatch.await(); // Wait until all threads are ready
+					controller.attack(attacker, defender);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				} finally {
+					doneLatch.countDown();
+				}
+			});
+		}
+
+		// Start all attackers simultaneously
+		startLatch.countDown();
+		// Wait for all to complete
+		doneLatch.await();
+		executor.shutdown();
+
+		// After all attacks, verify defender's health in DB
+		// Expected damage = 20 attackers * 10 damage = 200 total damage
+		float expectedHealth = 1000f - 200f;
+
+		// Refresh the defender from the DB to ensure we have the latest state
+		EntityManager em = emf.createEntityManager();
+		try {
+			Player updatedDefender = em.find(Player.class, defender.getId());
+			assertEquals(expectedHealth, updatedDefender.getHealth(), 0.01f,
+					"Defender health should reflect all concurrent damage");
+			assertTrue(updatedDefender.isAlive() == (expectedHealth > 0),
+					"Defender alive state should match final health");
+		} finally {
+			em.close();
+		}
+	}
+
+	@Test
+	void testConcurrentAddPlayersToMap() throws InterruptedException {
+		// Create and persist one map
+		GameMap gameMap = new GameMap();
+		gameMap.setName("ConcurrentMap");
+		gameMapDAO.save(gameMap);
+
+		// Create players to add
+		int playerCount = 50;
+		Player[] players = new Player[playerCount];
+		for (int i = 0; i < playerCount; i++) {
+			players[i] = playerBuilder.resetBuilder().withName("ConcurrentPlayer" + i).withHealth(100f).withDamage(10f)
+					.withIsAlive(true).build();
+			playerDAO.createPlayer(players[i]);
+		}
+
+		ExecutorService executor = Executors.newFixedThreadPool(playerCount);
+		CountDownLatch startLatch = new CountDownLatch(1);
+		CountDownLatch doneLatch = new CountDownLatch(playerCount);
+
+		for (Player p : players) {
+			executor.submit(() -> {
+				try {
+					startLatch.await();
+					controller.addPlayerToMap(gameMap.getId(), p);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				} finally {
+					doneLatch.countDown();
+				}
+			});
+		}
+
+		startLatch.countDown();
+		doneLatch.await();
+		executor.shutdown();
+
+		// After all insertions, check how many players ended up in the map
+		EntityManager em = emf.createEntityManager();
+		try {
+			GameMap updatedMap = em.find(GameMap.class, gameMap.getId());
+			em.refresh(updatedMap);
+			int finalCount = updatedMap.getPlayers().size();
+			assertEquals(playerCount, finalCount, "All players should be added even under concurrent conditions");
 		} finally {
 			em.close();
 		}
