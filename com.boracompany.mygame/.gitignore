@@ -7,3 +7,4 @@ postgres_user.txt
 postgres_db.txt
 /db
 /.db
+./failed-gui-tests
