@@ -658,8 +658,8 @@ class GameControllerIT {
 			Player updatedDefender = em.find(Player.class, defender.getId());
 			assertEquals(expectedHealth, updatedDefender.getHealth(), 0.01f,
 					"Defender health should reflect all concurrent damage");
-			assertTrue(updatedDefender.isAlive() == (expectedHealth > 0),
-					"Defender alive state should match final health");
+			assertEquals(expectedHealth > 0, updatedDefender.isAlive(),
+					"Defender's alive status does not match expected health condition.");
 		} finally {
 			em.close();
 		}
