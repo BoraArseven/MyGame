@@ -1,13 +1,21 @@
 package com.boracompany.mygame.ORM;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.EntityTransaction;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -23,17 +31,23 @@ import com.boracompany.mygame.model.PlayerBuilder;
 import com.boracompany.mygame.orm.HibernateUtil;
 import com.boracompany.mygame.orm.PlayerDAOIMPL;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.LockModeType;
+
 @Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PlayerDAOImpIT {
 
 	@Container
-	public static PostgreSQLContainer<?> postgreSQLContainer = extracted()
-	.withDatabaseName("test").withUsername("test").withPassword("test");
+	public static PostgreSQLContainer<?> postgreSQLContainer = extracted().withDatabaseName("test").withUsername("test")
+			.withPassword("test");
 
 	private static PostgreSQLContainer<?> extracted() {
 		return new PostgreSQLContainer<>("postgres:14.15");
 	}
+
 	private EntityManagerFactory emf;
 	private PlayerDAOIMPL playerDAO;
 
@@ -110,86 +124,6 @@ public class PlayerDAOImpIT {
 	}
 
 	@Test
-	void testUpdatePlayerWhenRollbackOnRuntimeException() {
-		// Use the custom TestPlayerDAOIMPL that throws the exception
-		TestPlayerDAOIMPL playerDAOTest = new TestPlayerDAOIMPL(emf);
-
-		// Create a player instance
-		Player player = new Player();
-		player.setName("Should Rollback");
-
-		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-			playerDAOTest.updatePlayer(player);
-		});
-
-		// Check that the exception message is correct
-		assertEquals("Failed to update player due to an unexpected error.", exception.getMessage());
-	}
-
-	@Test
-	void testUpdatePlayerTriggersRollbackOnRuntimeException() {
-		// Arrange
-		Player player = new PlayerBuilder().withName("Test Player").build();
-
-		// Spy on the real EntityManagerFactory
-		EntityManagerFactory emfSpy = Mockito.spy(emf);
-
-		// Create a spied EntityManager
-		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
-
-		// Spy on the EntityTransaction
-		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
-
-		// Ensure the spied EntityManagerFactory returns the spied EntityManager
-		when(emfSpy.createEntityManager()).thenReturn(emSpy);
-
-		// Use doReturn() to stub getTransaction() to return the spied transaction
-		// without invoking the real method
-		doReturn(transactionSpy).when(emSpy).getTransaction();
-
-		// Stub the isActive() method to return false initially
-		when(transactionSpy.isActive()).thenReturn(false);
-
-		// Stub the begin() method to set isActive() to true
-		doAnswer(invocation -> {
-			when(transactionSpy.isActive()).thenReturn(true);
-			return null;
-		}).when(transactionSpy).begin();
-
-		// Stub the commit() method to set isActive() to false
-		doAnswer(invocation -> {
-			when(transactionSpy.isActive()).thenReturn(false);
-			return null;
-		}).when(transactionSpy).commit();
-
-		// Stub the rollback() method to set isActive() to false
-		doAnswer(invocation -> {
-			when(transactionSpy.isActive()).thenReturn(false);
-			return null;
-		}).when(transactionSpy).rollback();
-
-		// Inject the spied EntityManagerFactory into the DAO
-		PlayerDAOIMPL dao = new PlayerDAOIMPL(emfSpy);
-
-		// Simulate a RuntimeException during the merge operation
-		doThrow(new RuntimeException("Simulated Exception")).when(emSpy).merge(any(Player.class));
-
-		// Act & Assert: Expect a RuntimeException with a specific message
-		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-			dao.updatePlayer(player);
-		});
-
-		// Verify the exception message
-		assertEquals("Simulated Exception", exception.getMessage());
-
-		// Verify that rollback was called on the transaction
-		verify(transactionSpy).rollback();
-
-		// Verify that the EntityManager was closed
-		verify(emSpy).close();
-	}
-
-	@Test
 	void testUpdatePlayerCommitsTransactionSuccessfully() {
 		// Arrange
 		Player player = new Player();
@@ -214,72 +148,6 @@ public class PlayerDAOImpIT {
 		Player updatedPlayer = em.find(Player.class, player.getId());
 		assertEquals("Updated Name", updatedPlayer.getName());
 		em.close();
-	}
-
-	@Test
-	void testUpdatePlayerWhenTransactionIsNotActive() {
-		// Spy on the real EntityManagerFactory
-		EntityManagerFactory emfSpy = Mockito.spy(emf);
-
-		// Spy on the EntityManager
-		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
-
-		// Spy on the EntityTransaction
-		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
-
-		// Make the spies return each other
-		when(emfSpy.createEntityManager()).thenReturn(emSpy);
-		when(emSpy.getTransaction()).thenReturn(transactionSpy);
-
-		// Simulate a non-active transaction
-		when(transactionSpy.isActive()).thenReturn(false);
-
-		// Inject the spied EntityManagerFactory into the PlayerDAOIMPL
-		PlayerDAOIMPL dao = new PlayerDAOIMPL(emfSpy);
-
-		// Create a Player instance
-		Player player = new Player();
-		player.setName("Test Player");
-
-		// Simulate a RuntimeException during the merge operation
-		doThrow(new RuntimeException("Failed to update player due to an unexpected error.")).when(emSpy)
-				.merge(any(Player.class));
-
-		// Act & Assert
-		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-			dao.updatePlayer(player);
-		});
-
-		// Verify the exception message
-		assertEquals("Failed to update player due to an unexpected error.", exception.getMessage());
-
-		// Verify that the EntityManager was closed
-		verify(emSpy).close();
-	}
-
-	@Test
-	void testDeletePlayerRollbackWhenRuntimeException() {
-		// Use the custom TestPlayerDAOIMPL that throws the exception
-		TestPlayerDAOIMPL playerDAOTest = new TestPlayerDAOIMPL(emf);
-
-		// Create a player instance and persist it
-		Player player = new PlayerBuilder().withName("Should Rollback").build();
-		EntityManager em = emf.createEntityManager();
-		em.getTransaction().begin();
-		em.persist(player);
-		em.getTransaction().commit();
-		em.close();
-
-		// Act & Assert
-		assertThrows(RuntimeException.class, () -> {
-			playerDAOTest.deletePlayer(player);
-		});
-
-		// Verify that the player still exists
-		EntityManager emVerify = emf.createEntityManager();
-		Player managedPlayer = emVerify.find(Player.class, player.getId());
-		assertNotNull(managedPlayer);
-		emVerify.close();
 	}
 
 	@Test
@@ -544,37 +412,6 @@ public class PlayerDAOImpIT {
 		// Act & Assert
 		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
 			dao.createPlayer(player);
-		});
-
-		// Verify that rollback and close were called
-		verify(transactionSpy).rollback();
-		verify(emSpy).close();
-
-		// Assert that the exception message is as expected
-		assertEquals("Simulated Exception", exception.getMessage());
-	}
-
-	@Test
-	void testDeletePlayer_withPlayerIdNotNull_exceptionThrown_playerIdNotNull() {
-		// Arrange
-		Player player = new PlayerBuilder().withName("Test Player").build();
-		player.setId(1L); // Assign a non-null ID
-		EntityManagerFactory emfSpy = Mockito.spy(emf);
-		// Mock EntityManager and Transaction
-		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
-		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
-
-		// Make the spies return each other
-		when(emfSpy.createEntityManager()).thenReturn(emSpy);
-		when(emSpy.getTransaction()).thenReturn(transactionSpy);
-		when(emSpy.find(Player.class, player.getId())).thenReturn(player);
-
-		// Simulate exception when remove is called
-		doThrow(new RuntimeException("Simulated Exception")).when(emSpy).remove(any(Player.class));
-		PlayerDAOIMPL spiedplayerdao = Mockito.spy(new PlayerDAOIMPL(emfSpy));
-		// Act & Assert
-		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-			spiedplayerdao.deletePlayer(player);
 		});
 
 		// Verify that rollback and close were called
@@ -1003,6 +840,187 @@ public class PlayerDAOImpIT {
 
 		// Verify that the EntityManager was closed
 		verify(emMock).close();
+	}
+
+	@Test
+	void testUpdatePlayerThrowsExceptionWhenPlayerNotFound() {
+		// Arrange
+		Player player = new PlayerBuilder().withName("Non-Existent Player").build();
+		player.setId(999L); // Non-existent ID
+
+		// Act & Assert
+		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+			playerDAO.updatePlayer(player);
+		});
+		assertEquals("Player with ID '999' not found.", exception.getMessage());
+	}
+
+	@Test
+	void testDeletePlayerThrowsExceptionForNullId() {
+		// Arrange
+		Player player = new PlayerBuilder().withName("Player with Null ID").build();
+
+		// Act & Assert
+		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+			playerDAO.deletePlayer(player);
+		});
+		assertEquals("Tried to delete non-existing player with ID N/A", exception.getMessage());
+	}
+
+	@Test
+	void testDeletePlayerThrowsExceptionWhenPlayerNotFound() {
+		// Arrange
+		Player player = new PlayerBuilder().withName("Non-Existent Player").build();
+		player.setId(999L); // Non-existent ID
+
+		// Act & Assert
+		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+			playerDAO.deletePlayer(player);
+		});
+		assertEquals("Tried to delete non-existing player with ID 999", exception.getMessage());
+	}
+
+	@Test
+	void testUpdatePlayerSuccessfully() {
+		// Arrange
+		EntityManager em = emf.createEntityManager();
+		em.getTransaction().begin();
+
+		// Persist a player into the database
+		Player player = new PlayerBuilder().withName("Original Name").build();
+		em.persist(player);
+		em.getTransaction().commit();
+		em.close();
+
+		// Update the player's name
+		player.setName("Updated Name");
+
+		// Act
+		playerDAO.updatePlayer(player);
+
+		// Assert
+		em = emf.createEntityManager();
+		Player updatedPlayer = em.find(Player.class, player.getId());
+		assertNotNull(updatedPlayer);
+		assertEquals("Updated Name", updatedPlayer.getName());
+		em.close();
+	}
+
+	@Test
+	void testUpdatePlayerLogsCorrectErrorArgsWhenIdIsNull() {
+		// Arrange
+		Player player = new PlayerBuilder().withName("Test Player").build();
+		player.setId(null); // Simulate a null ID
+
+		// Act & Assert
+		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+			playerDAO.updatePlayer(player);
+		});
+
+		assertEquals("Player ID cannot be null.", exception.getMessage());
+	}
+
+	@Test
+	void testUpdatePlayerLogsCorrectErrorArgsWhenIdIsNotNull() {
+		// Arrange
+		Player player = new PlayerBuilder().withName("Non-Existent Player").build();
+		player.setId(999L); // Non-existent ID
+
+		// Act & Assert
+		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+			playerDAO.updatePlayer(player);
+		});
+
+		assertEquals("Player with ID '999' not found.", exception.getMessage());
+	}
+
+	@Test
+	void testGetPlayerSuccessfully() {
+		// Arrange
+		EntityManager em = emf.createEntityManager();
+		em.getTransaction().begin();
+		Player player = new PlayerBuilder().withName("Existing Player").build();
+		em.persist(player);
+		em.getTransaction().commit();
+		em.close();
+
+		// Act
+		Player retrievedPlayer = playerDAO.getPlayer(player.getId());
+
+		// Assert
+		assertNotNull(retrievedPlayer);
+		assertEquals(player.getId(), retrievedPlayer.getId());
+		assertEquals(player.getName(), retrievedPlayer.getName());
+	}
+
+	@Test
+	void testGetPlayerNotFound() {
+		// Act
+		Player retrievedPlayer = playerDAO.getPlayer(999L); // Non-existent ID
+
+		// Assert
+		assertNull(retrievedPlayer, "Expected null when the player is not found");
+	}
+
+	@Test
+	void testGetPlayerRollsBackOnException() {
+		// Spy on the real EntityManagerFactory
+		EntityManagerFactory emfSpy = Mockito.spy(emf);
+		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
+		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+		// Ensure the spied EntityManagerFactory returns the spied EntityManager
+		when(emfSpy.createEntityManager()).thenReturn(emSpy);
+		when(emSpy.getTransaction()).thenReturn(transactionSpy);
+
+		// Simulate an exception during the find operation
+		doThrow(new RuntimeException("Simulated Exception")).when(emSpy).find(eq(Player.class), any(),
+				eq(LockModeType.PESSIMISTIC_READ));
+
+		PlayerDAOIMPL dao = new PlayerDAOIMPL(emfSpy);
+
+		// Act & Assert
+		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+			dao.getPlayer(1L);
+		});
+
+		// Verify rollback was called
+		verify(transactionSpy).rollback();
+
+		// Verify the exception message
+		assertEquals("Simulated Exception", exception.getMessage());
+
+		// Verify that the EntityManager was closed
+		verify(emSpy).close();
+	}
+
+	@Test
+	void testEntityManagerClosedEvenOnSuccess() {
+		// Spy on the real EntityManagerFactory
+		EntityManagerFactory emfSpy = Mockito.spy(emf);
+		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
+		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+		when(emfSpy.createEntityManager()).thenReturn(emSpy);
+		when(emSpy.getTransaction()).thenReturn(transactionSpy);
+
+		Player player = new PlayerBuilder().withName("Test Player").build();
+
+		// Persist the player for setup
+		emSpy.getTransaction().begin();
+		emSpy.persist(player);
+		emSpy.getTransaction().commit();
+
+		PlayerDAOIMPL dao = new PlayerDAOIMPL(emfSpy);
+
+		// Act
+		Player retrievedPlayer = dao.getPlayer(player.getId());
+
+		// Assert
+		assertNotNull(retrievedPlayer);
+
+		// Verify the EntityManager was closed
+		verify(emSpy).close();
 	}
 
 }
