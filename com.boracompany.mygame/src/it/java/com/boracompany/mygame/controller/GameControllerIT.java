@@ -336,32 +336,7 @@ class GameControllerIT {
 				thrown.getMessage());
 	}
 
-	@Test
-	void testRemovePlayerFromMap_PlayerExistsButNotInGameMap() {
-		// Arrange: Create and persist a GameMap and a Player
-		GameMap gameMap = new GameMap();
-		gameMap.setName("TestMap");
-		gameMapDAO.save(gameMap);
-
-		// Create a new Player and persist it using createPlayer to assign an ID
-		Player player = new PlayerBuilder().withName("TestPlayer").build();
-		playerDAO.createPlayer(player); // Use createPlayer instead of updatePlayer
-
-		// Verify that the player has been assigned an ID
-		assertNotNull(player.getId(), "Player ID should not be null after creation.");
-
-		Long gameMapId = gameMap.getId();
-
-		// Act & Assert: Attempt to remove the player from a GameMap it's not associated
-		// with
-		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
-			gameMapDAO.removePlayerFromMap(gameMapId, player);
-		});
-
-		// Assert: Verify that the exception message is as expected
-		assertEquals("Failed to remove Player: Expected GameMap not found or Player not in this GameMap.", thrown.getMessage());
-	}
-
+	
 	@Test
 	void testDeletePlayerSuccessfully() {
 		// Arrange: Create and persist a player

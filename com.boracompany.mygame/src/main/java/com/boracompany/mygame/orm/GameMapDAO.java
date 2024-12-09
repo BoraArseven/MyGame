@@ -23,6 +23,9 @@ public class GameMapDAO implements IGameMapDAO {
 		this.entityManagerFactory = entityManagerFactory;
 	}
 
+	private final String GAMEMAP_WITH_ID = "GameMap with id ";
+	private final String NOT_FOUND = " not found.";
+
 	@Override
 	public void save(GameMap gameMap) {
 		EntityManager entityManager = entityManagerFactory.createEntityManager();
@@ -82,7 +85,7 @@ public class GameMapDAO implements IGameMapDAO {
 			// Acquire a PESSIMISTIC_WRITE lock on the GameMap
 			GameMap managedGameMap = entityManager.find(GameMap.class, gameMap.getId(), LockModeType.PESSIMISTIC_WRITE);
 			if (managedGameMap == null) {
-				throw new PersistenceException("GameMap with id " + gameMap.getId() + " not found.");
+				throw new PersistenceException(GAMEMAP_WITH_ID + gameMap.getId() + NOT_FOUND);
 			}
 
 			// Update fields as necessary
@@ -122,7 +125,7 @@ public class GameMapDAO implements IGameMapDAO {
 				logger.info("GameMap with ID {} deleted successfully.", id);
 			} else {
 				logger.warn("GameMap with ID {} not found.", id);
-				throw new PersistenceException("GameMap with id " + id + " not found.");
+				throw new PersistenceException(GAMEMAP_WITH_ID + id + NOT_FOUND);
 			}
 		} catch (PersistenceException e) {
 			if (transaction.isActive()) {
@@ -170,7 +173,7 @@ public class GameMapDAO implements IGameMapDAO {
 			// Find the GameMap by ID with a PESSIMISTIC_WRITE lock
 			GameMap gameMap = em.find(GameMap.class, mapId, LockModeType.PESSIMISTIC_WRITE);
 			if (gameMap == null) {
-				throw new IllegalArgumentException("GameMap with id " + mapId + " not found.");
+				throw new IllegalArgumentException(GAMEMAP_WITH_ID + mapId + NOT_FOUND);
 			}
 
 			if (player == null) {
@@ -220,7 +223,7 @@ public class GameMapDAO implements IGameMapDAO {
 			// Find the GameMap with a PESSIMISTIC WRITE lock and validate it exists
 			GameMap gameMap = entityManager.find(GameMap.class, mapId, LockModeType.PESSIMISTIC_WRITE);
 			if (gameMap == null) {
-				throw new PersistenceException("GameMap with id " + mapId + " not found.");
+				throw new PersistenceException(GAMEMAP_WITH_ID + mapId + NOT_FOUND);
 			}
 
 			// Validate that the player's ID is not null before attempting to load the

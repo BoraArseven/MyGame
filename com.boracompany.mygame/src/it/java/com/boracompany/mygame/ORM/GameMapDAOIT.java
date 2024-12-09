@@ -478,7 +478,7 @@ public class GameMapDAOIT {
 		// Arrange: Attempt to delete a non-existing GameMap
 		Long nonExistentMapId = -1L; // Assuming IDs are positive, -1L does not exist
 
-		// Act & Assert: Expect a PersistenceException when deleting a non-existing
+		// Expect a PersistenceException when deleting a non-existing
 		// GameMap
 		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
 			gameMapDAO.delete(nonExistentMapId);
@@ -576,8 +576,6 @@ public class GameMapDAOIT {
 
 		Long mapId = gameMap.getId();
 
-		// Act & Assert: Simulate adding a null player to the map
-		GameMapDAO gameMapDAO = new GameMapDAO(emf);
 		Player nullPlayer = null;
 
 		IllegalArgumentException thrownException = assertThrows(IllegalArgumentException.class, () -> {
@@ -667,7 +665,7 @@ public class GameMapDAOIT {
 		Long nonExistentGameMapId = 1L; // Assuming this ID does not exist in the database
 		Player player = new Player(); // Player not persisted, no ID
 
-		// Act & Assert: Call removePlayerFromMap and expect an exception
+		// Call removePlayerFromMap and expect an exception
 		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
 			gameMapDAO.removePlayerFromMap(nonExistentGameMapId, player);
 		});
@@ -699,7 +697,7 @@ public class GameMapDAOIT {
 		transaction.commit();
 		em.close();
 
-		// Act & Assert: Attempt to remove a Player not in the GameMap
+		// Attempt to remove a Player not in the GameMap
 		Long gameMapId = gameMap.getId();
 
 		Player player = new Player(); // A player without an ID (not persisted)
@@ -725,8 +723,9 @@ public class GameMapDAOIT {
 		// Act & Assert: Attempt to remove a different Player not in the GameMap
 		Player anotherPlayer = new PlayerBuilder().withName("Another Player").build();
 		gameMapDAO.save(new GameMap()); // Save another GameMap if needed
+		Long gamemapid = gameMap.getId();
 		assertThrows(PersistenceException.class, () -> {
-			gameMapDAO.removePlayerFromMap(gameMap.getId(), anotherPlayer);
+			gameMapDAO.removePlayerFromMap(gamemapid, anotherPlayer);
 		});
 	}
 
@@ -918,7 +917,7 @@ public class GameMapDAOIT {
 
 		// Act & Assert: Expect IllegalArgumentException
 		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-			new GameMapDAO(emf).addPlayerToMap(null, player);
+			gameMapDAO.addPlayerToMap(null, player);
 		});
 
 		// Verify the exception message
@@ -1072,9 +1071,9 @@ public class GameMapDAOIT {
 		GameMap gameMap = new GameMap();
 		gameMap.setName("TestMap");
 		gameMapDAO.save(gameMap);
-
+		Long mapId = gameMap.getId();
 		PersistenceException thrown = assertThrows(PersistenceException.class, () -> {
-			gameMapDAO.removePlayerFromMap(gameMap.getId(), null);
+			gameMapDAO.removePlayerFromMap(mapId, null);
 		});
 
 		assertEquals("Failed to remove Player: Player is null or has a null ID.", thrown.getMessage());
@@ -1085,10 +1084,10 @@ public class GameMapDAOIT {
 		GameMap gameMap = new GameMap();
 		gameMap.setName("TestMap");
 		gameMapDAO.save(gameMap);
-
+		Long mapId = gameMap.getId();
 		Player playerWithNullId = new PlayerBuilder().withName("PlayerWithNullId").build();
 		PersistenceException thrown = assertThrows(PersistenceException.class, () -> {
-			gameMapDAO.removePlayerFromMap(gameMap.getId(), playerWithNullId);
+			gameMapDAO.removePlayerFromMap(mapId, playerWithNullId);
 		});
 
 		assertEquals("Failed to remove Player: Player is null or has a null ID.", thrown.getMessage());
@@ -1122,10 +1121,10 @@ public class GameMapDAOIT {
 		GameMap gameMap = new GameMap();
 		gameMap.setName("Test Map");
 		gameMapDAO.save(gameMap);
-
+		Long mapId = gameMap.getId();
 		// Act & Assert
 		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-			gameMapDAO.addPlayerToMap(gameMap.getId(), null);
+			gameMapDAO.addPlayerToMap(mapId, null);
 		});
 
 		assertEquals("Player cannot be null", exception.getMessage());
@@ -1177,10 +1176,10 @@ public class GameMapDAOIT {
 
 		// Simulate error during removal by setting up an invalid player ID
 		player.setId(-1L); // Non-existent ID to simulate an error
-
+		Long mapId = gameMap.getId();
 		// Act & Assert
 		PersistenceException thrown = assertThrows(PersistenceException.class, () -> {
-			gameMapDAO.removePlayerFromMap(gameMap.getId(), player);
+			gameMapDAO.removePlayerFromMap(mapId, player);
 		});
 
 		// Verify exception message
@@ -1223,10 +1222,10 @@ public class GameMapDAOIT {
 		Mockito.when(transactionSpy.isActive()).thenReturn(false);
 
 		GameMapDAO gameMapDAOWithSpy = new GameMapDAO(emfSpy);
-
+		Long mapId = gameMap.getId();
 		// Act & Assert: Attempt to remove the player and expect the exception
 		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
-			gameMapDAOWithSpy.removePlayerFromMap(gameMap.getId(), player);
+			gameMapDAOWithSpy.removePlayerFromMap(mapId, player);
 		});
 
 		// Verify the exception message
@@ -1261,10 +1260,10 @@ public class GameMapDAOIT {
 		Mockito.when(transactionSpy.isActive()).thenReturn(false);
 
 		GameMapDAO gameMapDAOWithSpy = new GameMapDAO(emfSpy);
-
+		Long mapId = gameMap.getId();
 		// Act & Assert: Attempt to delete the GameMap and expect a PersistenceException
 		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
-			gameMapDAOWithSpy.delete(gameMap.getId());
+			gameMapDAOWithSpy.delete(mapId);
 		});
 
 		// Verify the exception message
@@ -1349,7 +1348,7 @@ public class GameMapDAOIT {
 	}
 
 	@Test
-	public void testAddPlayerToMap_withActiveTransaction_throwsIllegalStateException() {
+	void testAddPlayerToMap_withActiveTransaction_throwsIllegalStateException() {
 		// Arrange
 		// Mock the EntityManagerFactory
 		EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
@@ -1367,10 +1366,10 @@ public class GameMapDAOIT {
 
 		// Create GameMapDAO with the mocked EntityManagerFactory
 		GameMapDAO daoWithMockedEmf = new GameMapDAO(emfMock);
-
+		Player testplayer = new Player();
 		// Act & Assert
 		IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
-			daoWithMockedEmf.addPlayerToMap(1L, new Player());
+			daoWithMockedEmf.addPlayerToMap(1L, testplayer);
 		}, "Expected addPlayerToMap to throw IllegalStateException when transaction is already active.");
 
 		// Verify exception message
@@ -1425,11 +1424,11 @@ public class GameMapDAOIT {
 		Mockito.doThrow(new PersistenceException("Simulated Exception")).when(emSpy).persist(Mockito.any(Player.class));
 
 		GameMapDAO gameMapDAOWithSpy = new GameMapDAO(emfSpy);
-
-		// Act & Assert: Attempt to add the player to the GameMap and expect
+		Long testgamemapID = testGameMap.getId();
+		// Attempt to add the player to the GameMap and expect
 		// PersistenceException
 		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
-			gameMapDAOWithSpy.addPlayerToMap(testGameMap.getId(), testPlayer);
+			gameMapDAOWithSpy.addPlayerToMap(testgamemapID, testPlayer);
 		});
 
 		// Verify rollback was called
@@ -1477,10 +1476,10 @@ public class GameMapDAOIT {
 		Mockito.when(transactionSpy.isActive()).thenReturn(true);
 
 		GameMapDAO gameMapDAOWithSpy = new GameMapDAO(emfSpy);
-
+		Player testplayer = new Player();
 		// Act & Assert
 		IllegalStateException thrownException = assertThrows(IllegalStateException.class, () -> {
-			gameMapDAOWithSpy.addPlayerToMap(1L, new Player());
+			gameMapDAOWithSpy.addPlayerToMap(1L, testplayer);
 		});
 
 		// Assert exception message
@@ -1505,10 +1504,10 @@ public class GameMapDAOIT {
 		em.close();
 
 		GameMapDAO dao = new GameMapDAO(emf);
-
+		Long mapId = gameMap.getId();
 		// Act & Assert
 		IllegalArgumentException thrownException = assertThrows(IllegalArgumentException.class, () -> {
-			dao.addPlayerToMap(gameMap.getId(), null); // Pass null player
+			dao.addPlayerToMap(mapId, null); // Pass null player
 		});
 
 		// Assert the exception message
@@ -1543,9 +1542,10 @@ public class GameMapDAOIT {
 		Player player = new Player();
 		player.setName("Test Player");
 
+		Long mapId = gameMap.getId();
 		// Act & Assert
 		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
-			dao.addPlayerToMap(gameMap.getId(), player); // Use valid GameMap ID
+			dao.addPlayerToMap(mapId, player); // Use valid GameMap ID
 		});
 
 		// Verify rollback was called
@@ -1597,10 +1597,10 @@ public class GameMapDAOIT {
 		Mockito.when(transactionSpy.isActive()).thenReturn(false); // Transaction not active
 
 		GameMapDAO dao = new GameMapDAO(emfSpy);
-
+		Player player = new Player();
 		// Act & Assert
 		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
-			dao.addPlayerToMap(null, new Player()); // Pass null mapId to trigger exception
+			dao.addPlayerToMap(null, player); // Pass null mapId to trigger exception
 		});
 
 		assertEquals("MapId cannot be null", thrown.getMessage());
@@ -1639,10 +1639,10 @@ public class GameMapDAOIT {
 
 		// Instantiate DAO with the mocked EntityManagerFactory
 		GameMapDAO dao = new GameMapDAO(emfMock);
-
+		Player player = new Player();
 		// Act & Assert
 		PersistenceException thrown = assertThrows(PersistenceException.class, () -> {
-			dao.addPlayerToMap(1L, new Player());
+			dao.addPlayerToMap(1L, player);
 		});
 
 		// Verify exception message
@@ -1711,10 +1711,10 @@ public class GameMapDAOIT {
 		doThrow(new RuntimeException("Simulated Exception during begin")).when(transactionMock).begin();
 
 		GameMapDAO dao = new GameMapDAO(emfMock);
-
-		// Act & Assert
+		
+		Player player = new Player();
 		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
-			dao.addPlayerToMap(1L, new Player());
+			dao.addPlayerToMap(1L, player);
 		});
 
 		verify(transactionMock, never()).rollback();

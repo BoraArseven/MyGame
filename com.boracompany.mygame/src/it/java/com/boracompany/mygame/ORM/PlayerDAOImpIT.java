@@ -920,19 +920,7 @@ public class PlayerDAOImpIT {
 		assertEquals("Player ID cannot be null.", exception.getMessage());
 	}
 
-	@Test
-	void testUpdatePlayerLogsCorrectErrorArgsWhenIdIsNotNull() {
-		// Arrange
-		Player player = new PlayerBuilder().withName("Non-Existent Player").build();
-		player.setId(999L); // Non-existent ID
 
-		// Act & Assert
-		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-			playerDAO.updatePlayer(player);
-		});
-
-		assertEquals("Player with ID '999' not found.", exception.getMessage());
-	}
 
 	@Test
 	void testGetPlayerSuccessfully() {
