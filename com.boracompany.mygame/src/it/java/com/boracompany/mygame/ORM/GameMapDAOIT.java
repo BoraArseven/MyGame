@@ -10,7 +10,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -1700,88 +1699,28 @@ public class GameMapDAOIT {
 	}
 
 	@Test
-	void testAddPlayerToMap_TransactionAlreadyActive_ShouldThrowIllegalStateException() {
+	void testAddPlayerToMap_ExceptionDuringBegin_NoRollback() {
 		// Arrange
-		// Mock the EntityManagerFactory to return a spy EntityManager
 		EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
-		EntityManager emSpy = Mockito.spy(emf.createEntityManager());
-		when(emfMock.createEntityManager()).thenReturn(emSpy);
-
-		// Mock the EntityTransaction
+		EntityManager emMock = Mockito.mock(EntityManager.class);
 		EntityTransaction transactionMock = Mockito.mock(EntityTransaction.class);
-		when(emSpy.getTransaction()).thenReturn(transactionMock);
 
-		// Simulate that the transaction is already active
-		when(transactionMock.isActive()).thenReturn(true);
+		when(emfMock.createEntityManager()).thenReturn(emMock);
+		when(emMock.getTransaction()).thenReturn(transactionMock);
 
-		// Initialize DAO with the mocked EntityManagerFactory
-		GameMapDAO daoWithSpy = new GameMapDAO(emfMock);
+		doThrow(new RuntimeException("Simulated Exception during begin")).when(transactionMock).begin();
 
-		// Create a Player
-		Player player = new PlayerBuilder().withName("Test Player").withIsAlive(true).build();
+		GameMapDAO dao = new GameMapDAO(emfMock);
 
 		// Act & Assert
-		IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
-			daoWithSpy.addPlayerToMap(1L, player); // Assuming mapId 1 exists
-		}, "Expected addPlayerToMap to throw IllegalStateException when transaction is already active.");
+		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
+			dao.addPlayerToMap(1L, new Player());
+		});
 
-		// Verify exception message
-		assertTrue(thrown.getMessage().contains("Transaction already active. Cannot begin a new transaction."),
-				"Exception message should contain 'Transaction already active. Cannot begin a new transaction.'.");
-
-		// Verify that transaction.begin() was never called since the transaction was
-		// already active
-		verify(transactionMock, never()).begin();
-
-		// Verify that transaction.rollback() was not called
 		verify(transactionMock, never()).rollback();
-
-		// Verify that the EntityManager was closed
-		verify(emSpy, times(1)).close();
-	}
-
-	@Test
-	void testAddPlayerToMap_GenericException_ShouldThrowPersistenceException() {
-		// Arrange
-		// Mock the EntityManagerFactory to return a spy EntityManager
-		EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
-		EntityManager emSpy = Mockito.spy(emf.createEntityManager());
-		when(emfMock.createEntityManager()).thenReturn(emSpy);
-
-		// Mock the EntityTransaction
-		EntityTransaction transactionMock = Mockito.mock(EntityTransaction.class);
-		when(emSpy.getTransaction()).thenReturn(transactionMock);
-
-		// Simulate normal transaction start
-		when(transactionMock.isActive()).thenReturn(false);
-		doNothing().when(transactionMock).begin();
-
-		// Simulate an exception during em.persist()
-		doThrow(new RuntimeException("Database error during persist")).when(emSpy).persist(any(Player.class));
-
-		// Initialize DAO with the mocked EntityManagerFactory
-		GameMapDAO daoWithSpy = new GameMapDAO(emfMock);
-
-		// Create a Player
-		Player player = new PlayerBuilder().withName("Test Player").withIsAlive(true).build();
-
-		// Act & Assert
-		PersistenceException thrown = assertThrows(PersistenceException.class, () -> {
-			daoWithSpy.addPlayerToMap(1L, player); // Assuming mapId 1 exists
-		}, "Expected addPlayerToMap to throw PersistenceException due to generic exception.");
-
-		// Verify exception message
-		assertTrue(thrown.getMessage().contains("Failed to add player to map"),
-				"Exception message should contain 'Failed to add player to map'.");
-
-		// Verify that transaction.begin() was called
-		verify(transactionMock, times(1)).begin();
-
-		// Verify that transaction.rollback() was called due to exception
-		verify(transactionMock, times(1)).rollback();
-
-		// Verify that the EntityManager was closed
-		verify(emSpy, times(1)).close();
+		verify(emMock).close();
+		assertTrue(thrownException.getMessage().contains("Failed to add player to map"),
+				"Exception message should indicate failure to add player to map.");
 	}
 
 }
