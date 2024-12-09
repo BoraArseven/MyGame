@@ -16,15 +16,15 @@ import java.util.List;
 public class GameMapDAO implements IGameMapDAO {
 
 	private static final Logger logger = LogManager.getLogger(GameMapDAO.class);
-
+	
 	private EntityManagerFactory entityManagerFactory;
 
 	public GameMapDAO(EntityManagerFactory entityManagerFactory) {
 		this.entityManagerFactory = entityManagerFactory;
 	}
 
-	private final String GAMEMAP_WITH_ID = "GameMap with id ";
-	private final String NOT_FOUND = " not found.";
+	private static final String GAMEMAP_WITH_ID = "GameMap with id ";
+	private static final String NOT_FOUND = " not found.";
 
 	@Override
 	public void save(GameMap gameMap) {
