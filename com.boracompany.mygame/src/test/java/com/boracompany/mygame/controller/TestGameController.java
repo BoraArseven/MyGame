@@ -1532,4 +1532,24 @@ class TestGameController {
 		assertEquals("Attacker is not eligible to attack.", negativeHealthException.getMessage());
 	}
 
+	@Test
+	void testDeletePlayerWithNullId_ThrowsIllegalArgumentException() {
+		// Arrange: playerId is null
+		Long nullPlayerId = null;
+
+		// Act & Assert: Expect IllegalArgumentException to be thrown
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+			gameControllerwithMocks.deletePlayer(nullPlayerId);
+		});
+
+		// Assert: Check exception message
+		assertEquals("Player ID must not be null.", exception.getMessage());
+
+		// Verify that logger.error was called with the correct message
+		verify(logger).error("Player ID is null, cannot delete player.");
+
+		// Verify that no interactions occurred with playerDAOMock
+		verifyNoInteractions(playerDAOMock);
+	}
+
 }

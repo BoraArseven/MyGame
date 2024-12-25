@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.mockito.Mockito;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -197,7 +198,7 @@ class GameControllerIT {
 		});
 
 		// Assert: Verify that the exception message is as expected
-		assertEquals("Expected GameMap not found or Player not in this GameMap.", thrown.getMessage());
+		assertEquals("Failed to remove Player: GameMap with id 999 not found.", thrown.getMessage());
 
 		logger.info("Test completed: testRemovePlayerFromMap_GameMapIsNull");
 	}
@@ -217,7 +218,7 @@ class GameControllerIT {
 		});
 
 		// Assert: Verify that the exception message is as expected
-		assertEquals("Player is null or has a null ID.", thrown.getMessage());
+		assertEquals("Failed to remove Player: Player is null or has a null ID.", thrown.getMessage());
 	}
 
 	@Test
@@ -237,7 +238,7 @@ class GameControllerIT {
 		});
 
 		// Assert: Verify that the exception message is as expected
-		assertEquals("Player is null or has a null ID.", thrown.getMessage());
+		assertEquals("Failed to remove Player: Player is null or has a null ID.", thrown.getMessage());
 	}
 
 	@Test
@@ -247,18 +248,23 @@ class GameControllerIT {
 		gameMap.setName("TestMap");
 		gameMapDAO.save(gameMap);
 
+		// Create a new Player and persist it using createPlayer to assign an ID
 		Player player = new PlayerBuilder().withName("TestPlayer").build();
-		playerDAO.updatePlayer(player); // Persist the player separately, not in the game map
+		playerDAO.createPlayer(player); // Use createPlayer instead of updatePlayer
 
-		// Arrange
+		// Verify that the player has been assigned an ID
+		assertNotNull(player.getId(), "Player ID should not be null after creation.");
+
 		Long gameMapId = gameMap.getId();
 
-		// Try to remove a null player from the map
+		// Act & Assert: Attempt to remove the player from a GameMap it's not associated
+		// with
 		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
-			gameMapDAO.removePlayerFromMap(gameMapId, null);
+			gameMapDAO.removePlayerFromMap(gameMapId, player);
 		});
+
 		// Assert: Verify that the exception message is as expected
-		assertEquals("Player is null or has a null ID.", thrown.getMessage());
+		assertEquals("Failed to remove Player: Expected GameMap not found or Player not in this GameMap.", thrown.getMessage());
 	}
 
 	@Test
@@ -326,29 +332,11 @@ class GameControllerIT {
 		});
 
 		// Verify that the exception message is as expected
-		assertEquals("Expected GameMap not found or Player not in this GameMap.", thrown.getMessage());
+		assertEquals("Failed to remove Player: Expected GameMap not found or Player not in this GameMap.",
+				thrown.getMessage());
 	}
 
-	@Test
-	void testRemovePlayerFromMap_PlayerExistsButNotInGameMap() {
-		// Arrange: Create and persist a GameMap and a Player
-		GameMap gameMap = new GameMap();
-		gameMap.setName("TestMap");
-		gameMapDAO.save(gameMap);
-
-		Player player = new PlayerBuilder().withName("TestPlayer").build();
-		playerDAO.updatePlayer(player); // Persist the player separately
-
-		Long gameMapId = gameMap.getId();
-		RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
-
-			gameMapDAO.removePlayerFromMap(gameMapId, player);
-		});
-
-		// Assert: Verify that the exception message is as expected
-		assertEquals("Player is null or has a null ID.", thrown.getMessage());
-	}
-
+	
 	@Test
 	void testDeletePlayerSuccessfully() {
 		// Arrange: Create and persist a player
@@ -713,4 +701,43 @@ class GameControllerIT {
 			em.close();
 		}
 	}
+
+	@Test
+	void testDeletePlayer_ConcurrentDeletion() throws InterruptedException {
+		// Arrange: Create and persist a player
+		Player player = playerBuilder.withName("ConcurrentPlayer").withDamage(50).withHealth(150).build();
+		playerDAO.createPlayer(player);
+		Long playerId = player.getId();
+
+		// Prepare concurrency tools
+		int threadCount = 10;
+		ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+		CountDownLatch latch = new CountDownLatch(threadCount);
+
+		for (int i = 0; i < threadCount; i++) {
+			executor.submit(() -> {
+				try {
+					controller.deletePlayer(playerId);
+				} catch (Exception e) {
+					// Ignore exceptions for this test
+				} finally {
+					latch.countDown();
+				}
+			});
+		}
+
+		// Wait for all threads to complete
+		latch.await();
+		executor.shutdown();
+
+		// Assert: Ensure the player is deleted
+		EntityManager em = emf.createEntityManager();
+		Player deletedPlayer = em.find(Player.class, playerId);
+		assertNull(deletedPlayer);
+		em.close();
+
+		// Verify that deletePlayer was called at least once
+		verify(playerDAO, Mockito.atLeastOnce()).deletePlayer(player);
+	}
+
 }

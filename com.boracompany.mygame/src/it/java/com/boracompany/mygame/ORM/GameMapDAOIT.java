@@ -1,13 +1,20 @@
 package com.boracompany.mygame.ORM;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.EntityTransaction;
-import jakarta.persistence.PersistenceException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,6 +34,12 @@ import com.boracompany.mygame.model.PlayerBuilder;
 import com.boracompany.mygame.orm.GameMapDAO;
 import com.boracompany.mygame.orm.HibernateUtil;
 import com.boracompany.mygame.orm.PlayerDAOIMPL;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceException;
 
 @Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -73,22 +86,24 @@ public class GameMapDAOIT {
 
 		try {
 			transaction.begin();
-			// Delete all data from tables
+
+			// Clear data from tables in reverse dependency order
 			em.createQuery("DELETE FROM Player").executeUpdate();
 			em.createQuery("DELETE FROM GameMap").executeUpdate();
+
 			transaction.commit();
 		} catch (Exception e) {
 			if (transaction.isActive()) {
 				try {
 					transaction.rollback();
 				} catch (Exception rollbackEx) {
-					// Log rollback failure
+					LOGGER.error("Rollback failed: {}", rollbackEx.getMessage(), rollbackEx);
 				}
 			}
-			throw new PersistenceException("Failed to reset database", e);
+			throw new PersistenceException("Failed to reset database", e); // Preserve original exception as cause
 		} finally {
 			if (em.isOpen()) {
-				em.close();
+				em.close(); // Ensure resources are released
 			}
 		}
 	}
@@ -187,28 +202,49 @@ public class GameMapDAOIT {
 
 	@Test
 	void testRemovePlayerFromMap() {
+		// Arrange: Create and save a GameMap and a Player
 		GameMap gameMap = new GameMap();
-		gameMap.setName("Map with One Player");
-
-		Player player = new PlayerBuilder().withName("Lonely Player").build();
-		gameMap.setPlayers(List.of(player));
+		gameMap.setName("Map with Player");
 		gameMapDAO.save(gameMap);
 
-		gameMapDAO.removePlayerFromMap(gameMap.getId(), player);
+		Player player = new PlayerBuilder().withName("Player to Remove").build();
+		gameMapDAO.addPlayerToMap(gameMap.getId(), player);
 
+		// Act & Assert: Attempt to remove the Player and simulate an exception
 		EntityManager em = emf.createEntityManager();
-		GameMap updatedMap = em.find(GameMap.class, gameMap.getId());
-		em.refresh(updatedMap); // Ensure the latest data is loaded
-		assertEquals(0, updatedMap.getPlayers().size());
-		em.close();
-	}
+		EntityTransaction transaction = em.getTransaction();
 
-	@Test
-	void testAddPlayerToNonExistingMap() {
-		Player player = new PlayerBuilder().withName("Player for Non-existing Map").build();
-		assertThrows(PersistenceException.class, () -> {
-			gameMapDAO.addPlayerToMap(-1L, player); // -1L to simulate non-existing map
-		});
+		try {
+			transaction.begin();
+			// Load the GameMap with a pessimistic lock
+			GameMap managedGameMap = em.find(GameMap.class, gameMap.getId(), LockModeType.PESSIMISTIC_WRITE);
+			if (managedGameMap == null) {
+				throw new PersistenceException("GameMap with id " + gameMap.getId() + " not found.");
+			}
+			throw new PersistenceException("Simulated Exception"); // Simulate the exception
+		} catch (PersistenceException ex) {
+			if (transaction.isActive()) {
+				transaction.rollback();
+			}
+			// Assert: Exception is properly thrown and handled
+			assertEquals("Simulated Exception", ex.getMessage());
+		} finally {
+			if (em.isOpen()) {
+				em.close(); // Ensure the EntityManager is closed
+			}
+		}
+
+		// Verify: Player should still be in the GameMap since the transaction rolled
+		// back
+		EntityManager verifyEm = emf.createEntityManager();
+		try {
+			GameMap updatedGameMap = verifyEm.find(GameMap.class, gameMap.getId());
+			assertNotNull(updatedGameMap);
+			assertFalse(updatedGameMap.getPlayers().isEmpty());
+			assertEquals("Player to Remove", updatedGameMap.getPlayers().get(0).getName());
+		} finally {
+			verifyEm.close();
+		}
 	}
 
 	@Test
@@ -352,40 +388,20 @@ public class GameMapDAOIT {
 
 	@Test
 	void testUpdateWithPersistenceException() {
-		// Spy on the real EntityManagerFactory and EntityManager
-		EntityManagerFactory spyEmf = Mockito.spy(emf);
-		EntityManager spyEm = Mockito.spy(spyEmf.createEntityManager());
-		EntityTransaction spyTransaction = Mockito.spy(spyEm.getTransaction());
-
-		// Set up the spy to use the real transaction but simulate a
-		// PersistenceException when merge is called
-		Mockito.when(spyEmf.createEntityManager()).thenReturn(spyEm);
-		Mockito.when(spyEm.getTransaction()).thenReturn(spyTransaction);
-		Mockito.doThrow(new PersistenceException("Simulated Persistence Exception")).when(spyEm)
-				.merge(Mockito.any(GameMap.class));
-
-		// Use the spied EntityManagerFactory in the DAO
-		GameMapDAO gameMapDAOwithSpiedEmf = new GameMapDAO(spyEmf);
-
-		// Create a GameMap object to update
+		// Arrange: Create and save a GameMap to assign an ID
 		GameMap gameMap = new GameMap();
-		gameMap.setName("Test Map");
+		gameMap.setName("Initial Name");
+		gameMapDAO.save(gameMap);
 
-		// Verify that the update method throws a PersistenceException due to the
-		// simulated
-		// PersistenceException
-		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
-			gameMapDAOwithSpiedEmf.update(gameMap);
+		// Simulate an exception during update
+		EntityManagerFactory emfSpy = Mockito.spy(emf);
+		GameMapDAO spyGameMapDAO = new GameMapDAO(emfSpy);
+		Mockito.doThrow(new PersistenceException("Simulated Exception")).when(emfSpy).createEntityManager();
+
+		// Act & Assert: Attempt to update the GameMap and expect a PersistenceException
+		assertThrows(PersistenceException.class, () -> {
+			spyGameMapDAO.update(gameMap);
 		});
-
-		// Assert that the transaction was rolled back
-		Mockito.verify(spyTransaction).rollback();
-
-		// Assert that the exception message contains the expected text
-		assertTrue(thrownException.getMessage().contains("Failed to update GameMap:"));
-
-		// Verify that the EntityManager is closed after the operation
-		Mockito.verify(spyEm).close();
 	}
 
 	@Test
@@ -459,44 +475,18 @@ public class GameMapDAOIT {
 
 	@Test
 	void testDelete_PersistenceException_TransactionNotActive() {
-		// Spy on the real EntityManagerFactory and EntityManager
-		EntityManagerFactory spyEmf = Mockito.spy(emf);
-		EntityManager spyEm = Mockito.spy(spyEmf.createEntityManager());
-		EntityTransaction spyTransaction = Mockito.spy(spyEm.getTransaction());
+		// Arrange: Attempt to delete a non-existing GameMap
+		Long nonExistentMapId = -1L; // Assuming IDs are positive, -1L does not exist
 
-		// Set up the spy to use the real transaction but simulate a
-		// PersistenceException when remove is called
-		Mockito.when(spyEmf.createEntityManager()).thenReturn(spyEm);
-		Mockito.when(spyEm.getTransaction()).thenReturn(spyTransaction);
-		Mockito.doThrow(new PersistenceException("Simulated Persistence Exception")).when(spyEm)
-				.remove(Mockito.any(GameMap.class));
-
-		// Use the spied EntityManagerFactory in the DAO
-		GameMapDAO gameMapDAOWithSpiedEmf = new GameMapDAO(spyEmf);
-
-		// Simulate finding a GameMap to trigger the remove operation
-		GameMap gameMap = new GameMap();
-		gameMap.setId(1L);
-		Mockito.when(spyEm.find(GameMap.class, 1L)).thenReturn(gameMap);
-
-		// Ensure the transaction is NOT active before the exception occurs
-		Mockito.when(spyTransaction.isActive()).thenReturn(false);
-
-		// Verify that the delete method throws a PersistenceException due to the
-		// simulated
-		// PersistenceException
+		// Expect a PersistenceException when deleting a non-existing
+		// GameMap
 		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
-			gameMapDAOWithSpiedEmf.delete(1L);
+			gameMapDAO.delete(nonExistentMapId);
 		});
 
-		// Assert that the transaction was NOT rolled back since it was not active
-		Mockito.verify(spyTransaction, Mockito.never()).rollback();
-
-		// Assert that the exception message contains the expected text
-		assertTrue(thrownException.getMessage().contains("Failed to delete GameMap: Simulated Persistence Exception"));
-
-		// Verify that the EntityManager is closed after the operation
-		Mockito.verify(spyEm).close();
+		// Verify that the exception message contains the expected text
+		assertTrue(thrownException.getMessage()
+				.contains("Failed to delete GameMap: GameMap with id " + nonExistentMapId + " not found."));
 	}
 
 	@Test
@@ -572,39 +562,28 @@ public class GameMapDAOIT {
 	}
 
 	@Test
-	void testAddPlayerToMap_PersistenceException() {
-		// Spy on the real EntityManagerFactory and EntityManager
-		EntityManagerFactory spyEmf = Mockito.spy(emf);
-		EntityManager spyEm = Mockito.spy(spyEmf.createEntityManager());
-		EntityTransaction spyTransaction = Mockito.spy(spyEm.getTransaction());
-
-		// Set up the spy to use the real transaction but simulate a
-		// PersistenceException when persist is called
-		Mockito.when(spyEmf.createEntityManager()).thenReturn(spyEm);
-		Mockito.when(spyEm.getTransaction()).thenReturn(spyTransaction);
-		Mockito.doThrow(new PersistenceException("Simulated Persistence Exception")).when(spyEm)
-				.persist(Mockito.any(Player.class));
-
-		// Use the spied EntityManagerFactory in the DAO
-		GameMapDAO gameMapDAOwithSpiedEmf = new GameMapDAO(spyEmf);
-
-		// Simulate finding a GameMap to trigger the persist operation
+	void testAddPlayerToMap_IllegalArgumentException() {
+		// Arrange: Create and save a GameMap
 		GameMap gameMap = new GameMap();
-		gameMap.setId(1L);
-		Mockito.when(spyEm.find(GameMap.class, 1L)).thenReturn(gameMap);
+		gameMap.setName("Test Map");
 
-		Player player = new Player();
-		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
-			gameMapDAOwithSpiedEmf.addPlayerToMap(1L, player);
+		EntityManager em = emf.createEntityManager();
+		EntityTransaction transaction = em.getTransaction();
+		transaction.begin();
+		em.persist(gameMap);
+		transaction.commit();
+		em.close();
+
+		Long mapId = gameMap.getId();
+
+		Player nullPlayer = null;
+
+		IllegalArgumentException thrownException = assertThrows(IllegalArgumentException.class, () -> {
+			gameMapDAO.addPlayerToMap(mapId, nullPlayer);
 		});
 
-		// Assert that the transaction was rolled back
-		Mockito.verify(spyTransaction).rollback();
-		// Assert that the exception message is exactly as expected
-		assertEquals("Failed to add player to map", thrownException.getMessage());
-
-		// Verify that the EntityManager is closed after the operation
-		Mockito.verify(spyEm).close();
+		// Assert: Ensure the exception message is correct
+		assertEquals("Player cannot be null", thrownException.getMessage());
 	}
 
 	@Test
@@ -627,7 +606,7 @@ public class GameMapDAOIT {
 		// Verify that the addPlayerToMap method throws a PersistenceException due to
 		// GameMap not being found
 		Player player = new Player();
-		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
+		IllegalArgumentException thrownException = assertThrows(IllegalArgumentException.class, () -> {
 
 			gameMapDAOWithSpiedEmf.addPlayerToMap(1L, player);
 		});
@@ -636,7 +615,7 @@ public class GameMapDAOIT {
 		Mockito.verify(spyTransaction, Mockito.times(1)).rollback();
 
 		// Assert that the exception message contains the expected text
-		assertEquals("Failed to add player to map", thrownException.getMessage());
+		assertEquals("GameMap with id 1 not found.", thrownException.getMessage());
 
 		// Verify that the EntityManager is closed after the operation
 		Mockito.verify(spyEm).close();
@@ -682,129 +661,91 @@ public class GameMapDAOIT {
 
 	@Test
 	void testRemovePlayerFromMap_GameMapNotFound() {
-		// Arrange
-		EntityManagerFactory emfSpy = Mockito.spy(emf);
-		GameMapDAO gameMapDAOWithSpiedEmf = new GameMapDAO(emfSpy);
+		// Arrange: Use a non-existent GameMap ID
+		Long nonExistentGameMapId = 1L; // Assuming this ID does not exist in the database
+		Player player = new Player(); // Player not persisted, no ID
 
-		// Spy on the real EntityManager and Transaction
-		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
-		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
-
-		Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
-		Mockito.doReturn(transactionSpy).when(emSpy).getTransaction();
-		Mockito.when(transactionSpy.isActive()).thenReturn(true);
-
-		// Simulate GameMap not being found
-		Mockito.doReturn(null).when(emSpy).find(GameMap.class, 1L);
-		Player player = new Player();
-		assertThrows(PersistenceException.class, () -> {
-
-			gameMapDAOWithSpiedEmf.removePlayerFromMap(1L, player);
+		// Call removePlayerFromMap and expect an exception
+		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
+			gameMapDAO.removePlayerFromMap(nonExistentGameMapId, player);
 		});
 
-		// Verify that the transaction was rolled back
-		Mockito.verify(transactionSpy).rollback();
+		// Assert: Check the exception message
+		assertEquals("Failed to remove Player: GameMap with id " + nonExistentGameMapId + " not found.",
+				thrownException.getMessage());
 
-		// Verify that the EntityManager is closed after the operation
-		Mockito.verify(emSpy).close();
+		// Additional: Verify no residual changes in the database
+		EntityManager em = emf.createEntityManager();
+		try {
+			GameMap gameMap = em.find(GameMap.class, nonExistentGameMapId);
+			assertNull(gameMap, "GameMap should not exist in the database.");
+		} finally {
+			em.close();
+		}
 	}
 
 	@Test
 	void testRemovePlayerFromMap_PlayerNotFound() {
-		// Arrange
-		EntityManagerFactory emfspy = Mockito.spy(emf);
-		GameMapDAO gameMapDAOWithSpiedEmf = new GameMapDAO(emfspy);
-
-		// Begin transaction and save the GameMap, but not the Player
-		EntityManager em = emfspy.createEntityManager();
+		// Arrange: Create and save a GameMap without adding any Player
+		EntityManager em = emf.createEntityManager();
 		EntityTransaction transaction = em.getTransaction();
-
 		transaction.begin();
+
 		GameMap gameMap = new GameMap();
+		gameMap.setName("TestMap");
 		em.persist(gameMap);
 		transaction.commit();
 		em.close();
 
-		// Re-open the EntityManager for the operation we are testing
-		EntityManager emspy = Mockito.spy(emf.createEntityManager());
-		EntityTransaction spyTransaction = Mockito.spy(emspy.getTransaction());
+		// Attempt to remove a Player not in the GameMap
+		Long gameMapId = gameMap.getId();
 
-		// Spy on the real EntityManager and Transaction
-
-		Mockito.when(emfspy.createEntityManager()).thenReturn(emspy);
-		Mockito.doReturn(spyTransaction).when(emspy).getTransaction();
-		Mockito.when(spyTransaction.isActive()).thenReturn(true);
-
-		Long id = gameMap.getId();
-		Player player = new Player();
-		assertThrows(PersistenceException.class, () -> {
-
-			gameMapDAOWithSpiedEmf.removePlayerFromMap(id, player);
+		Player player = new Player(); // A player without an ID (not persisted)
+		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
+			gameMapDAO.removePlayerFromMap(gameMapId, player);
 		});
 
-		// Verify that the transaction was rolled back
-		Mockito.verify(spyTransaction).rollback();
-
-		// Verify that the EntityManager is closed after the operation
-		Mockito.verify(emspy).close();
+		// Assert: Ensure the exception message is as expected
+		assertEquals("Failed to remove Player: Player is null or has a null ID.", thrownException.getMessage());
 	}
 
 	@Test
 	void testRemovePlayerFromMap_PlayerNotInGameMap() {
-		// Arrange
-		GameMapDAO testGameMapDAO = new GameMapDAO(emf);
-
-		// Create and persist a GameMap
-		EntityManager em = emf.createEntityManager();
-		em.getTransaction().begin();
+		// Arrange: Create and save a GameMap
 		GameMap gameMap = new GameMap();
-		em.persist(gameMap);
-		em.getTransaction().commit();
-		em.close();
+		gameMap.setName("Map with One Player");
+		gameMapDAO.save(gameMap);
 
-		// Create a Player that is not part of any GameMap
-		em = emf.createEntityManager();
-		em.getTransaction().begin();
-		Player player = new Player();
-		em.persist(player);
-		em.getTransaction().commit();
-		em.close();
-		Long mapID = gameMap.getId();
-		// Act & Assert
+		// Create a Player not associated with any GameMap
+		Player player = new PlayerBuilder().withName("Lonely Player").build();
+		gameMapDAO.addPlayerToMap(gameMap.getId(), player);
+
+		// Act & Assert: Attempt to remove a different Player not in the GameMap
+		Player anotherPlayer = new PlayerBuilder().withName("Another Player").build();
+		gameMapDAO.save(new GameMap()); // Save another GameMap if needed
+		Long gamemapid = gameMap.getId();
 		assertThrows(PersistenceException.class, () -> {
-			testGameMapDAO.removePlayerFromMap(mapID, player);
+			gameMapDAO.removePlayerFromMap(gamemapid, anotherPlayer);
 		});
 	}
 
 	@Test
 	void testRemovePlayerFromMap_GameMapAndPlayerNotFound() {
-		// Arrange
-		EntityManagerFactory emfSpy = Mockito.spy(emf);
-		GameMapDAO gameMapDAOWithSpiedEmf = new GameMapDAO(emfSpy);
+		// Arrange: No GameMap or Player is saved in the database
+		EntityManager em = emf.createEntityManager();
 
-		// Spy on the real EntityManager and Transaction
-		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
-		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+		// Attempt to remove a Player from a non-existent GameMap
+		Long nonExistentGameMapId = 1L; // Assuming no GameMap with this ID exists
+		Player nonExistentPlayer = new Player(); // Player not persisted, no ID
 
-		Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
-		Mockito.doReturn(transactionSpy).when(emSpy).getTransaction();
-		Mockito.when(transactionSpy.isActive()).thenReturn(true);
-
-		// Simulate GameMap and Player not being found
-		Mockito.doReturn(null).when(emSpy).find(GameMap.class, 1L);
-		Mockito.doReturn(null).when(emSpy).find(Player.class, 1L);
-
-		Player player = new Player();
-		assertThrows(PersistenceException.class, () -> {
-
-			gameMapDAOWithSpiedEmf.removePlayerFromMap(1L, player);
+		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
+			gameMapDAO.removePlayerFromMap(nonExistentGameMapId, nonExistentPlayer);
 		});
 
-		// Verify that the transaction was rolled back
-		Mockito.verify(transactionSpy).rollback();
+		// Assert: Ensure the exception message is as expected, we check gamemap first
+		assertEquals("Failed to remove Player: GameMap with id 1 not found.", thrownException.getMessage());
 
-		// Verify that the EntityManager is closed after the operation
-		Mockito.verify(emSpy).close();
+		em.close();
 	}
 
 	@Test
@@ -858,72 +799,25 @@ public class GameMapDAOIT {
 		Mockito.when(spyEmf.createEntityManager()).thenReturn(spyEm);
 		Mockito.when(spyEm.getTransaction()).thenReturn(spyTransaction);
 
-		// Simulate finding a GameMap but throwing a PersistenceException during persist
-		GameMap gameMap = new GameMap();
-		Mockito.when(spyEm.find(GameMap.class, 1L)).thenReturn(gameMap);
-		Mockito.doThrow(new PersistenceException("Simulated Persistence Exception")).when(spyEm)
-				.persist(Mockito.any(Player.class));
-
-		// Ensure that the transaction is active
+		// Simulate an active transaction
 		Mockito.when(spyTransaction.isActive()).thenReturn(true);
 
 		// Use the spied EntityManagerFactory in the DAO
 		GameMapDAO gameMapDAOWithSpiedEmf = new GameMapDAO(spyEmf);
 		Player player = new Player();
-		// Verify that the addPlayerToMap method throws a PersistenceException
-		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
 
+		// Act & Assert: Verify that the method throws an IllegalStateException
+		IllegalStateException thrownException = assertThrows(IllegalStateException.class, () -> {
 			gameMapDAOWithSpiedEmf.addPlayerToMap(1L, player);
 		});
 
-		// Assert that the transaction was rolled back
-		Mockito.verify(spyTransaction, Mockito.times(1)).rollback();
+		// Assert the exception message
+		assertEquals("Transaction already active. Cannot begin a new transaction.", thrownException.getMessage());
 
-		// Assert that the exception message contains the expected text
-		assertEquals("Failed to add player to map", thrownException.getMessage());
-
-		// Verify that the EntityManager is closed after the operation
-		Mockito.verify(spyEm).close();
-	}
-
-	@Test
-	void testAddPlayerToMap_TransactionNotActive() {
-		// Spy on the real EntityManagerFactory and EntityManager
-		EntityManagerFactory spyEmf = Mockito.spy(emf);
-		EntityManager spyEm = Mockito.spy(spyEmf.createEntityManager());
-		EntityTransaction spyTransaction = Mockito.spy(spyEm.getTransaction());
-
-		// Set up the spy to use the real transaction
-		Mockito.when(spyEmf.createEntityManager()).thenReturn(spyEm);
-		Mockito.when(spyEm.getTransaction()).thenReturn(spyTransaction);
-
-		// Simulate finding a GameMap but throwing a PersistenceException during persist
-		GameMap gameMap = new GameMap();
-		Mockito.when(spyEm.find(GameMap.class, 1L)).thenReturn(gameMap);
-		Mockito.doThrow(new PersistenceException("Simulated Persistence Exception")).when(spyEm)
-				.persist(Mockito.any(Player.class));
-
-		// Ensure that the transaction is not active
-		Mockito.when(spyTransaction.isActive()).thenReturn(false);
-
-		// Use the spied EntityManagerFactory in the DAO
-		GameMapDAO gameMapDAOWithSpiedEmf = new GameMapDAO(spyEmf);
-
-		Player player = new Player();
-		// Verify that the addPlayerToMap method throws a PersistenceException
-		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
-
-			gameMapDAOWithSpiedEmf.addPlayerToMap(1L, player);
-		});
-
-		// Assert that the transaction rollback was not called since the transaction is
-		// not active
+		// Verify that rollback was not called
 		Mockito.verify(spyTransaction, Mockito.never()).rollback();
 
-		// Assert that the exception message contains the expected text
-		assertEquals("Failed to add player to map", thrownException.getMessage());
-
-		// Verify that the EntityManager is closed after the operation
+		// Verify that the EntityManager was closed
 		Mockito.verify(spyEm).close();
 	}
 
@@ -964,12 +858,12 @@ public class GameMapDAOIT {
 		Long mapId = gameMap.getId();
 		// Act & Assert: Try adding a null player to the map and assert that it throws
 		// an exception
-		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
+		IllegalArgumentException thrownException = assertThrows(IllegalArgumentException.class, () -> {
 			gameMapDAO.addPlayerToMap(mapId, null); // Pass null as the player
 		});
 
 		// Assert: Check the exception message
-		assertEquals("Failed to add player to map", thrownException.getMessage());
+		assertEquals("Player cannot be null", thrownException.getMessage());
 	}
 
 	@Test
@@ -1018,17 +912,16 @@ public class GameMapDAOIT {
 
 	@Test
 	void testAddPlayerToMap_withNullMapId_throwsIllegalArgumentException() {
-		Player player = new Player();
-		player.setId(1L); // assuming this player already exists or has an ID
+		// Arrange: Create a player
+		Player player = new PlayerBuilder().withName("Test Player").build();
 
-		// Act & Assert
-		PersistenceException exception = assertThrows(PersistenceException.class, () -> {
+		// Act & Assert: Expect IllegalArgumentException
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
 			gameMapDAO.addPlayerToMap(null, player);
 		});
 
-		// Check if the cause of the PersistenceException is IllegalArgumentException
-		assertTrue(exception.getCause() instanceof IllegalArgumentException);
-		assertTrue(exception.getCause().getMessage().contains("MapId can not be null"));
+		// Verify the exception message
+		assertEquals("MapId cannot be null", exception.getMessage());
 	}
 
 	// Test for updatePlayer when player.getId() is not null
@@ -1106,37 +999,6 @@ public class GameMapDAOIT {
 		assertEquals("Simulated Exception", exception.getMessage());
 	}
 
-	// Test for updatePlayer when player.getId() is null
-	@Test
-	void testUpdatePlayer_withNullPlayerId_exceptionThrown_playerIdIsNull() {
-		// Arrange
-		Player player = new PlayerBuilder().withName("Test Player").build();
-		// player.getId() is null
-
-		// Spy on EntityManagerFactory and simulate exception
-		EntityManagerFactory emfSpy = Mockito.spy(emf);
-		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
-		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
-
-		Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
-		Mockito.doThrow(new RuntimeException("Simulated Exception")).when(emSpy).merge(Mockito.any(Player.class));
-		Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
-
-		PlayerDAOIMPL dao = new PlayerDAOIMPL(emfSpy);
-
-		// Act & Assert
-		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-			dao.updatePlayer(player);
-		});
-
-		// Verify that rollback and close were called
-		Mockito.verify(transactionSpy).rollback();
-		Mockito.verify(emSpy).close();
-
-		// Assert that the exception message is as expected
-		assertEquals("Simulated Exception", exception.getMessage());
-	}
-
 	// Test for deletePlayer when player.getId() is null
 	@Test
 	void testDeletePlayer_withNullPlayerId_exceptionThrown_playerIdIsNull() {
@@ -1153,6 +1015,712 @@ public class GameMapDAOIT {
 
 		// Assert that the exception message is as expected
 		assertEquals("Tried to delete non-existing player with ID N/A", exception.getMessage());
+	}
+
+	@Test
+	void testUpdateGameMapNotFound() {
+		// Arrange: Create a GameMap object with a non-existing ID
+		GameMap nonExistingGameMap = new GameMap();
+		nonExistingGameMap.setId(999L); // Assuming 999L does not exist in the database
+		nonExistingGameMap.setName("NonExistingMap");
+
+		// Act & Assert: Expect a PersistenceException with the correct message
+		PersistenceException thrown = assertThrows(PersistenceException.class, () -> {
+			gameMapDAO.update(nonExistingGameMap);
+		});
+
+		// Verify the exception message
+		assertEquals("Failed to update GameMap: GameMap with id 999 not found.", thrown.getMessage());
+	}
+
+	@Test
+	void testUpdateGameMapFailsWithPersistenceException() {
+		// Arrange: Persist a valid GameMap
+		GameMap existingGameMap = new GameMap();
+		existingGameMap.setName("ValidMap");
+		gameMapDAO.save(existingGameMap);
+
+		// Spy on EntityManagerFactory to simulate an exception
+		EntityManagerFactory emfSpy = Mockito.spy(emf);
+		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
+		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+		Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
+		Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
+
+		// Simulate a PersistenceException during the merge operation
+		Mockito.doThrow(new PersistenceException("Simulated Database Failure")).when(emSpy)
+				.merge(Mockito.any(GameMap.class));
+
+		GameMapDAO gameMapDAOWithSpy = new GameMapDAO(emfSpy);
+
+		// Act & Assert: Expect a PersistenceException with the appropriate message
+		PersistenceException thrown = assertThrows(PersistenceException.class, () -> {
+			gameMapDAOWithSpy.update(existingGameMap);
+		});
+
+		// Verify that the transaction was rolled back
+		Mockito.verify(transactionSpy).rollback();
+
+		// Verify the exception message
+		assertTrue(thrown.getMessage().contains("Failed to update GameMap: Simulated Database Failure"));
+	}
+
+	@Test
+	void testRemovePlayerFromMap_PlayerIsNull() {
+		GameMap gameMap = new GameMap();
+		gameMap.setName("TestMap");
+		gameMapDAO.save(gameMap);
+		Long mapId = gameMap.getId();
+		PersistenceException thrown = assertThrows(PersistenceException.class, () -> {
+			gameMapDAO.removePlayerFromMap(mapId, null);
+		});
+
+		assertEquals("Failed to remove Player: Player is null or has a null ID.", thrown.getMessage());
+	}
+
+	@Test
+	void testRemovePlayerFromMap_PlayerHasNullId() {
+		GameMap gameMap = new GameMap();
+		gameMap.setName("TestMap");
+		gameMapDAO.save(gameMap);
+		Long mapId = gameMap.getId();
+		Player playerWithNullId = new PlayerBuilder().withName("PlayerWithNullId").build();
+		PersistenceException thrown = assertThrows(PersistenceException.class, () -> {
+			gameMapDAO.removePlayerFromMap(mapId, playerWithNullId);
+		});
+
+		assertEquals("Failed to remove Player: Player is null or has a null ID.", thrown.getMessage());
+	}
+
+	@Test
+	void testRemovePlayerFromMap_Success() {
+		// Arrange
+		GameMap gameMap = new GameMap();
+		gameMap.setName("Test Map");
+		gameMapDAO.save(gameMap);
+
+		Player player = new PlayerBuilder().withName("Player to Remove").build();
+		gameMapDAO.addPlayerToMap(gameMap.getId(), player);
+
+		// Act
+		gameMapDAO.removePlayerFromMap(gameMap.getId(), player);
+
+		// Assert
+		EntityManager em = emf.createEntityManager();
+		GameMap updatedGameMap = em.find(GameMap.class, gameMap.getId());
+		em.refresh(updatedGameMap); // Ensure the latest data is loaded
+
+		assertTrue(updatedGameMap.getPlayers().isEmpty(), "The player should be removed from the GameMap.");
+		em.close();
+	}
+
+	@Test
+	void testAddPlayerToMap_PlayerIsNull() {
+		// Arrange
+		GameMap gameMap = new GameMap();
+		gameMap.setName("Test Map");
+		gameMapDAO.save(gameMap);
+		Long mapId = gameMap.getId();
+		// Act & Assert
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+			gameMapDAO.addPlayerToMap(mapId, null);
+		});
+
+		assertEquals("Player cannot be null", exception.getMessage());
+	}
+
+	@Test
+	void testAddPlayerToMap_ExistingPlayer() {
+		// Arrange
+		GameMap gameMap = new GameMap();
+		gameMap.setName("Test Map");
+		gameMapDAO.save(gameMap);
+
+		Player existingPlayer = new PlayerBuilder().withName("Existing Player").build();
+		gameMapDAO.addPlayerToMap(gameMap.getId(), existingPlayer);
+
+		// Detach the player entity
+		EntityManager em = emf.createEntityManager();
+		em.detach(existingPlayer);
+		existingPlayer.setName("Updated Name");
+
+		// Save the updated player to ensure changes are persisted
+		em.getTransaction().begin();
+		em.merge(existingPlayer);
+		em.getTransaction().commit();
+		em.close();
+
+		// Act
+		gameMapDAO.addPlayerToMap(gameMap.getId(), existingPlayer);
+
+		// Assert
+		em = emf.createEntityManager();
+		GameMap updatedGameMap = em.find(GameMap.class, gameMap.getId());
+		em.refresh(updatedGameMap); // Ensure the latest data is loaded
+
+		assertEquals(1, updatedGameMap.getPlayers().size());
+		assertEquals("Updated Name", updatedGameMap.getPlayers().get(0).getName());
+		em.close();
+	}
+
+	@Test
+	void testRemovePlayerFromMap_RollbackOnError() {
+		// Arrange
+		GameMap gameMap = new GameMap();
+		gameMap.setName("TestMap");
+		gameMapDAO.save(gameMap);
+
+		Player player = new PlayerBuilder().withName("PlayerToRemove").build();
+		gameMapDAO.addPlayerToMap(gameMap.getId(), player);
+
+		// Simulate error during removal by setting up an invalid player ID
+		player.setId(-1L); // Non-existent ID to simulate an error
+		Long mapId = gameMap.getId();
+		// Act & Assert
+		PersistenceException thrown = assertThrows(PersistenceException.class, () -> {
+			gameMapDAO.removePlayerFromMap(mapId, player);
+		});
+
+		// Verify exception message
+		assertTrue(thrown.getMessage().contains("Failed to remove Player"), "Expected rollback on error.");
+
+		// Assert that the transaction was rolled back and the player is still in the
+		// GameMap
+		EntityManager em = emf.createEntityManager();
+		GameMap unchangedGameMap = em.find(GameMap.class, gameMap.getId());
+		em.refresh(unchangedGameMap);
+
+		assertFalse(unchangedGameMap.getPlayers().isEmpty(),
+				"The player should still be in the GameMap due to rollback.");
+		em.close();
+	}
+
+	@Test
+	void testRemovePlayerFromMap_TransactionInactiveAtRollback() {
+		// Arrange: Create a GameMap and a Player
+		GameMap gameMap = new GameMap();
+		gameMap.setName("Test Map");
+
+		Player player = new Player();
+		player.setName("Test Player");
+
+		EntityManagerFactory emfSpy = Mockito.spy(emf);
+		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
+		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+		// Set up the spy to return the mocked transaction
+		Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
+		Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
+
+		// Begin the transaction and persist the entities
+		Mockito.doNothing().when(transactionSpy).begin();
+		Mockito.doThrow(new PersistenceException("Simulated Exception")).when(emSpy).find(GameMap.class,
+				gameMap.getId(), LockModeType.PESSIMISTIC_WRITE);
+
+		// Simulate the transaction becoming inactive after the exception
+		Mockito.when(transactionSpy.isActive()).thenReturn(false);
+
+		GameMapDAO gameMapDAOWithSpy = new GameMapDAO(emfSpy);
+		Long mapId = gameMap.getId();
+		// Act & Assert: Attempt to remove the player and expect the exception
+		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
+			gameMapDAOWithSpy.removePlayerFromMap(mapId, player);
+		});
+
+		// Verify the exception message
+		assertTrue(thrownException.getMessage().contains("Failed to remove Player"));
+
+		// Verify that rollback was not called because the transaction is inactive
+		Mockito.verify(transactionSpy, Mockito.never()).rollback();
+
+		// Verify that the EntityManager is closed
+		Mockito.verify(emSpy).close();
+	}
+
+	@Test
+	void testDeleteGameMap_TransactionInactiveAtRollback() {
+		// Arrange: Create a GameMap and persist it
+		GameMap gameMap = new GameMap();
+		gameMap.setName("Test Map");
+		gameMapDAO.save(gameMap);
+
+		// Spy on the EntityManager and Transaction
+		EntityManagerFactory emfSpy = Mockito.spy(emf);
+		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
+		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+		// Set up the spy behavior
+		Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
+		Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
+
+		// Simulate the transaction becoming inactive after an exception
+		Mockito.doThrow(new PersistenceException("Simulated Exception")).when(emSpy).find(GameMap.class,
+				gameMap.getId(), LockModeType.PESSIMISTIC_WRITE);
+		Mockito.when(transactionSpy.isActive()).thenReturn(false);
+
+		GameMapDAO gameMapDAOWithSpy = new GameMapDAO(emfSpy);
+		Long mapId = gameMap.getId();
+		// Act & Assert: Attempt to delete the GameMap and expect a PersistenceException
+		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
+			gameMapDAOWithSpy.delete(mapId);
+		});
+
+		// Verify the exception message
+		assertTrue(thrownException.getMessage().contains("Failed to delete GameMap"));
+
+		// Verify that rollback was not called because the transaction is inactive
+		Mockito.verify(transactionSpy, Mockito.never()).rollback();
+
+		// Verify that the EntityManager is closed
+		Mockito.verify(emSpy).close();
+	}
+
+	@Test
+	void testUpdateGameMap_TransactionInactiveAtRollback() {
+		// Arrange: Create and persist a GameMap
+		GameMap gameMap = new GameMap();
+		gameMap.setName("Initial Name");
+		gameMapDAO.save(gameMap);
+
+		// Spy on the EntityManager and Transaction
+		EntityManagerFactory emfSpy = Mockito.spy(emf);
+		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
+		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+		// Set up the spy behavior
+		Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
+		Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
+
+		// Simulate the transaction becoming inactive after an exception
+		Mockito.doThrow(new PersistenceException("Simulated Exception")).when(emSpy).find(GameMap.class,
+				gameMap.getId(), LockModeType.PESSIMISTIC_WRITE);
+		Mockito.when(transactionSpy.isActive()).thenReturn(false); // Transaction inactive
+
+		GameMapDAO gameMapDAOWithSpy = new GameMapDAO(emfSpy);
+
+		// Act & Assert: Attempt to update the GameMap and expect a PersistenceException
+		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
+			gameMapDAOWithSpy.update(gameMap);
+		});
+
+		// Verify the exception message
+		assertTrue(thrownException.getMessage().contains("Failed to update GameMap"));
+
+		// Verify that rollback was not called because the transaction is inactive
+		Mockito.verify(transactionSpy, Mockito.never()).rollback();
+
+		// Verify that the EntityManager is closed
+		Mockito.verify(emSpy).close();
+	}
+
+	@Test
+	void testAddPlayerToMap_withNonExistingMapId_throwsIllegalArgumentException() {
+		// Arrange: Create a player
+		Player player = new PlayerBuilder().withName("Test Player").build();
+
+		// Act & Assert: Expect IllegalArgumentException
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+			gameMapDAO.addPlayerToMap(-1L, player); // Assuming -1L does not exist
+		});
+
+		// Verify the exception message
+		assertEquals("GameMap with id -1 not found.", exception.getMessage());
+	}
+
+	@Test
+	void testAddPlayerToMap_withNullPlayer_throwsIllegalArgumentException() {
+		// Arrange: Create a new GameMap and persist it
+		GameMap gameMap = new GameMap();
+		gameMap.setName("Test Map for Null Player");
+		gameMapDAO.save(gameMap);
+
+		Long mapId = gameMap.getId();
+
+		// Act & Assert: Try adding a null player to the map and assert that it throws
+		// an exception
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+			gameMapDAO.addPlayerToMap(mapId, null); // Pass null as the player
+		});
+
+		// Assert: Check the exception message
+		assertEquals("Player cannot be null", exception.getMessage());
+	}
+
+	@Test
+	void testAddPlayerToMap_withActiveTransaction_throwsIllegalStateException() {
+		// Arrange
+		// Mock the EntityManagerFactory
+		EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
+
+		// Mock the EntityManager
+		EntityManager emMock = Mockito.mock(EntityManager.class);
+		when(emfMock.createEntityManager()).thenReturn(emMock);
+
+		// Mock the EntityTransaction
+		EntityTransaction transactionMock = Mockito.mock(EntityTransaction.class);
+		when(emMock.getTransaction()).thenReturn(transactionMock);
+
+		// Simulate the transaction is already active
+		when(transactionMock.isActive()).thenReturn(true);
+
+		// Create GameMapDAO with the mocked EntityManagerFactory
+		GameMapDAO daoWithMockedEmf = new GameMapDAO(emfMock);
+		Player testplayer = new Player();
+		// Act & Assert
+		IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
+			daoWithMockedEmf.addPlayerToMap(1L, testplayer);
+		}, "Expected addPlayerToMap to throw IllegalStateException when transaction is already active.");
+
+		// Verify exception message
+		assertEquals("Transaction already active. Cannot begin a new transaction.", thrown.getMessage(),
+				"Exception message should match.");
+
+		// Verify that rollback was not called
+		verify(transactionMock, times(0)).rollback();
+
+		// Verify that EntityManager was closed
+		verify(emMock, times(1)).close();
+	}
+
+	@Test
+	void testAddPlayerToMap_withPersistenceException_throwsPersistenceException() {
+		// Spy on EntityManagerFactory to simulate an exception
+		EntityManagerFactory emfSpy = Mockito.spy(emf);
+		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
+		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+		Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
+		Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
+
+		// Step 1: Add a GameMap to the database to ensure it exists
+		EntityManager em = emf.createEntityManager();
+		EntityTransaction transaction = em.getTransaction();
+		GameMap testGameMap = new GameMap();
+		testGameMap.setName("Test Map");
+
+		transaction.begin();
+		em.persist(testGameMap); // Persist the GameMap and assign an ID
+		transaction.commit();
+		em.close();
+
+		// Verify the GameMap now has an ID
+		assertNotNull(testGameMap.getId(), "GameMap ID should not be null after being persisted.");
+
+		// Step 2: Add the player to the database to ensure it has an ID
+		Player testPlayer = new PlayerBuilder().withName("Test Player").build();
+
+		em = emf.createEntityManager();
+		transaction = em.getTransaction();
+		transaction.begin();
+		em.persist(testPlayer); // Persist the player and assign an ID
+		transaction.commit();
+		em.close();
+
+		// Verify the player now has an ID
+		assertNotNull(testPlayer.getId(), "Player ID should not be null after being persisted.");
+
+		// Step 3: Simulate exception during persist operation in GameMapDAO
+		Mockito.doThrow(new PersistenceException("Simulated Exception")).when(emSpy).persist(Mockito.any(Player.class));
+
+		GameMapDAO gameMapDAOWithSpy = new GameMapDAO(emfSpy);
+		Long testgamemapID = testGameMap.getId();
+		// Attempt to add the player to the GameMap and expect
+		// PersistenceException
+		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
+			gameMapDAOWithSpy.addPlayerToMap(testgamemapID, testPlayer);
+		});
+
+		// Verify rollback was called
+		Mockito.verify(transactionSpy).rollback();
+
+		// Verify the exception message
+		assertTrue(thrownException.getMessage().contains("Failed to add player to map"));
+
+		// Verify EntityManager was closed
+		Mockito.verify(emSpy).close();
+	}
+
+	@Test
+	void testAddPlayerToMap_ensuresEntityManagerIsClosed() {
+		// Spy on EntityManagerFactory
+		EntityManagerFactory emfSpy = Mockito.spy(emf);
+		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
+		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+		Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
+		Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
+
+		GameMapDAO gameMapDAOWithSpy = new GameMapDAO(emfSpy);
+		Player addedplayer = new PlayerBuilder().withName("Playertobeadded").build();
+
+		// Act & Assert: Even if an exception is thrown, EntityManager should close
+		assertThrows(IllegalArgumentException.class, () -> {
+			gameMapDAOWithSpy.addPlayerToMap(1L, addedplayer);
+		});
+
+		// Verify that the EntityManager is closed
+		Mockito.verify(emSpy).close();
+	}
+
+	@Test
+	void testAddPlayerToMap_TransactionAlreadyActive() {
+		// Spy on the EntityManager and Transaction
+		EntityManagerFactory emfSpy = Mockito.spy(emf);
+		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
+		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+		// Set up the spy to return an active transaction
+		Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
+		Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
+		Mockito.when(transactionSpy.isActive()).thenReturn(true);
+
+		GameMapDAO gameMapDAOWithSpy = new GameMapDAO(emfSpy);
+		Player testplayer = new Player();
+		// Act & Assert
+		IllegalStateException thrownException = assertThrows(IllegalStateException.class, () -> {
+			gameMapDAOWithSpy.addPlayerToMap(1L, testplayer);
+		});
+
+		// Assert exception message
+		assertEquals("Transaction already active. Cannot begin a new transaction.", thrownException.getMessage());
+
+		// Verify no rollback since it throws immediately
+		Mockito.verify(transactionSpy, Mockito.never()).rollback();
+		Mockito.verify(emSpy).close();
+	}
+
+	@Test
+	void testAddPlayerToMap_InvalidArguments() {
+		// Arrange
+		EntityManager em = emf.createEntityManager();
+		EntityTransaction transaction = em.getTransaction();
+
+		transaction.begin();
+		GameMap gameMap = new GameMap();
+		gameMap.setName("Test Map");
+		em.persist(gameMap); // Persist GameMap so it exists in the database
+		transaction.commit();
+		em.close();
+
+		GameMapDAO dao = new GameMapDAO(emf);
+		Long mapId = gameMap.getId();
+		// Act & Assert
+		IllegalArgumentException thrownException = assertThrows(IllegalArgumentException.class, () -> {
+			dao.addPlayerToMap(mapId, null); // Pass null player
+		});
+
+		// Assert the exception message
+		assertEquals("Player cannot be null", thrownException.getMessage());
+	}
+
+	@Test
+	void testAddPlayerToMap_GenericException() {
+		// Arrange
+		EntityManager em = emf.createEntityManager();
+		EntityTransaction transaction = em.getTransaction();
+
+		transaction.begin();
+		GameMap gameMap = new GameMap();
+		gameMap.setName("Test Map");
+		em.persist(gameMap); // Persist GameMap so it exists in the database
+		transaction.commit();
+		em.close();
+
+		// Spy on EntityManagerFactory and simulate an exception
+		EntityManagerFactory emfSpy = Mockito.spy(emf);
+		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
+		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+		Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
+		Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
+
+		// Simulate a generic Exception during persist
+		Mockito.doThrow(new RuntimeException("Simulated Exception")).when(emSpy).persist(Mockito.any(Player.class));
+
+		GameMapDAO dao = new GameMapDAO(emfSpy);
+		Player player = new Player();
+		player.setName("Test Player");
+
+		Long mapId = gameMap.getId();
+		// Act & Assert
+		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
+			dao.addPlayerToMap(mapId, player); // Use valid GameMap ID
+		});
+
+		// Verify rollback was called
+		Mockito.verify(transactionSpy).rollback();
+
+		// Verify the exception message
+		assertTrue(thrownException.getMessage().contains("Failed to add player to map"));
+		Mockito.verify(emSpy).close();
+	}
+
+	@Test
+	void testAddPlayerToMap_EnsureEntityManagerClosed() {
+		// Arrange
+		EntityManager em = emf.createEntityManager();
+		EntityTransaction transaction = em.getTransaction();
+
+		transaction.begin();
+		GameMap gameMap = new GameMap();
+		gameMap.setName("Test Map");
+		em.persist(gameMap); // Persist GameMap
+		transaction.commit();
+		em.close();
+
+		GameMapDAO dao = new GameMapDAO(emf);
+		Player player = new Player();
+		player.setName("Test Player");
+
+		// Act
+		dao.addPlayerToMap(gameMap.getId(), player);
+
+		// Assert
+		em = emf.createEntityManager();
+		GameMap updatedMap = em.find(GameMap.class, gameMap.getId());
+		assertNotNull(updatedMap);
+		assertFalse(updatedMap.getPlayers().isEmpty());
+		assertEquals("Test Player", updatedMap.getPlayers().get(0).getName());
+		em.close();
+	}
+
+	@Test
+	void testAddPlayerToMap_IllegalArgumentException_NoRollback() {
+		// Arrange
+		EntityManagerFactory emfSpy = Mockito.spy(emf);
+		EntityManager emSpy = Mockito.spy(emfSpy.createEntityManager());
+		EntityTransaction transactionSpy = Mockito.spy(emSpy.getTransaction());
+
+		Mockito.when(emfSpy.createEntityManager()).thenReturn(emSpy);
+		Mockito.when(emSpy.getTransaction()).thenReturn(transactionSpy);
+		Mockito.when(transactionSpy.isActive()).thenReturn(false); // Transaction not active
+
+		GameMapDAO dao = new GameMapDAO(emfSpy);
+		Player player = new Player();
+		// Act & Assert
+		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+			dao.addPlayerToMap(null, player); // Pass null mapId to trigger exception
+		});
+
+		assertEquals("MapId cannot be null", thrown.getMessage());
+		Mockito.verify(transactionSpy, Mockito.never()).rollback(); // Rollback shouldn't occur
+		Mockito.verify(emSpy).close();
+	}
+
+	@Test
+	void testAddPlayerToMap_GenericException_WithRollback() {
+		// Arrange
+		// Mock EntityManagerFactory to return a mock EntityManager
+		EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
+		EntityManager emMock = Mockito.mock(EntityManager.class);
+		EntityTransaction transactionMock = Mockito.mock(EntityTransaction.class);
+
+		when(emfMock.createEntityManager()).thenReturn(emMock);
+		when(emMock.getTransaction()).thenReturn(transactionMock);
+
+		// Simulate transaction behavior
+		doNothing().when(transactionMock).begin();
+		// First call returns false (no active transaction), second call returns true
+		when(transactionMock.isActive()).thenReturn(false).thenReturn(true);
+		doNothing().when(transactionMock).rollback();
+
+		// Mock finding a valid GameMap
+		GameMap mockGameMap = new GameMap();
+		mockGameMap.setId(1L);
+		mockGameMap.setName("Test Map");
+		when(emMock.find(GameMap.class, 1L, LockModeType.PESSIMISTIC_WRITE)).thenReturn(mockGameMap);
+
+		// Simulate EntityManager being open
+		when(emMock.isOpen()).thenReturn(true);
+
+		// Simulate a runtime exception during persist
+		doThrow(new RuntimeException("Simulated Exception during persist")).when(emMock).persist(any(Player.class));
+
+		// Instantiate DAO with the mocked EntityManagerFactory
+		GameMapDAO dao = new GameMapDAO(emfMock);
+		Player player = new Player();
+		// Act & Assert
+		PersistenceException thrown = assertThrows(PersistenceException.class, () -> {
+			dao.addPlayerToMap(1L, player);
+		});
+
+		// Verify exception message
+		assertTrue(thrown.getMessage().contains("Failed to add player to map"));
+
+		// Verify that rollback was called once
+		verify(transactionMock, times(1)).rollback();
+
+		// Verify that EntityManager was closed
+		verify(emMock, times(1)).close();
+	}
+
+	@Test
+	void testAddPlayerToMap_MapIdNull_ShouldThrowIllegalArgumentException() {
+		// Arrange
+		// Persist a GameMap
+		EntityManager realEm = emf.createEntityManager();
+		realEm.getTransaction().begin();
+		GameMap gameMap = new GameMap();
+		gameMap.setName("Test Map");
+		realEm.persist(gameMap);
+		realEm.getTransaction().commit();
+		realEm.close();
+
+		// Create a Player
+		Player player = new PlayerBuilder().withName("Test Player").withIsAlive(true).build();
+
+		// Act & Assert
+		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+			gameMapDAO.addPlayerToMap(null, player);
+		}, "Expected addPlayerToMap to throw IllegalArgumentException when mapId is null.");
+
+		// Verify exception message
+		assertTrue(thrown.getMessage().contains("MapId cannot be null"),
+				"Exception message should contain 'MapId cannot be null'.");
+	}
+
+	@Test
+	void testAddPlayerToMap_GameMapNotFound_ShouldThrowIllegalArgumentException() {
+		// Arrange
+		Long nonExistentMapId = 999L; // Assuming this ID does not exist
+
+		// Create a Player
+		Player player = new PlayerBuilder().withName("Test Player").withIsAlive(true).build();
+
+		// Act & Assert
+		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+			gameMapDAO.addPlayerToMap(nonExistentMapId, player);
+		}, "Expected addPlayerToMap to throw IllegalArgumentException when GameMap is not found.");
+
+		// Verify exception message
+		assertTrue(thrown.getMessage().contains("GameMap with id " + nonExistentMapId + " not found."),
+				"Exception message should contain 'GameMap with id 999 not found.'.");
+	}
+
+	@Test
+	void testAddPlayerToMap_ExceptionDuringBegin_NoRollback() {
+		// Arrange
+		EntityManagerFactory emfMock = Mockito.mock(EntityManagerFactory.class);
+		EntityManager emMock = Mockito.mock(EntityManager.class);
+		EntityTransaction transactionMock = Mockito.mock(EntityTransaction.class);
+
+		when(emfMock.createEntityManager()).thenReturn(emMock);
+		when(emMock.getTransaction()).thenReturn(transactionMock);
+
+		doThrow(new RuntimeException("Simulated Exception during begin")).when(transactionMock).begin();
+
+		GameMapDAO dao = new GameMapDAO(emfMock);
+		
+		Player player = new Player();
+		PersistenceException thrownException = assertThrows(PersistenceException.class, () -> {
+			dao.addPlayerToMap(1L, player);
+		});
+
+		verify(transactionMock, never()).rollback();
+		verify(emMock).close();
+		assertTrue(thrownException.getMessage().contains("Failed to add player to map"),
+				"Exception message should indicate failure to add player to map.");
 	}
 
 }

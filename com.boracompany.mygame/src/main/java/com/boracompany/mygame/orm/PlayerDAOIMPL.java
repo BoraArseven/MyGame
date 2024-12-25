@@ -3,11 +3,10 @@ package com.boracompany.mygame.orm;
 import java.util.List;
 import java.util.function.Function;
 
-import javax.annotation.Generated;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
-
+import jakarta.persistence.LockModeType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,15 +17,11 @@ public class PlayerDAOIMPL implements PlayerDAO {
 	private static final Logger LOGGER = LogManager.getLogger(PlayerDAOIMPL.class);
 	private EntityManagerFactory emf;
 
-	@Generated("exclude-from-coverage")
-	public EntityManagerFactory getEmf() {
-		return emf;
-	}
-
 	public PlayerDAOIMPL(EntityManagerFactory emf) {
 		this.emf = emf;
 	}
 
+	@Override
 	public List<Player> getAllPlayers() {
 		EntityManager em = emf.createEntityManager();
 		try {
@@ -40,7 +35,14 @@ public class PlayerDAOIMPL implements PlayerDAO {
 	public Player getPlayer(Long id) {
 		EntityManager em = emf.createEntityManager();
 		try {
-			return em.find(Player.class, id);
+			EntityTransaction transaction = em.getTransaction();
+			transaction.begin(); // Start a transaction
+			Player player = em.find(Player.class, id, LockModeType.PESSIMISTIC_READ);
+			transaction.commit(); // Commit the transaction
+			return player;
+		} catch (RuntimeException e) {
+			em.getTransaction().rollback(); // Rollback in case of failure
+			throw e;
 		} finally {
 			em.close();
 		}
@@ -61,6 +63,13 @@ public class PlayerDAOIMPL implements PlayerDAO {
 	@Override
 	public void updatePlayer(Player player) throws IllegalStateException {
 		executeInTransaction(em -> {
+			if (player.getId() == null) {
+				throw new IllegalStateException("Player ID cannot be null.");
+			}
+			Player managedPlayer = em.find(Player.class, player.getId(), LockModeType.PESSIMISTIC_WRITE);
+			if (managedPlayer == null) {
+				throw new IllegalStateException("Player with ID '" + player.getId() + "' not found.");
+			}
 			em.merge(player);
 			return null;
 		}, "An error occurred while trying to update player with ID {}: {}",
@@ -70,12 +79,11 @@ public class PlayerDAOIMPL implements PlayerDAO {
 	@Override
 	public void deletePlayer(Player player) {
 		executeInTransaction(em -> {
-			// Explicitly check if player ID is null
 			if (player.getId() == null) {
 				throw new IllegalStateException("Tried to delete non-existing player with ID N/A");
 			}
 
-			Player managedPlayer = em.find(Player.class, player.getId());
+			Player managedPlayer = em.find(Player.class, player.getId(), LockModeType.PESSIMISTIC_WRITE);
 			if (managedPlayer != null) {
 				em.remove(managedPlayer);
 			} else {
@@ -114,7 +122,6 @@ public class PlayerDAOIMPL implements PlayerDAO {
 			if (transaction != null && transaction.isActive()) {
 				transaction.rollback();
 			}
-			// Correctly log the error message with placeholders and the exception
 			LOGGER.error(errorMessage, errorArgs);
 			LOGGER.error("Exception occurred:", e);
 			throw e;
@@ -122,5 +129,4 @@ public class PlayerDAOIMPL implements PlayerDAO {
 			em.close();
 		}
 	}
-
 }
