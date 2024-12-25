@@ -5,11 +5,11 @@ import org.apache.logging.log4j.Logger;
 
 import com.boracompany.mygame.model.GameMap;
 import com.boracompany.mygame.model.Player;
-//With this
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceException;
 import java.util.List;
 
@@ -22,6 +22,9 @@ public class GameMapDAO implements IGameMapDAO {
 	public GameMapDAO(EntityManagerFactory entityManagerFactory) {
 		this.entityManagerFactory = entityManagerFactory;
 	}
+
+	private final String GAMEMAP_WITH_ID = "GameMap with id ";
+	private final String NOT_FOUND = " not found.";
 
 	@Override
 	public void save(GameMap gameMap) {
@@ -73,15 +76,30 @@ public class GameMapDAO implements IGameMapDAO {
 	@Override
 	public void update(GameMap gameMap) {
 		EntityManager entityManager = entityManagerFactory.createEntityManager();
+		EntityTransaction transaction = entityManager.getTransaction();
+
 		try {
 			logger.info("Updating GameMap: {}", gameMap.getName());
-			entityManager.getTransaction().begin();
-			entityManager.merge(gameMap);
-			entityManager.getTransaction().commit();
-			logger.info("GameMap {} updated successfully.", gameMap.getName());
+			transaction.begin();
+
+			// Acquire a PESSIMISTIC_WRITE lock on the GameMap
+			GameMap managedGameMap = entityManager.find(GameMap.class, gameMap.getId(), LockModeType.PESSIMISTIC_WRITE);
+			if (managedGameMap == null) {
+				throw new PersistenceException(GAMEMAP_WITH_ID + gameMap.getId() + NOT_FOUND);
+			}
+
+			// Update fields as necessary
+			managedGameMap.setName(gameMap.getName());
+			// ... update other fields as needed
+
+			entityManager.merge(managedGameMap);
+			transaction.commit();
+			logger.info("GameMap {} updated successfully.", managedGameMap.getName());
 		} catch (PersistenceException e) {
-			entityManager.getTransaction().rollback();
-			logger.error("Failed to update GameMap: {}", e.getMessage());
+			if (transaction.isActive()) {
+				transaction.rollback();
+				logger.error("Failed to update GameMap: {}", e.getMessage());
+			}
 			throw new PersistenceException("Failed to update GameMap: " + e.getMessage(), e);
 		} finally {
 			entityManager.close();
@@ -97,7 +115,9 @@ public class GameMapDAO implements IGameMapDAO {
 		try {
 			logger.info("Deleting GameMap by ID: {}", id);
 			transaction.begin();
-			GameMap gameMap = entityManager.find(GameMap.class, id);
+
+			// Acquire a PESSIMISTIC_WRITE lock on the GameMap
+			GameMap gameMap = entityManager.find(GameMap.class, id, LockModeType.PESSIMISTIC_WRITE);
 
 			if (gameMap != null) {
 				entityManager.remove(gameMap);
@@ -105,7 +125,7 @@ public class GameMapDAO implements IGameMapDAO {
 				logger.info("GameMap with ID {} deleted successfully.", id);
 			} else {
 				logger.warn("GameMap with ID {} not found.", id);
-				throw new PersistenceException("GameMap with id " + id + " not found.");
+				throw new PersistenceException(GAMEMAP_WITH_ID + id + NOT_FOUND);
 			}
 		} catch (PersistenceException e) {
 			if (transaction.isActive()) {
@@ -135,50 +155,60 @@ public class GameMapDAO implements IGameMapDAO {
 	public void addPlayerToMap(Long mapId, Player player) {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		EntityTransaction transaction = em.getTransaction();
+		boolean isTransactionOwner = false;
 
 		try {
-			transaction.begin();
+			if (!transaction.isActive()) {
+				transaction.begin();
+				isTransactionOwner = true;
+			} else {
+				throw new IllegalStateException("Transaction already active. Cannot begin a new transaction.");
+			}
 
-			// Find the GameMap by ID
-			if (mapId != null) {
+			// Validate mapId
+			if (mapId == null) {
+				throw new IllegalArgumentException("MapId cannot be null");
+			}
 
-				GameMap gameMap = em.find(GameMap.class, mapId);
-				if (gameMap == null) {
-					throw new PersistenceException("GameMap with id " + mapId + " not found.");
-				}
+			// Find the GameMap by ID with a PESSIMISTIC_WRITE lock
+			GameMap gameMap = em.find(GameMap.class, mapId, LockModeType.PESSIMISTIC_WRITE);
+			if (gameMap == null) {
+				throw new IllegalArgumentException(GAMEMAP_WITH_ID + mapId + NOT_FOUND);
+			}
 
-				// Ensure the player is not null
-				if (player == null) {
-					throw new PersistenceException("Player cannot be null.");
-				}
+			if (player == null) {
+				throw new IllegalArgumentException("Player cannot be null");
+			}
 
-				// Check if the player has an ID (detached or new state)
-				if (player.getId() == null) {
-					// New player, persist it
-					em.persist(player);
-					em.flush(); // Make sure the player gets an ID after persisting
-				} else {
-					em.merge(player);
-					em.flush();
-				}
+			// Persist or merge the player entity
+			if (player.getId() == null) {
+				em.persist(player);
+			} else {
+				em.merge(player);
+			}
 
-				// Add the player to the map's player list
-				gameMap.getPlayers().add(player);
+			// Add the player to the map's player list
+			gameMap.getPlayers().add(player);
 
-				// Merge the GameMap to save the changes
-				em.merge(gameMap);
+			// Save changes to the GameMap
+			em.merge(gameMap);
 
-				// Commit the transaction
-				transaction.commit();
-			} else
-				throw new IllegalArgumentException("MapId can not be null");
+			// Commit the transaction
+			transaction.commit();
+		} catch (IllegalArgumentException | IllegalStateException e) {
+			if (isTransactionOwner && transaction.isActive()) {
+				transaction.rollback();
+			}
+			throw e;
 		} catch (Exception e) {
-			if (transaction.isActive()) {
+			if (isTransactionOwner && transaction.isActive()) {
 				transaction.rollback();
 			}
 			throw new PersistenceException("Failed to add player to map", e);
 		} finally {
+
 			em.close();
+
 		}
 	}
 
@@ -186,9 +216,15 @@ public class GameMapDAO implements IGameMapDAO {
 	public void removePlayerFromMap(Long mapId, Player player) {
 		EntityManager entityManager = entityManagerFactory.createEntityManager();
 		EntityTransaction transaction = entityManager.getTransaction();
+
 		try {
-			// Find the GameMap and validate it exists
-			GameMap gameMap = entityManager.find(GameMap.class, mapId);
+			transaction.begin();
+
+			// Find the GameMap with a PESSIMISTIC WRITE lock and validate it exists
+			GameMap gameMap = entityManager.find(GameMap.class, mapId, LockModeType.PESSIMISTIC_WRITE);
+			if (gameMap == null) {
+				throw new PersistenceException(GAMEMAP_WITH_ID + mapId + NOT_FOUND);
+			}
 
 			// Validate that the player's ID is not null before attempting to load the
 			// player
@@ -197,31 +233,28 @@ public class GameMapDAO implements IGameMapDAO {
 				throw new PersistenceException("Player is null or has a null ID.");
 			}
 
-			// Find the managed player entity
-			Player managedPlayer = entityManager.find(Player.class, player.getId());
-
-			// Validate the GameMap and Player exist and the Player is in the GameMap
-			if (gameMap == null || managedPlayer == null || !gameMap.getPlayers().contains(managedPlayer)) {
-				logger.warn("Expected GameMap or Player not found");
+			// Find the managed player entity with a PESSIMISTIC WRITE lock
+			Player managedPlayer = entityManager.find(Player.class, player.getId(), LockModeType.PESSIMISTIC_WRITE);
+			if (managedPlayer == null || !gameMap.getPlayers().contains(managedPlayer)) {
+				logger.warn("Expected GameMap not found or Player not in this GameMap.");
 				throw new PersistenceException("Expected GameMap not found or Player not in this GameMap.");
 			}
 
 			// Remove the player from the map and update the entities
 			logger.info("Removing Player {} from GameMap with ID: {}", player.getName(), mapId);
-			transaction.begin();
 			gameMap.getPlayers().remove(managedPlayer);
 			managedPlayer.setMap(null);
 			entityManager.merge(gameMap);
 			entityManager.merge(managedPlayer);
+
 			transaction.commit();
 			logger.info("Player {} removed from GameMap {} successfully.", player.getName(), gameMap.getName());
-
 		} catch (PersistenceException e) {
 			if (transaction.isActive()) {
 				transaction.rollback();
 				logger.error("Transaction rolled back due to error while removing Player: {}", e.getMessage());
 			}
-			throw e;
+			throw new PersistenceException("Failed to remove Player: " + e.getMessage(), e);
 		} finally {
 			entityManager.close();
 			logger.info("EntityManager closed after removing Player from GameMap.");
